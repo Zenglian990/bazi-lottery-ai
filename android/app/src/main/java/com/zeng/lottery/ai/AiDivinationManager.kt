@@ -50,6 +50,26 @@ class AiDivinationManager(
         val config = configOverride ?: KeyStoreManager.loadAiConfig(context)
 
         return when (config.provider) {
+            AiProvider.DIRECT_DEEPSEEK -> {
+                if (config.deepseekApiKey.isNotBlank()) {
+                    val systemPrompt = AiPromptBuilder.buildSystemPrompt()
+                    val userPrompt = AiPromptBuilder.buildUserPrompt(
+                        lotteryType, primaryNumbers, secondaryNumbers, destiny, birthDateTime
+                    )
+                    openAiClient.streamDivination(
+                        systemPrompt = systemPrompt,
+                        userPrompt = userPrompt,
+                        apiKey = config.deepseekApiKey,
+                        baseUrl = config.deepseekBaseUrl.ifBlank { "https://api.deepseek.com/v1" },
+                        model = config.deepseekModel.ifBlank { "deepseek-chat" }
+                    ).catch {
+                        emitAllFallback(lotteryType, primaryNumbers, secondaryNumbers, destiny)
+                    }
+                } else {
+                    emitFallbackFlow(lotteryType, primaryNumbers, secondaryNumbers, destiny)
+                }
+            }
+
             AiProvider.DIRECT_GEMINI -> {
                 if (config.geminiApiKey.isNotBlank()) {
                     val prompt = "${AiPromptBuilder.buildSystemPrompt()}\n\n${

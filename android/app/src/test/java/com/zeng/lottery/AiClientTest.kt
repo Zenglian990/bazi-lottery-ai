@@ -143,22 +143,28 @@ class AiClientTest {
 
         // Test Config Save & Load with JVM Fallback
         val testConfig = AiConfig(
-            provider = AiProvider.DIRECT_GEMINI,
+            provider = AiProvider.DIRECT_DEEPSEEK,
+            deepseekApiKey = "sk-deepseek-test-9999",
+            deepseekBaseUrl = "https://api.deepseek.com/v1",
+            deepseekModel = "deepseek-chat",
             geminiApiKey = "AIzaSyTestKey9999",
-            geminiModel = "gemini-1.5-flash",
+            geminiModel = "gemini-2.5-flash",
             openaiApiKey = "sk-test-openai-key-8888",
-            openaiBaseUrl = "https://api.deepseek.com/v1",
-            openaiModel = "deepseek-chat"
+            openaiBaseUrl = "https://api.openai.com/v1",
+            openaiModel = "gpt-4o-mini"
         )
         KeyStoreManager.saveAiConfig(null, testConfig)
         val loaded = KeyStoreManager.loadAiConfig(null)
 
-        assertEquals(AiProvider.DIRECT_GEMINI, loaded.provider)
+        assertEquals(AiProvider.DIRECT_DEEPSEEK, loaded.provider)
+        assertEquals("sk-deepseek-test-9999", loaded.deepseekApiKey)
+        assertEquals("https://api.deepseek.com/v1", loaded.deepseekBaseUrl)
+        assertEquals("deepseek-chat", loaded.deepseekModel)
         assertEquals("AIzaSyTestKey9999", loaded.geminiApiKey)
-        assertEquals("gemini-1.5-flash", loaded.geminiModel)
+        assertEquals("gemini-2.5-flash", loaded.geminiModel)
         assertEquals("sk-test-openai-key-8888", loaded.openaiApiKey)
-        assertEquals("https://api.deepseek.com/v1", loaded.openaiBaseUrl)
-        assertEquals("deepseek-chat", loaded.openaiModel)
+        assertEquals("https://api.openai.com/v1", loaded.openaiBaseUrl)
+        assertEquals("gpt-4o-mini", loaded.openaiModel)
     }
 
     @Test

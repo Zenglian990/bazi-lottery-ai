@@ -1,14 +1,14 @@
-# 生辰八字彩票机选系统 (Bazi Lottery Recommender)
+# 曾练彩票助手 (ZengLian Lottery Assistant)
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
 [![Backend](https://img.shields.io/badge/FastAPI-0.115+-009688.svg)]()
 [![Android](https://img.shields.io/badge/Android-Kotlin%202.0%20%7C%20Compose%20M3-3DDC84.svg)]()
 [![Python](https://img.shields.io/badge/Python-3.12%20%2F%203.14-3776AB.svg)]()
 [![E2E Coverage](https://img.shields.io/badge/E2E%20Tests-127%2F127%20Passed%20(100%25)-success.svg)]()
-[![Unit Tests](https://img.shields.io/badge/Backend%20Pytest-143%2F143%20Passed-success.svg)]()
+[![Unit Tests](https://img.shields.io/badge/Backend%20Pytest-144%2F144%20Passed-success.svg)]()
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)]()
 
-> 基于**生辰八字天干地支推算**、**河图五行数理**、**历史开奖大数据加权**并集成**最新 AI 大模型 API 双模智能解盘**的现代化彩票机选系统。采用前后端分离架构，由高性能云端 RESTful API 后端服务与原生 Android Jetpack Compose 客户端协同构成。
+> 基于**生辰八字天干地支推算**、**河图五行数理**、**历史开奖大数据加权**并集成**国内顶级 DeepSeek (V3/R1) 与 Google Gemini (2.5/3.8 Flash) AI 双模智能解盘**的现代化专业级彩票助手。采用前后端分离架构，由高性能云端 RESTful API 后端服务与原生 Android Jetpack Compose 客户端协同构成。搭载全新东方轻奢暗金 Taiji 乾坤 Logo。
 
 ---
 

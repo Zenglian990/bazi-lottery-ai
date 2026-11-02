@@ -357,13 +357,28 @@ async def generate_divination_text(request: BaziDivinationRequest) -> Dict[str, 
     model = request.model
 
     # Check for client-provided or environment API keys
+    deepseek_key = (
+        request.user_api_key
+        if provider == "deepseek"
+        else (settings.DEEPSEEK_API_KEY or (request.user_api_key if "deepseek" in (model or "").lower() else ""))
+    )
+    deepseek_base = request.user_base_url or settings.DEEPSEEK_BASE_URL or "https://api.deepseek.com/v1"
     gemini_key = request.user_api_key or settings.GEMINI_API_KEY
     openai_key = request.user_api_key or settings.OPENAI_API_KEY
     openai_base = request.user_base_url or settings.OPENAI_BASE_URL
 
+    if provider in ("deepseek", "auto") and deepseek_key:
+        try:
+            target_model = model or settings.DEEPSEEK_MODEL or "deepseek-chat"
+            text = await _call_openai_api(request, deepseek_key, deepseek_base, target_model)
+            compliant_text = _ensure_disclaimer_compliance(text)
+            return {"text": compliant_text, "provider": "deepseek", "model": target_model}
+        except Exception as e:
+            logger.warning(f"DeepSeek API call failed, falling back: {e}")
+
     if provider in ("gemini", "auto") and gemini_key:
         try:
-            target_model = model or settings.GEMINI_MODEL or "gemini-1.5-flash"
+            target_model = model or settings.GEMINI_MODEL or "gemini-2.5-flash"
             text = await _call_gemini_api(request, gemini_key, target_model)
             compliant_text = _ensure_disclaimer_compliance(text)
             return {"text": compliant_text, "provider": "gemini", "model": target_model}
@@ -394,13 +409,65 @@ async def stream_divination_chunks(request: BaziDivinationRequest) -> AsyncGener
     Supports live LLM streaming or authentic typewriter chunk emission.
     """
     provider = (request.provider or settings.AI_DEFAULT_PROVIDER or "auto").lower()
+    model = request.model
+    deepseek_key = (
+        request.user_api_key
+        if provider == "deepseek"
+        else (settings.DEEPSEEK_API_KEY or (request.user_api_key if "deepseek" in (model or "").lower() else ""))
+    )
+    deepseek_base = request.user_base_url or settings.DEEPSEEK_BASE_URL or "https://api.deepseek.com/v1"
     gemini_key = request.user_api_key or settings.GEMINI_API_KEY
     openai_key = request.user_api_key or settings.OPENAI_API_KEY
     openai_base = request.user_base_url or settings.OPENAI_BASE_URL
 
+    # Try streaming from DeepSeek if configured
+    if provider in ("deepseek", "auto") and deepseek_key:
+        clean_base = deepseek_base.rstrip("/")
+        endpoint = f"{clean_base}/v1/chat/completions" if not clean_base.endswith("/v1") else f"{clean_base}/chat/completions"
+        target_model = request.model or settings.DEEPSEEK_MODEL or "deepseek-chat"
+        payload = {
+            "model": target_model,
+            "messages": [
+                {"role": "system", "content": build_system_prompt()},
+                {"role": "user", "content": build_user_prompt(request)},
+            ],
+            "stream": True,
+            "temperature": 0.7,
+            "max_tokens": 1024,
+        }
+        headers = {
+            "Authorization": f"Bearer {deepseek_key}",
+            "Content-Type": "application/json",
+            "Accept": "text/event-stream",
+        }
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                async with client.stream("POST", endpoint, json=payload, headers=headers) as response:
+                    if response.status_code == 200:
+                        emitted_any = False
+                        async for line in response.aiter_lines():
+                            if line.startswith("data: "):
+                                data_str = line[6:].strip()
+                                if data_str == "[DONE]":
+                                    break
+                                try:
+                                    json_data = json.loads(data_str)
+                                    choices = json_data.get("choices", [])
+                                    if choices:
+                                        delta = choices[0].get("delta", {}).get("content", "")
+                                        if delta:
+                                            emitted_any = True
+                                            yield delta
+                                except Exception:
+                                    continue
+                        if emitted_any:
+                            return
+        except Exception as e:
+            logger.warning(f"DeepSeek streaming failed: {e}")
+
     # Try streaming from Gemini if configured
     if provider in ("gemini", "auto") and gemini_key:
-        target_model = request.model or settings.GEMINI_MODEL or "gemini-1.5-flash"
+        target_model = request.model or settings.GEMINI_MODEL or "gemini-2.5-flash"
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{target_model}:streamGenerateContent?alt=sse&key={gemini_key}"
         system_text = build_system_prompt()
         user_text = build_user_prompt(request)

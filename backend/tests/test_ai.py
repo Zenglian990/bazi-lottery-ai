@@ -64,7 +64,7 @@ def test_ai_divination_fallback_non_streaming():
     data = resp.json()
     assert data["lottery_type"] == "ssq"
     assert data["has_disclaimer"] is True
-    assert data["provider"] in ("fallback", "gemini", "openai")
+    assert data["provider"] in ("fallback", "gemini", "openai", "deepseek")
 
     text = data["divination_text"]
     for section in MANDATORY_SECTIONS:
@@ -72,6 +72,24 @@ def test_ai_divination_fallback_non_streaming():
 
     for kw in MANDATORY_DISCLAIMER_KEYWORDS:
         assert kw in text, f"Missing required disclaimer keyword '{kw}' in output"
+
+
+def test_ai_divination_deepseek_provider():
+    """Verify provider='deepseek' returns compliant divination and graceful fallback."""
+    payload = {
+        "birth_datetime": "1990-08-15T08:30:00",
+        "lottery_type": "ssq",
+        "recommended_numbers": SAMPLE_SSQ_TICKET,
+        "provider": "deepseek",
+        "model": "deepseek-chat",
+        "stream": False,
+    }
+    resp = client.post("/api/ai/divination", json=payload)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["provider"] in ("deepseek", "fallback")
+    assert all(sec in data["divination_text"] for sec in MANDATORY_SECTIONS)
+    assert all(kw in data["divination_text"] for kw in MANDATORY_DISCLAIMER_KEYWORDS)
 
 
 def test_ai_divination_fallback_streaming_sse():

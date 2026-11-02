@@ -1,0 +1,11 @@
+.gcloudignore
+.git
+.gitignore
+android/
+release/
+tests_e2e/
+.gradle/
+.idea/
+*.apk
+__pycache__/
+*.pyc

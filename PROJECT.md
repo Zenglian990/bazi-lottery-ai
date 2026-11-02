@@ -1,4 +1,4 @@
-# Project: Bazi Lottery Recommender (生辰八字彩票机选系统)
+# Project: ZengLian Lottery Assistant (曾练彩票助手)
 
 ## Architecture
 
@@ -13,7 +13,7 @@
 |   ├─ Screen 3: 五行命理雷达图 (Compose Canvas 原生五边形极坐标渲染)               |
 |   ├─ Screen 4: 历史冷热遗漏大屏 (柱状图 / 遗漏走势热力卡片)                       |
 |   └─ Screen 5: 智能机选球盘 (3D 拟真彩球径向渐变 / 物理弹跳动画)                 |
-|  [AI Divination Client] ── SSE 流式读取 ──> Gemini / OpenAI (用户直连模式)         |
+|  [AI Divination Client] ── SSE 流式读取 ──> DeepSeek / Gemini / OpenAI (用户直连模式)         |
 |  [Network Layer (Retrofit + OkHttp)] ── 动态 Base URL 拦截器                       |
 |  [Offline Engine] ── 本地纯 Kotlin 八字与离线 100 期种子 (三级离线回退保底)        |
 +------------------------------------------┬----------------------------------------+

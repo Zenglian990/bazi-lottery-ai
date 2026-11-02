@@ -1,5 +1,5 @@
 # Test Infrastructure Specification (TEST_INFRA.md)
-# Bazi Lottery Recommender (生辰八字彩票机选系统)
+# Bazi Lottery Recommender (生辰曾练彩票助手系统)
 
 ## 1. Test Philosophy & Architecture Principles
 

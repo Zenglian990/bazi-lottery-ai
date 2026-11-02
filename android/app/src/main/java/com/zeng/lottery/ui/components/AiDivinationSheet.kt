@@ -95,6 +95,7 @@ fun AiDivinationSheet(
 
     val channelBadge = when (aiConfig.provider) {
         AiProvider.BACKEND_RELAY -> "后端安全中继"
+        AiProvider.DIRECT_DEEPSEEK -> "DeepSeek: ${aiConfig.deepseekModel}"
         AiProvider.DIRECT_GEMINI -> "Gemini: ${aiConfig.geminiModel}"
         AiProvider.DIRECT_OPENAI -> "OpenAI: ${aiConfig.openaiModel}"
     }

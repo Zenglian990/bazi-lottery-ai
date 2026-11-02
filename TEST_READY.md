@@ -1,5 +1,5 @@
 # Test Suite Readiness Certification (TEST_READY.md)
-# Bazi Lottery Recommender (生辰八字彩票机选系统)
+# Bazi Lottery Recommender (生辰曾练彩票助手系统)
 
 **Certification Date**: 2026-11-02  
 **Test Suite Architect**: `test_writer_e2e`  

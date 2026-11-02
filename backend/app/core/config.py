@@ -10,7 +10,7 @@ DB_DIR = APP_DIR / "db"
 SEEDS_DIR = DB_DIR / "seeds"
 
 class Settings:
-    PROJECT_NAME: str = "Bazi Lottery System - Rules Engine & Big Data Analytics"
+    PROJECT_NAME: str = "曾练彩票助手 - 易道乾坤与大数据分析中枢"
     VERSION: str = "1.0.0"
     API_V1_PREFIX: str = "/api"
 
@@ -34,10 +34,13 @@ class Settings:
     SUPPORTED_LOTTERIES: List[str] = ["ssq", "dlt", "fc3d", "qxc"]
 
     # AI LLM Provider Configuration
+    DEEPSEEK_API_KEY: str = os.getenv("DEEPSEEK_API_KEY", "")
+    DEEPSEEK_BASE_URL: str = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1")
+    DEEPSEEK_MODEL: str = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     OPENAI_BASE_URL: str = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
-    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
     OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
     AI_DEFAULT_PROVIDER: str = os.getenv("AI_DEFAULT_PROVIDER", "auto")
 

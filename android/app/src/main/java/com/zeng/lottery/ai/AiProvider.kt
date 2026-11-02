@@ -5,7 +5,8 @@ package com.zeng.lottery.ai
  */
 enum class AiProvider(val displayName: String, val defaultModel: String) {
     BACKEND_RELAY("后端安全中继 (默认推荐)", "auto"),
-    DIRECT_GEMINI("Google Gemini (直连)", "gemini-1.5-flash"),
+    DIRECT_DEEPSEEK("DeepSeek 深度求索 (国内直连)", "deepseek-chat"),
+    DIRECT_GEMINI("Google Gemini (直连)", "gemini-2.5-flash"),
     DIRECT_OPENAI("OpenAI 兼容接口 (直连)", "gpt-4o-mini");
 
     companion object {

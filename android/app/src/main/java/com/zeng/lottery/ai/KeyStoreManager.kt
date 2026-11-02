@@ -163,12 +163,16 @@ object KeyStoreManager {
 
     fun saveAiConfig(context: Context?, config: AiConfig) {
         val prefs = getPrefs(context)
+        val encryptedDeepSeek = encrypt(config.deepseekApiKey)
         val encryptedGemini = encrypt(config.geminiApiKey)
         val encryptedOpenAi = encrypt(config.openaiApiKey)
 
         if (prefs != null) {
             prefs.edit()
                 .putString("provider", config.provider.name)
+                .putString("deepseek_key", encryptedDeepSeek)
+                .putString("deepseek_base_url", config.deepseekBaseUrl)
+                .putString("deepseek_model", config.deepseekModel)
                 .putString("gemini_key", encryptedGemini)
                 .putString("gemini_model", config.geminiModel)
                 .putString("openai_key", encryptedOpenAi)
@@ -177,6 +181,9 @@ object KeyStoreManager {
                 .apply()
         } else {
             jvmTestPrefs["provider"] = config.provider.name
+            jvmTestPrefs["deepseek_key"] = encryptedDeepSeek
+            jvmTestPrefs["deepseek_base_url"] = config.deepseekBaseUrl
+            jvmTestPrefs["deepseek_model"] = config.deepseekModel
             jvmTestPrefs["gemini_key"] = encryptedGemini
             jvmTestPrefs["gemini_model"] = config.geminiModel
             jvmTestPrefs["openai_key"] = encryptedOpenAi
@@ -189,14 +196,20 @@ object KeyStoreManager {
         val prefs = getPrefs(context)
         return if (prefs != null) {
             val providerStr = prefs.getString("provider", AiProvider.BACKEND_RELAY.name)
+            val encDeepSeek = prefs.getString("deepseek_key", "") ?: ""
+            val deepseekBaseUrl = prefs.getString("deepseek_base_url", "https://api.deepseek.com/v1") ?: "https://api.deepseek.com/v1"
+            val deepseekModel = prefs.getString("deepseek_model", "deepseek-chat") ?: "deepseek-chat"
             val encGemini = prefs.getString("gemini_key", "") ?: ""
-            val geminiModel = prefs.getString("gemini_model", "gemini-1.5-flash") ?: "gemini-1.5-flash"
+            val geminiModel = prefs.getString("gemini_model", "gemini-2.5-flash") ?: "gemini-2.5-flash"
             val encOpenAi = prefs.getString("openai_key", "") ?: ""
             val openaiBaseUrl = prefs.getString("openai_base_url", "https://api.openai.com/v1") ?: "https://api.openai.com/v1"
             val openaiModel = prefs.getString("openai_model", "gpt-4o-mini") ?: "gpt-4o-mini"
 
             AiConfig(
                 provider = AiProvider.fromName(providerStr),
+                deepseekApiKey = decrypt(encDeepSeek),
+                deepseekBaseUrl = deepseekBaseUrl,
+                deepseekModel = deepseekModel,
                 geminiApiKey = decrypt(encGemini),
                 geminiModel = geminiModel,
                 openaiApiKey = decrypt(encOpenAi),
@@ -205,14 +218,20 @@ object KeyStoreManager {
             )
         } else {
             val providerStr = jvmTestPrefs["provider"] ?: AiProvider.BACKEND_RELAY.name
+            val encDeepSeek = jvmTestPrefs["deepseek_key"] ?: ""
+            val deepseekBaseUrl = jvmTestPrefs["deepseek_base_url"] ?: "https://api.deepseek.com/v1"
+            val deepseekModel = jvmTestPrefs["deepseek_model"] ?: "deepseek-chat"
             val encGemini = jvmTestPrefs["gemini_key"] ?: ""
-            val geminiModel = jvmTestPrefs["gemini_model"] ?: "gemini-1.5-flash"
+            val geminiModel = jvmTestPrefs["gemini_model"] ?: "gemini-2.5-flash"
             val encOpenAi = jvmTestPrefs["openai_key"] ?: ""
             val openaiBaseUrl = jvmTestPrefs["openai_base_url"] ?: "https://api.openai.com/v1"
             val openaiModel = jvmTestPrefs["openai_model"] ?: "gpt-4o-mini"
 
             AiConfig(
                 provider = AiProvider.fromName(providerStr),
+                deepseekApiKey = decrypt(encDeepSeek),
+                deepseekBaseUrl = deepseekBaseUrl,
+                deepseekModel = deepseekModel,
                 geminiApiKey = decrypt(encGemini),
                 geminiModel = geminiModel,
                 openaiApiKey = decrypt(encOpenAi),
