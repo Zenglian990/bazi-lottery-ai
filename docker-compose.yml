@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: bazi-lottery-backend:latest
+    container_name: bazi_lottery_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - LOTTERY_DB_PATH=/app/data/lottery.db
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-https://api.openai.com/v1}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-1.5-flash}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
+      - AI_DEFAULT_PROVIDER=${AI_DEFAULT_PROVIDER:-auto}
+    volumes:
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    networks:
+      - lottery_network
+
+networks:
+  lottery_network:
+    driver: bridge

@@ -1,0 +1,6310 @@
+{
+  "ssq": [
+    {
+      "issue": "2026125",
+      "draw_date": "2026-11-01",
+      "primary_numbers": [
+        "04",
+        "06",
+        "10",
+        "15",
+        "26",
+        "27"
+      ],
+      "secondary_numbers": [
+        "11"
+      ],
+      "sales_amount": 374042920,
+      "pool_amount": 1044117721
+    },
+    {
+      "issue": "2026124",
+      "draw_date": "2026-10-29",
+      "primary_numbers": [
+        "03",
+        "11",
+        "17",
+        "22",
+        "23",
+        "29"
+      ],
+      "secondary_numbers": [
+        "09"
+      ],
+      "sales_amount": 346568144,
+      "pool_amount": 1075698427
+    },
+    {
+      "issue": "2026123",
+      "draw_date": "2026-10-27",
+      "primary_numbers": [
+        "04",
+        "05",
+        "20",
+        "21",
+        "26",
+        "30"
+      ],
+      "secondary_numbers": [
+        "12"
+      ],
+      "sales_amount": 334118378,
+      "pool_amount": 1079246630
+    },
+    {
+      "issue": "2026122",
+      "draw_date": "2026-10-25",
+      "primary_numbers": [
+        "01",
+        "02",
+        "04",
+        "17",
+        "19",
+        "30"
+      ],
+      "secondary_numbers": [
+        "09"
+      ],
+      "sales_amount": 364308228,
+      "pool_amount": 1056837777
+    },
+    {
+      "issue": "2026121",
+      "draw_date": "2026-10-22",
+      "primary_numbers": [
+        "02",
+        "07",
+        "20",
+        "24",
+        "26",
+        "30"
+      ],
+      "secondary_numbers": [
+        "02"
+      ],
+      "sales_amount": 336574558,
+      "pool_amount": 1056741122
+    },
+    {
+      "issue": "2026120",
+      "draw_date": "2026-10-20",
+      "primary_numbers": [
+        "13",
+        "14",
+        "16",
+        "18",
+        "20",
+        "31"
+      ],
+      "secondary_numbers": [
+        "03"
+      ],
+      "sales_amount": 332731798,
+      "pool_amount": 1035363275
+    },
+    {
+      "issue": "2026119",
+      "draw_date": "2026-10-18",
+      "primary_numbers": [
+        "12",
+        "22",
+        "23",
+        "25",
+        "27",
+        "30"
+      ],
+      "secondary_numbers": [
+        "04"
+      ],
+      "sales_amount": 364378528,
+      "pool_amount": 1025112736
+    },
+    {
+      "issue": "2026118",
+      "draw_date": "2026-10-15",
+      "primary_numbers": [
+        "05",
+        "21",
+        "22",
+        "23",
+        "28",
+        "31"
+      ],
+      "secondary_numbers": [
+        "14"
+      ],
+      "sales_amount": 340890776,
+      "pool_amount": 958655708
+    },
+    {
+      "issue": "2026117",
+      "draw_date": "2026-10-13",
+      "primary_numbers": [
+        "04",
+        "11",
+        "14",
+        "22",
+        "26",
+        "27"
+      ],
+      "secondary_numbers": [
+        "04"
+      ],
+      "sales_amount": 332237260,
+      "pool_amount": 931629281
+    },
+    {
+      "issue": "2026116",
+      "draw_date": "2026-10-11",
+      "primary_numbers": [
+        "10",
+        "19",
+        "24",
+        "27",
+        "28",
+        "33"
+      ],
+      "secondary_numbers": [
+        "12"
+      ],
+      "sales_amount": 363128812,
+      "pool_amount": 936031217
+    },
+    {
+      "issue": "2026115",
+      "draw_date": "2026-10-08",
+      "primary_numbers": [
+        "04",
+        "13",
+        "14",
+        "18",
+        "22",
+        "24"
+      ],
+      "secondary_numbers": [
+        "03"
+      ],
+      "sales_amount": 337573290,
+      "pool_amount": 909402631
+    },
+    {
+      "issue": "2026114",
+      "draw_date": "2026-10-06",
+      "primary_numbers": [
+        "07",
+        "18",
+        "23",
+        "24",
+        "29",
+        "31"
+      ],
+      "secondary_numbers": [
+        "10"
+      ],
+      "sales_amount": 339993172,
+      "pool_amount": 941868611
+    },
+    {
+      "issue": "2026113",
+      "draw_date": "2026-09-29",
+      "primary_numbers": [
+        "03",
+        "04",
+        "20",
+        "24",
+        "29",
+        "30"
+      ],
+      "secondary_numbers": [
+        "11"
+      ],
+      "sales_amount": 338536676,
+      "pool_amount": 973407364
+    },
+    {
+      "issue": "2026112",
+      "draw_date": "2026-09-27",
+      "primary_numbers": [
+        "01",
+        "04",
+        "11",
+        "12",
+        "17",
+        "29"
+      ],
+      "secondary_numbers": [
+        "11"
+      ],
+      "sales_amount": 351384920,
+      "pool_amount": 972650894
+    },
+    {
+      "issue": "2026111",
+      "draw_date": "2026-09-24",
+      "primary_numbers": [
+        "06",
+        "07",
+        "14",
+        "22",
+        "31",
+        "32"
+      ],
+      "secondary_numbers": [
+        "05"
+      ],
+      "sales_amount": 325191464,
+      "pool_amount": 966038984
+    },
+    {
+      "issue": "2026110",
+      "draw_date": "2026-09-22",
+      "primary_numbers": [
+        "02",
+        "05",
+        "16",
+        "19",
+        "26",
+        "32"
+      ],
+      "secondary_numbers": [
+        "14"
+      ],
+      "sales_amount": 327624764,
+      "pool_amount": 930967826
+    },
+    {
+      "issue": "2026109",
+      "draw_date": "2026-09-20",
+      "primary_numbers": [
+        "09",
+        "12",
+        "15",
+        "26",
+        "30",
+        "33"
+      ],
+      "secondary_numbers": [
+        "06"
+      ],
+      "sales_amount": 359008756,
+      "pool_amount": 936353465
+    },
+    {
+      "issue": "2026108",
+      "draw_date": "2026-09-17",
+      "primary_numbers": [
+        "06",
+        "11",
+        "13",
+        "14",
+        "20",
+        "28"
+      ],
+      "secondary_numbers": [
+        "16"
+      ],
+      "sales_amount": 335294274,
+      "pool_amount": 917243647
+    },
+    {
+      "issue": "2026107",
+      "draw_date": "2026-09-15",
+      "primary_numbers": [
+        "01",
+        "05",
+        "09",
+        "17",
+        "24",
+        "33"
+      ],
+      "secondary_numbers": [
+        "04"
+      ],
+      "sales_amount": 328194638,
+      "pool_amount": 858528126
+    },
+    {
+      "issue": "2026106",
+      "draw_date": "2026-09-13",
+      "primary_numbers": [
+        "06",
+        "11",
+        "13",
+        "14",
+        "22",
+        "30"
+      ],
+      "secondary_numbers": [
+        "14"
+      ],
+      "sales_amount": 361568656,
+      "pool_amount": 856497196
+    },
+    {
+      "issue": "2026105",
+      "draw_date": "2026-09-10",
+      "primary_numbers": [
+        "02",
+        "04",
+        "13",
+        "14",
+        "15",
+        "30"
+      ],
+      "secondary_numbers": [
+        "08"
+      ],
+      "sales_amount": 333874688,
+      "pool_amount": 833007469
+    },
+    {
+      "issue": "2026104",
+      "draw_date": "2026-09-08",
+      "primary_numbers": [
+        "11",
+        "12",
+        "13",
+        "19",
+        "20",
+        "31"
+      ],
+      "secondary_numbers": [
+        "03"
+      ],
+      "sales_amount": 333116798,
+      "pool_amount": 798557035
+    },
+    {
+      "issue": "2026103",
+      "draw_date": "2026-09-06",
+      "primary_numbers": [
+        "04",
+        "11",
+        "20",
+        "27",
+        "28",
+        "30"
+      ],
+      "secondary_numbers": [
+        "15"
+      ],
+      "sales_amount": 362416068,
+      "pool_amount": 805259723
+    },
+    {
+      "issue": "2026102",
+      "draw_date": "2026-09-03",
+      "primary_numbers": [
+        "03",
+        "04",
+        "10",
+        "13",
+        "16",
+        "25"
+      ],
+      "secondary_numbers": [
+        "09"
+      ],
+      "sales_amount": 335960988,
+      "pool_amount": 782244968
+    },
+    {
+      "issue": "2026101",
+      "draw_date": "2026-09-01",
+      "primary_numbers": [
+        "05",
+        "06",
+        "08",
+        "09",
+        "24",
+        "25"
+      ],
+      "secondary_numbers": [
+        "12"
+      ],
+      "sales_amount": 329493946,
+      "pool_amount": 766096090
+    },
+    {
+      "issue": "2026100",
+      "draw_date": "2026-08-30",
+      "primary_numbers": [
+        "03",
+        "04",
+        "09",
+        "13",
+        "22",
+        "31"
+      ],
+      "secondary_numbers": [
+        "04"
+      ],
+      "sales_amount": 357107230,
+      "pool_amount": 743395010
+    },
+    {
+      "issue": "2026099",
+      "draw_date": "2026-08-27",
+      "primary_numbers": [
+        "01",
+        "12",
+        "14",
+        "18",
+        "30",
+        "31"
+      ],
+      "secondary_numbers": [
+        "02"
+      ],
+      "sales_amount": 344486222,
+      "pool_amount": 776452438
+    },
+    {
+      "issue": "2026098",
+      "draw_date": "2026-08-25",
+      "primary_numbers": [
+        "08",
+        "16",
+        "18",
+        "22",
+        "25",
+        "26"
+      ],
+      "secondary_numbers": [
+        "07"
+      ],
+      "sales_amount": 337464770,
+      "pool_amount": 711169786
+    },
+    {
+      "issue": "2026097",
+      "draw_date": "2026-08-23",
+      "primary_numbers": [
+        "05",
+        "16",
+        "24",
+        "26",
+        "29",
+        "30"
+      ],
+      "secondary_numbers": [
+        "02"
+      ],
+      "sales_amount": 369897178,
+      "pool_amount": 710238057
+    },
+    {
+      "issue": "2026096",
+      "draw_date": "2026-08-20",
+      "primary_numbers": [
+        "01",
+        "04",
+        "16",
+        "22",
+        "26",
+        "31"
+      ],
+      "secondary_numbers": [
+        "04"
+      ],
+      "sales_amount": 344932190,
+      "pool_amount": 654135395
+    },
+    {
+      "issue": "2026095",
+      "draw_date": "2026-08-18",
+      "primary_numbers": [
+        "04",
+        "06",
+        "14",
+        "21",
+        "22",
+        "33"
+      ],
+      "secondary_numbers": [
+        "16"
+      ],
+      "sales_amount": 347737104,
+      "pool_amount": 628888733
+    },
+    {
+      "issue": "2026094",
+      "draw_date": "2026-08-16",
+      "primary_numbers": [
+        "06",
+        "13",
+        "15",
+        "17",
+        "24",
+        "25"
+      ],
+      "secondary_numbers": [
+        "01"
+      ],
+      "sales_amount": 373881722,
+      "pool_amount": 616242219
+    },
+    {
+      "issue": "2026093",
+      "draw_date": "2026-08-13",
+      "primary_numbers": [
+        "05",
+        "08",
+        "15",
+        "20",
+        "21",
+        "24"
+      ],
+      "secondary_numbers": [
+        "09"
+      ],
+      "sales_amount": 348046564,
+      "pool_amount": 566415284
+    },
+    {
+      "issue": "2026092",
+      "draw_date": "2026-08-11",
+      "primary_numbers": [
+        "09",
+        "11",
+        "12",
+        "25",
+        "30",
+        "33"
+      ],
+      "secondary_numbers": [
+        "11"
+      ],
+      "sales_amount": 339633672,
+      "pool_amount": 571623532
+    },
+    {
+      "issue": "2026091",
+      "draw_date": "2026-08-09",
+      "primary_numbers": [
+        "02",
+        "13",
+        "14",
+        "16",
+        "20",
+        "24"
+      ],
+      "secondary_numbers": [
+        "05"
+      ],
+      "sales_amount": 367362274,
+      "pool_amount": 583235682
+    },
+    {
+      "issue": "2026090",
+      "draw_date": "2026-08-06",
+      "primary_numbers": [
+        "02",
+        "04",
+        "15",
+        "23",
+        "25",
+        "27"
+      ],
+      "secondary_numbers": [
+        "03"
+      ],
+      "sales_amount": 348980318,
+      "pool_amount": 545331466
+    },
+    {
+      "issue": "2026089",
+      "draw_date": "2026-08-04",
+      "primary_numbers": [
+        "05",
+        "18",
+        "23",
+        "24",
+        "27",
+        "33"
+      ],
+      "secondary_numbers": [
+        "03"
+      ],
+      "sales_amount": 345041020,
+      "pool_amount": 489539135
+    },
+    {
+      "issue": "2026088",
+      "draw_date": "2026-08-02",
+      "primary_numbers": [
+        "06",
+        "07",
+        "11",
+        "18",
+        "22",
+        "33"
+      ],
+      "secondary_numbers": [
+        "05"
+      ],
+      "sales_amount": 373747432,
+      "pool_amount": 442158322
+    },
+    {
+      "issue": "2026087",
+      "draw_date": "2026-07-30",
+      "primary_numbers": [
+        "04",
+        "06",
+        "10",
+        "18",
+        "23",
+        "31"
+      ],
+      "secondary_numbers": [
+        "11"
+      ],
+      "sales_amount": 349545040,
+      "pool_amount": 473791046
+    },
+    {
+      "issue": "2026086",
+      "draw_date": "2026-07-28",
+      "primary_numbers": [
+        "02",
+        "05",
+        "14",
+        "25",
+        "30",
+        "32"
+      ],
+      "secondary_numbers": [
+        "05"
+      ],
+      "sales_amount": 345608568,
+      "pool_amount": 463257269
+    },
+    {
+      "issue": "2026085",
+      "draw_date": "2026-07-26",
+      "primary_numbers": [
+        "06",
+        "09",
+        "13",
+        "17",
+        "24",
+        "28"
+      ],
+      "secondary_numbers": [
+        "15"
+      ],
+      "sales_amount": 368292652,
+      "pool_amount": 450096595
+    },
+    {
+      "issue": "2026084",
+      "draw_date": "2026-07-23",
+      "primary_numbers": [
+        "01",
+        "05",
+        "06",
+        "10",
+        "12",
+        "16"
+      ],
+      "secondary_numbers": [
+        "05"
+      ],
+      "sales_amount": 348718788,
+      "pool_amount": 480566551
+    },
+    {
+      "issue": "2026083",
+      "draw_date": "2026-07-21",
+      "primary_numbers": [
+        "07",
+        "14",
+        "15",
+        "23",
+        "28",
+        "33"
+      ],
+      "secondary_numbers": [
+        "03"
+      ],
+      "sales_amount": 348240258,
+      "pool_amount": 480802779
+    },
+    {
+      "issue": "2026082",
+      "draw_date": "2026-07-19",
+      "primary_numbers": [
+        "05",
+        "07",
+        "10",
+        "14",
+        "21",
+        "28"
+      ],
+      "secondary_numbers": [
+        "04"
+      ],
+      "sales_amount": 375000824,
+      "pool_amount": 409487566
+    },
+    {
+      "issue": "2026081",
+      "draw_date": "2026-07-16",
+      "primary_numbers": [
+        "06",
+        "10",
+        "12",
+        "15",
+        "24",
+        "27"
+      ],
+      "secondary_numbers": [
+        "12"
+      ],
+      "sales_amount": 350765488,
+      "pool_amount": 401606257
+    },
+    {
+      "issue": "2026080",
+      "draw_date": "2026-07-14",
+      "primary_numbers": [
+        "04",
+        "05",
+        "11",
+        "19",
+        "27",
+        "32"
+      ],
+      "secondary_numbers": [
+        "01"
+      ],
+      "sales_amount": 344697650,
+      "pool_amount": 384218118
+    },
+    {
+      "issue": "2026079",
+      "draw_date": "2026-07-12",
+      "primary_numbers": [
+        "01",
+        "11",
+        "17",
+        "22",
+        "24",
+        "29"
+      ],
+      "secondary_numbers": [
+        "04"
+      ],
+      "sales_amount": 373452200,
+      "pool_amount": 367458887
+    },
+    {
+      "issue": "2026078",
+      "draw_date": "2026-07-09",
+      "primary_numbers": [
+        "07",
+        "11",
+        "14",
+        "16",
+        "27",
+        "28"
+      ],
+      "secondary_numbers": [
+        "06"
+      ],
+      "sales_amount": 355852948,
+      "pool_amount": 285632700
+    },
+    {
+      "issue": "2026077",
+      "draw_date": "2026-07-07",
+      "primary_numbers": [
+        "01",
+        "04",
+        "05",
+        "14",
+        "18",
+        "25"
+      ],
+      "secondary_numbers": [
+        "04"
+      ],
+      "sales_amount": 353662546,
+      "pool_amount": 320076738
+    },
+    {
+      "issue": "2026076",
+      "draw_date": "2026-07-05",
+      "primary_numbers": [
+        "01",
+        "03",
+        "19",
+        "20",
+        "24",
+        "25"
+      ],
+      "secondary_numbers": [
+        "07"
+      ],
+      "sales_amount": 382507054,
+      "pool_amount": 292048181
+    },
+    {
+      "issue": "2026075",
+      "draw_date": "2026-07-02",
+      "primary_numbers": [
+        "08",
+        "12",
+        "18",
+        "21",
+        "24",
+        "30"
+      ],
+      "secondary_numbers": [
+        "01"
+      ],
+      "sales_amount": 370657052,
+      "pool_amount": 283183968
+    },
+    {
+      "issue": "2026074",
+      "draw_date": "2026-06-30",
+      "primary_numbers": [
+        "02",
+        "23",
+        "24",
+        "26",
+        "28",
+        "32"
+      ],
+      "secondary_numbers": [
+        "04"
+      ],
+      "sales_amount": 370952514,
+      "pool_amount": 308183968
+    },
+    {
+      "issue": "2026073",
+      "draw_date": "2026-06-28",
+      "primary_numbers": [
+        "09",
+        "10",
+        "13",
+        "16",
+        "19",
+        "21"
+      ],
+      "secondary_numbers": [
+        "08"
+      ],
+      "sales_amount": 398594042,
+      "pool_amount": 328183968
+    },
+    {
+      "issue": "2026072",
+      "draw_date": "2026-06-25",
+      "primary_numbers": [
+        "07",
+        "08",
+        "12",
+        "15",
+        "17",
+        "21"
+      ],
+      "secondary_numbers": [
+        "01"
+      ],
+      "sales_amount": 377591844,
+      "pool_amount": 378183968
+    },
+    {
+      "issue": "2026071",
+      "draw_date": "2026-06-23",
+      "primary_numbers": [
+        "03",
+        "08",
+        "19",
+        "25",
+        "31",
+        "33"
+      ],
+      "secondary_numbers": [
+        "05"
+      ],
+      "sales_amount": 373089958,
+      "pool_amount": 398183968
+    },
+    {
+      "issue": "2026070",
+      "draw_date": "2026-06-21",
+      "primary_numbers": [
+        "03",
+        "06",
+        "08",
+        "14",
+        "26",
+        "27"
+      ],
+      "secondary_numbers": [
+        "08"
+      ],
+      "sales_amount": 398555946,
+      "pool_amount": 438183968
+    },
+    {
+      "issue": "2026069",
+      "draw_date": "2026-06-18",
+      "primary_numbers": [
+        "12",
+        "14",
+        "16",
+        "17",
+        "18",
+        "32"
+      ],
+      "secondary_numbers": [
+        "08"
+      ],
+      "sales_amount": 373992648,
+      "pool_amount": 493183968
+    },
+    {
+      "issue": "2026068",
+      "draw_date": "2026-06-16",
+      "primary_numbers": [
+        "03",
+        "05",
+        "16",
+        "18",
+        "29",
+        "32"
+      ],
+      "secondary_numbers": [
+        "04"
+      ],
+      "sales_amount": 379517740,
+      "pool_amount": 588469423
+    },
+    {
+      "issue": "2026067",
+      "draw_date": "2026-06-14",
+      "primary_numbers": [
+        "04",
+        "19",
+        "27",
+        "29",
+        "30",
+        "32"
+      ],
+      "secondary_numbers": [
+        "13"
+      ],
+      "sales_amount": 414869642,
+      "pool_amount": 658469423
+    },
+    {
+      "issue": "2026066",
+      "draw_date": "2026-06-11",
+      "primary_numbers": [
+        "05",
+        "11",
+        "21",
+        "23",
+        "24",
+        "29"
+      ],
+      "secondary_numbers": [
+        "16"
+      ],
+      "sales_amount": 392786646,
+      "pool_amount": 671837950
+    },
+    {
+      "issue": "2026065",
+      "draw_date": "2026-06-09",
+      "primary_numbers": [
+        "07",
+        "08",
+        "16",
+        "24",
+        "30",
+        "32"
+      ],
+      "secondary_numbers": [
+        "02"
+      ],
+      "sales_amount": 386314046,
+      "pool_amount": 706837950
+    },
+    {
+      "issue": "2026064",
+      "draw_date": "2026-06-07",
+      "primary_numbers": [
+        "01",
+        "09",
+        "15",
+        "18",
+        "29",
+        "33"
+      ],
+      "secondary_numbers": [
+        "15"
+      ],
+      "sales_amount": 427210484,
+      "pool_amount": 741837950
+    },
+    {
+      "issue": "2026063",
+      "draw_date": "2026-06-04",
+      "primary_numbers": [
+        "02",
+        "08",
+        "25",
+        "28",
+        "30",
+        "31"
+      ],
+      "secondary_numbers": [
+        "02"
+      ],
+      "sales_amount": 393294950,
+      "pool_amount": 816837950
+    },
+    {
+      "issue": "2026062",
+      "draw_date": "2026-06-02",
+      "primary_numbers": [
+        "02",
+        "04",
+        "07",
+        "14",
+        "28",
+        "29"
+      ],
+      "secondary_numbers": [
+        "09"
+      ],
+      "sales_amount": 402189304,
+      "pool_amount": 909990283
+    },
+    {
+      "issue": "2026061",
+      "draw_date": "2026-05-31",
+      "primary_numbers": [
+        "01",
+        "04",
+        "05",
+        "15",
+        "23",
+        "28"
+      ],
+      "secondary_numbers": [
+        "07"
+      ],
+      "sales_amount": 429422172,
+      "pool_amount": 1009990273
+    },
+    {
+      "issue": "2026060",
+      "draw_date": "2026-05-28",
+      "primary_numbers": [
+        "07",
+        "09",
+        "10",
+        "16",
+        "22",
+        "27"
+      ],
+      "secondary_numbers": [
+        "11"
+      ],
+      "sales_amount": 398771788,
+      "pool_amount": 1049990273
+    },
+    {
+      "issue": "2026059",
+      "draw_date": "2026-05-26",
+      "primary_numbers": [
+        "08",
+        "16",
+        "26",
+        "28",
+        "29",
+        "30"
+      ],
+      "secondary_numbers": [
+        "15"
+      ],
+      "sales_amount": 392773558,
+      "pool_amount": 1139990273
+    },
+    {
+      "issue": "2026058",
+      "draw_date": "2026-05-24",
+      "primary_numbers": [
+        "01",
+        "04",
+        "07",
+        "21",
+        "29",
+        "30"
+      ],
+      "secondary_numbers": [
+        "01"
+      ],
+      "sales_amount": 425121686,
+      "pool_amount": 1154771516
+    },
+    {
+      "issue": "2026057",
+      "draw_date": "2026-05-21",
+      "primary_numbers": [
+        "01",
+        "10",
+        "22",
+        "24",
+        "28",
+        "30"
+      ],
+      "secondary_numbers": [
+        "07"
+      ],
+      "sales_amount": 397400020,
+      "pool_amount": 1199771516
+    },
+    {
+      "issue": "2026056",
+      "draw_date": "2026-05-19",
+      "primary_numbers": [
+        "10",
+        "19",
+        "21",
+        "22",
+        "31",
+        "33"
+      ],
+      "secondary_numbers": [
+        "05"
+      ],
+      "sales_amount": 391304582,
+      "pool_amount": 1229771516
+    },
+    {
+      "issue": "2026055",
+      "draw_date": "2026-05-17",
+      "primary_numbers": [
+        "04",
+        "11",
+        "24",
+        "25",
+        "32",
+        "33"
+      ],
+      "secondary_numbers": [
+        "13"
+      ],
+      "sales_amount": 422769486,
+      "pool_amount": 1237107160
+    },
+    {
+      "issue": "2026054",
+      "draw_date": "2026-05-14",
+      "primary_numbers": [
+        "13",
+        "20",
+        "25",
+        "29",
+        "30",
+        "33"
+      ],
+      "secondary_numbers": [
+        "02"
+      ],
+      "sales_amount": 391858874,
+      "pool_amount": 1251883761
+    },
+    {
+      "issue": "2026053",
+      "draw_date": "2026-05-12",
+      "primary_numbers": [
+        "01",
+        "02",
+        "03",
+        "08",
+        "13",
+        "14"
+      ],
+      "secondary_numbers": [
+        "02"
+      ],
+      "sales_amount": 395029142,
+      "pool_amount": 1276883761
+    },
+    {
+      "issue": "2026052",
+      "draw_date": "2026-05-10",
+      "primary_numbers": [
+        "01",
+        "03",
+        "11",
+        "22",
+        "26",
+        "31"
+      ],
+      "secondary_numbers": [
+        "11"
+      ],
+      "sales_amount": 417267288,
+      "pool_amount": 1306883761
+    },
+    {
+      "issue": "2026051",
+      "draw_date": "2026-05-07",
+      "primary_numbers": [
+        "09",
+        "14",
+        "15",
+        "16",
+        "29",
+        "30"
+      ],
+      "secondary_numbers": [
+        "10"
+      ],
+      "sales_amount": 386809756,
+      "pool_amount": 1400262206
+    },
+    {
+      "issue": "2026050",
+      "draw_date": "2026-05-05",
+      "primary_numbers": [
+        "06",
+        "09",
+        "25",
+        "27",
+        "28",
+        "30"
+      ],
+      "secondary_numbers": [
+        "03"
+      ],
+      "sales_amount": 368215788,
+      "pool_amount": 1470262206
+    },
+    {
+      "issue": "2026049",
+      "draw_date": "2026-05-03",
+      "primary_numbers": [
+        "03",
+        "04",
+        "14",
+        "15",
+        "18",
+        "20"
+      ],
+      "secondary_numbers": [
+        "02"
+      ],
+      "sales_amount": 378548054,
+      "pool_amount": 1490262206
+    },
+    {
+      "issue": "2026048",
+      "draw_date": "2026-04-30",
+      "primary_numbers": [
+        "09",
+        "15",
+        "18",
+        "24",
+        "28",
+        "33"
+      ],
+      "secondary_numbers": [
+        "01"
+      ],
+      "sales_amount": 381163108,
+      "pool_amount": 1520262206
+    },
+    {
+      "issue": "2026047",
+      "draw_date": "2026-04-28",
+      "primary_numbers": [
+        "07",
+        "16",
+        "21",
+        "24",
+        "27",
+        "30"
+      ],
+      "secondary_numbers": [
+        "07"
+      ],
+      "sales_amount": 383992530,
+      "pool_amount": 1505111504
+    },
+    {
+      "issue": "2026046",
+      "draw_date": "2026-04-26",
+      "primary_numbers": [
+        "02",
+        "09",
+        "10",
+        "24",
+        "31",
+        "33"
+      ],
+      "secondary_numbers": [
+        "16"
+      ],
+      "sales_amount": 425615512,
+      "pool_amount": 1535111504
+    },
+    {
+      "issue": "2026045",
+      "draw_date": "2026-04-23",
+      "primary_numbers": [
+        "04",
+        "11",
+        "15",
+        "17",
+        "24",
+        "30"
+      ],
+      "secondary_numbers": [
+        "15"
+      ],
+      "sales_amount": 395637026,
+      "pool_amount": 1559981238
+    },
+    {
+      "issue": "2026044",
+      "draw_date": "2026-04-21",
+      "primary_numbers": [
+        "02",
+        "14",
+        "17",
+        "18",
+        "22",
+        "30"
+      ],
+      "secondary_numbers": [
+        "01"
+      ],
+      "sales_amount": 395282770,
+      "pool_amount": 1619981238
+    },
+    {
+      "issue": "2026043",
+      "draw_date": "2026-04-19",
+      "primary_numbers": [
+        "06",
+        "09",
+        "14",
+        "16",
+        "25",
+        "32"
+      ],
+      "secondary_numbers": [
+        "16"
+      ],
+      "sales_amount": 423102342,
+      "pool_amount": 1649981238
+    },
+    {
+      "issue": "2026042",
+      "draw_date": "2026-04-16",
+      "primary_numbers": [
+        "02",
+        "07",
+        "12",
+        "19",
+        "24",
+        "31"
+      ],
+      "secondary_numbers": [
+        "10"
+      ],
+      "sales_amount": 400801534,
+      "pool_amount": 1729981238
+    },
+    {
+      "issue": "2026041",
+      "draw_date": "2026-04-14",
+      "primary_numbers": [
+        "02",
+        "08",
+        "10",
+        "17",
+        "19",
+        "24"
+      ],
+      "secondary_numbers": [
+        "13"
+      ],
+      "sales_amount": 396284492,
+      "pool_amount": 1799981238
+    },
+    {
+      "issue": "2026040",
+      "draw_date": "2026-04-12",
+      "primary_numbers": [
+        "03",
+        "04",
+        "14",
+        "22",
+        "23",
+        "33"
+      ],
+      "secondary_numbers": [
+        "04"
+      ],
+      "sales_amount": 421923472,
+      "pool_amount": 1869981238
+    },
+    {
+      "issue": "2026039",
+      "draw_date": "2026-04-09",
+      "primary_numbers": [
+        "08",
+        "17",
+        "18",
+        "21",
+        "25",
+        "30"
+      ],
+      "secondary_numbers": [
+        "05"
+      ],
+      "sales_amount": 393444014,
+      "pool_amount": 1934981238
+    },
+    {
+      "issue": "2026038",
+      "draw_date": "2026-04-07",
+      "primary_numbers": [
+        "01",
+        "02",
+        "13",
+        "23",
+        "25",
+        "27"
+      ],
+      "secondary_numbers": [
+        "05"
+      ],
+      "sales_amount": 382309000,
+      "pool_amount": 1933841973
+    },
+    {
+      "issue": "2026037",
+      "draw_date": "2026-04-05",
+      "primary_numbers": [
+        "11",
+        "22",
+        "27",
+        "29",
+        "31",
+        "33"
+      ],
+      "secondary_numbers": [
+        "12"
+      ],
+      "sales_amount": 398672542,
+      "pool_amount": 1973841973
+    },
+    {
+      "issue": "2026036",
+      "draw_date": "2026-04-02",
+      "primary_numbers": [
+        "06",
+        "10",
+        "12",
+        "15",
+        "22",
+        "28"
+      ],
+      "secondary_numbers": [
+        "08"
+      ],
+      "sales_amount": 398552206,
+      "pool_amount": 2063784926
+    },
+    {
+      "issue": "2026035",
+      "draw_date": "2026-03-31",
+      "primary_numbers": [
+        "02",
+        "06",
+        "12",
+        "24",
+        "25",
+        "32"
+      ],
+      "secondary_numbers": [
+        "02"
+      ],
+      "sales_amount": 389527084,
+      "pool_amount": 2108784926
+    },
+    {
+      "issue": "2026034",
+      "draw_date": "2026-03-29",
+      "primary_numbers": [
+        "01",
+        "03",
+        "07",
+        "13",
+        "22",
+        "23"
+      ],
+      "secondary_numbers": [
+        "07"
+      ],
+      "sales_amount": 425726210,
+      "pool_amount": 2138784926
+    },
+    {
+      "issue": "2026033",
+      "draw_date": "2026-03-26",
+      "primary_numbers": [
+        "03",
+        "06",
+        "13",
+        "21",
+        "28",
+        "29"
+      ],
+      "secondary_numbers": [
+        "06"
+      ],
+      "sales_amount": 397739574,
+      "pool_amount": 2203784926
+    },
+    {
+      "issue": "2026032",
+      "draw_date": "2026-03-24",
+      "primary_numbers": [
+        "01",
+        "03",
+        "11",
+        "18",
+        "31",
+        "33"
+      ],
+      "secondary_numbers": [
+        "02"
+      ],
+      "sales_amount": 392702390,
+      "pool_amount": 2278784926
+    },
+    {
+      "issue": "2026031",
+      "draw_date": "2026-03-22",
+      "primary_numbers": [
+        "03",
+        "10",
+        "12",
+        "13",
+        "18",
+        "33"
+      ],
+      "secondary_numbers": [
+        "08"
+      ],
+      "sales_amount": 430685136,
+      "pool_amount": 2308784926
+    },
+    {
+      "issue": "2026030",
+      "draw_date": "2026-03-19",
+      "primary_numbers": [
+        "10",
+        "11",
+        "14",
+        "19",
+        "22",
+        "24"
+      ],
+      "secondary_numbers": [
+        "04"
+      ],
+      "sales_amount": 401991268,
+      "pool_amount": 2358784926
+    },
+    {
+      "issue": "2026029",
+      "draw_date": "2026-03-17",
+      "primary_numbers": [
+        "06",
+        "19",
+        "22",
+        "23",
+        "28",
+        "31"
+      ],
+      "secondary_numbers": [
+        "05"
+      ],
+      "sales_amount": 390925844,
+      "pool_amount": 2383784926
+    },
+    {
+      "issue": "2026028",
+      "draw_date": "2026-03-15",
+      "primary_numbers": [
+        "02",
+        "06",
+        "09",
+        "17",
+        "25",
+        "28"
+      ],
+      "secondary_numbers": [
+        "15"
+      ],
+      "sales_amount": 425241582,
+      "pool_amount": 2403784926
+    },
+    {
+      "issue": "2026027",
+      "draw_date": "2026-03-12",
+      "primary_numbers": [
+        "02",
+        "13",
+        "17",
+        "18",
+        "25",
+        "26"
+      ],
+      "secondary_numbers": [
+        "13"
+      ],
+      "sales_amount": 397777968,
+      "pool_amount": 2428784926
+    },
+    {
+      "issue": "2026026",
+      "draw_date": "2026-03-10",
+      "primary_numbers": [
+        "02",
+        "09",
+        "16",
+        "22",
+        "25",
+        "29"
+      ],
+      "secondary_numbers": [
+        "03"
+      ],
+      "sales_amount": 377828982,
+      "pool_amount": 2518926159
+    }
+  ],
+  "fc3d": [
+    {
+      "issue": "2026291",
+      "draw_date": "2026-11-01",
+      "primary_numbers": [
+        "0",
+        "8",
+        "6"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 99205938,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026290",
+      "draw_date": "2026-10-31",
+      "primary_numbers": [
+        "7",
+        "3",
+        "5"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 98013484,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026289",
+      "draw_date": "2026-10-30",
+      "primary_numbers": [
+        "8",
+        "4",
+        "3"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 100121182,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026288",
+      "draw_date": "2026-10-29",
+      "primary_numbers": [
+        "6",
+        "1",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 98279284,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026287",
+      "draw_date": "2026-10-28",
+      "primary_numbers": [
+        "1",
+        "2",
+        "1"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 101470054,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026286",
+      "draw_date": "2026-10-27",
+      "primary_numbers": [
+        "1",
+        "9",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 100468510,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026285",
+      "draw_date": "2026-10-26",
+      "primary_numbers": [
+        "9",
+        "3",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 99355354,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026284",
+      "draw_date": "2026-10-25",
+      "primary_numbers": [
+        "1",
+        "7",
+        "6"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 97106772,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026283",
+      "draw_date": "2026-10-24",
+      "primary_numbers": [
+        "2",
+        "0",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 96685046,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026282",
+      "draw_date": "2026-10-23",
+      "primary_numbers": [
+        "3",
+        "0",
+        "0"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 108680926,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026281",
+      "draw_date": "2026-10-22",
+      "primary_numbers": [
+        "8",
+        "1",
+        "3"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 103092230,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026280",
+      "draw_date": "2026-10-21",
+      "primary_numbers": [
+        "4",
+        "3",
+        "5"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 99542826,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026279",
+      "draw_date": "2026-10-20",
+      "primary_numbers": [
+        "7",
+        "9",
+        "1"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 96142502,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026278",
+      "draw_date": "2026-10-19",
+      "primary_numbers": [
+        "6",
+        "6",
+        "6"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 104768858,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026277",
+      "draw_date": "2026-10-18",
+      "primary_numbers": [
+        "5",
+        "6",
+        "8"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 103487554,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026276",
+      "draw_date": "2026-10-17",
+      "primary_numbers": [
+        "9",
+        "6",
+        "0"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 101608874,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026275",
+      "draw_date": "2026-10-16",
+      "primary_numbers": [
+        "2",
+        "8",
+        "7"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 106583766,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026274",
+      "draw_date": "2026-10-15",
+      "primary_numbers": [
+        "8",
+        "2",
+        "3"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 103583876,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026273",
+      "draw_date": "2026-10-14",
+      "primary_numbers": [
+        "9",
+        "0",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 100404550,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026272",
+      "draw_date": "2026-10-13",
+      "primary_numbers": [
+        "0",
+        "1",
+        "5"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 100832020,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026271",
+      "draw_date": "2026-10-12",
+      "primary_numbers": [
+        "2",
+        "8",
+        "0"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 103211018,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026270",
+      "draw_date": "2026-10-11",
+      "primary_numbers": [
+        "0",
+        "8",
+        "4"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 101830580,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026269",
+      "draw_date": "2026-10-10",
+      "primary_numbers": [
+        "3",
+        "4",
+        "1"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 101283970,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026268",
+      "draw_date": "2026-10-09",
+      "primary_numbers": [
+        "8",
+        "9",
+        "0"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 103871566,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026267",
+      "draw_date": "2026-10-08",
+      "primary_numbers": [
+        "8",
+        "5",
+        "7"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 99125960,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026266",
+      "draw_date": "2026-10-07",
+      "primary_numbers": [
+        "3",
+        "4",
+        "6"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 91197060,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026265",
+      "draw_date": "2026-10-06",
+      "primary_numbers": [
+        "1",
+        "6",
+        "1"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 87684304,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026264",
+      "draw_date": "2026-10-05",
+      "primary_numbers": [
+        "1",
+        "1",
+        "9"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 88928694,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026263",
+      "draw_date": "2026-09-30",
+      "primary_numbers": [
+        "9",
+        "8",
+        "7"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 103864936,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026262",
+      "draw_date": "2026-09-29",
+      "primary_numbers": [
+        "3",
+        "4",
+        "7"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 96846432,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026261",
+      "draw_date": "2026-09-28",
+      "primary_numbers": [
+        "5",
+        "1",
+        "1"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 98832432,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026260",
+      "draw_date": "2026-09-27",
+      "primary_numbers": [
+        "6",
+        "1",
+        "9"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 96943708,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026259",
+      "draw_date": "2026-09-26",
+      "primary_numbers": [
+        "7",
+        "3",
+        "1"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 96542876,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026258",
+      "draw_date": "2026-09-25",
+      "primary_numbers": [
+        "6",
+        "3",
+        "5"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 95669692,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026257",
+      "draw_date": "2026-09-24",
+      "primary_numbers": [
+        "4",
+        "8",
+        "6"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 97749434,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026256",
+      "draw_date": "2026-09-23",
+      "primary_numbers": [
+        "0",
+        "5",
+        "1"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 101368636,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026255",
+      "draw_date": "2026-09-22",
+      "primary_numbers": [
+        "6",
+        "9",
+        "9"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 103419024,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026254",
+      "draw_date": "2026-09-21",
+      "primary_numbers": [
+        "8",
+        "5",
+        "0"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 102498432,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026253",
+      "draw_date": "2026-09-20",
+      "primary_numbers": [
+        "0",
+        "3",
+        "4"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 104791332,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026252",
+      "draw_date": "2026-09-19",
+      "primary_numbers": [
+        "0",
+        "9",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 99448856,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026251",
+      "draw_date": "2026-09-18",
+      "primary_numbers": [
+        "7",
+        "7",
+        "7"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 112900898,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026250",
+      "draw_date": "2026-09-17",
+      "primary_numbers": [
+        "9",
+        "5",
+        "4"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 105900836,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026249",
+      "draw_date": "2026-09-16",
+      "primary_numbers": [
+        "6",
+        "8",
+        "9"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 102027188,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026248",
+      "draw_date": "2026-09-15",
+      "primary_numbers": [
+        "8",
+        "7",
+        "6"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 103199168,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026247",
+      "draw_date": "2026-09-14",
+      "primary_numbers": [
+        "6",
+        "0",
+        "9"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 102179952,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026246",
+      "draw_date": "2026-09-13",
+      "primary_numbers": [
+        "9",
+        "8",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 98247910,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026245",
+      "draw_date": "2026-09-12",
+      "primary_numbers": [
+        "5",
+        "4",
+        "9"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 95511108,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026244",
+      "draw_date": "2026-09-11",
+      "primary_numbers": [
+        "6",
+        "5",
+        "4"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 98530436,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026243",
+      "draw_date": "2026-09-10",
+      "primary_numbers": [
+        "2",
+        "1",
+        "9"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 91668582,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026242",
+      "draw_date": "2026-09-09",
+      "primary_numbers": [
+        "5",
+        "5",
+        "5"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 92602358,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026241",
+      "draw_date": "2026-09-08",
+      "primary_numbers": [
+        "0",
+        "0",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 97418934,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026240",
+      "draw_date": "2026-09-07",
+      "primary_numbers": [
+        "9",
+        "8",
+        "1"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 93199346,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026239",
+      "draw_date": "2026-09-06",
+      "primary_numbers": [
+        "0",
+        "0",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 96172590,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026238",
+      "draw_date": "2026-09-05",
+      "primary_numbers": [
+        "8",
+        "9",
+        "9"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 101277746,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026237",
+      "draw_date": "2026-09-04",
+      "primary_numbers": [
+        "8",
+        "5",
+        "4"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 102044338,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026236",
+      "draw_date": "2026-09-03",
+      "primary_numbers": [
+        "0",
+        "4",
+        "7"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 103055378,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026235",
+      "draw_date": "2026-09-02",
+      "primary_numbers": [
+        "2",
+        "1",
+        "9"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 101179200,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026234",
+      "draw_date": "2026-09-01",
+      "primary_numbers": [
+        "6",
+        "9",
+        "5"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 100945514,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026233",
+      "draw_date": "2026-08-31",
+      "primary_numbers": [
+        "9",
+        "7",
+        "0"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 101106056,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026232",
+      "draw_date": "2026-08-30",
+      "primary_numbers": [
+        "6",
+        "5",
+        "8"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 100737340,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026231",
+      "draw_date": "2026-08-29",
+      "primary_numbers": [
+        "7",
+        "3",
+        "3"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 99547098,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026230",
+      "draw_date": "2026-08-28",
+      "primary_numbers": [
+        "0",
+        "6",
+        "6"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 104695954,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026229",
+      "draw_date": "2026-08-27",
+      "primary_numbers": [
+        "8",
+        "2",
+        "8"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 104741902,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026228",
+      "draw_date": "2026-08-26",
+      "primary_numbers": [
+        "3",
+        "9",
+        "9"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 107058866,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026227",
+      "draw_date": "2026-08-25",
+      "primary_numbers": [
+        "5",
+        "2",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 104266778,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026226",
+      "draw_date": "2026-08-24",
+      "primary_numbers": [
+        "8",
+        "5",
+        "1"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 99249730,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026225",
+      "draw_date": "2026-08-23",
+      "primary_numbers": [
+        "5",
+        "5",
+        "5"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 107577374,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026224",
+      "draw_date": "2026-08-22",
+      "primary_numbers": [
+        "8",
+        "6",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 104875148,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026223",
+      "draw_date": "2026-08-21",
+      "primary_numbers": [
+        "9",
+        "4",
+        "8"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 109896280,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026222",
+      "draw_date": "2026-08-20",
+      "primary_numbers": [
+        "3",
+        "8",
+        "0"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 107512234,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026221",
+      "draw_date": "2026-08-19",
+      "primary_numbers": [
+        "2",
+        "9",
+        "6"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 105700632,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026220",
+      "draw_date": "2026-08-18",
+      "primary_numbers": [
+        "3",
+        "7",
+        "3"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 106804902,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026219",
+      "draw_date": "2026-08-17",
+      "primary_numbers": [
+        "2",
+        "2",
+        "5"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 105692666,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026218",
+      "draw_date": "2026-08-16",
+      "primary_numbers": [
+        "3",
+        "8",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 108117598,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026217",
+      "draw_date": "2026-08-15",
+      "primary_numbers": [
+        "8",
+        "8",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 107924072,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026216",
+      "draw_date": "2026-08-14",
+      "primary_numbers": [
+        "9",
+        "3",
+        "5"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 111654440,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026215",
+      "draw_date": "2026-08-13",
+      "primary_numbers": [
+        "1",
+        "7",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 107614142,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026214",
+      "draw_date": "2026-08-12",
+      "primary_numbers": [
+        "5",
+        "4",
+        "5"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 109910022,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026213",
+      "draw_date": "2026-08-11",
+      "primary_numbers": [
+        "8",
+        "7",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 109153150,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026212",
+      "draw_date": "2026-08-10",
+      "primary_numbers": [
+        "5",
+        "6",
+        "1"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 105944728,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026211",
+      "draw_date": "2026-08-09",
+      "primary_numbers": [
+        "7",
+        "0",
+        "8"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 106241288,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026210",
+      "draw_date": "2026-08-08",
+      "primary_numbers": [
+        "7",
+        "5",
+        "5"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 113312530,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026209",
+      "draw_date": "2026-08-07",
+      "primary_numbers": [
+        "2",
+        "8",
+        "9"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 114564306,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026208",
+      "draw_date": "2026-08-06",
+      "primary_numbers": [
+        "6",
+        "3",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 110194926,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026207",
+      "draw_date": "2026-08-05",
+      "primary_numbers": [
+        "4",
+        "1",
+        "5"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 107407356,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026206",
+      "draw_date": "2026-08-04",
+      "primary_numbers": [
+        "9",
+        "4",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 110155880,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026205",
+      "draw_date": "2026-08-03",
+      "primary_numbers": [
+        "8",
+        "1",
+        "4"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 106516632,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026204",
+      "draw_date": "2026-08-02",
+      "primary_numbers": [
+        "9",
+        "7",
+        "8"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 106652492,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026203",
+      "draw_date": "2026-08-01",
+      "primary_numbers": [
+        "4",
+        "3",
+        "5"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 105017956,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026202",
+      "draw_date": "2026-07-31",
+      "primary_numbers": [
+        "9",
+        "8",
+        "8"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 115106130,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026201",
+      "draw_date": "2026-07-30",
+      "primary_numbers": [
+        "3",
+        "2",
+        "1"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 112870158,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026200",
+      "draw_date": "2026-07-29",
+      "primary_numbers": [
+        "9",
+        "1",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 112497770,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026199",
+      "draw_date": "2026-07-28",
+      "primary_numbers": [
+        "5",
+        "9",
+        "1"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 107329046,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026198",
+      "draw_date": "2026-07-27",
+      "primary_numbers": [
+        "6",
+        "8",
+        "5"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 105595438,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026197",
+      "draw_date": "2026-07-26",
+      "primary_numbers": [
+        "2",
+        "3",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 107804510,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026196",
+      "draw_date": "2026-07-25",
+      "primary_numbers": [
+        "4",
+        "1",
+        "9"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 105675128,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026195",
+      "draw_date": "2026-07-24",
+      "primary_numbers": [
+        "2",
+        "7",
+        "5"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 108062604,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026194",
+      "draw_date": "2026-07-23",
+      "primary_numbers": [
+        "2",
+        "8",
+        "3"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 105643658,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026193",
+      "draw_date": "2026-07-22",
+      "primary_numbers": [
+        "2",
+        "5",
+        "4"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 107397096,
+      "pool_amount": 0
+    },
+    {
+      "issue": "2026192",
+      "draw_date": "2026-07-21",
+      "primary_numbers": [
+        "4",
+        "2",
+        "5"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 106726524,
+      "pool_amount": 0
+    }
+  ],
+  "dlt": [
+    {
+      "issue": "2026124",
+      "draw_date": "2026-10-31",
+      "primary_numbers": [
+        "12",
+        "14",
+        "18",
+        "22",
+        "27"
+      ],
+      "secondary_numbers": [
+        "01",
+        "09"
+      ],
+      "sales_amount": 750797514,
+      "pool_amount": 6
+    },
+    {
+      "issue": "2026123",
+      "draw_date": "2026-10-28",
+      "primary_numbers": [
+        "13",
+        "18",
+        "19",
+        "20",
+        "28"
+      ],
+      "secondary_numbers": [
+        "09",
+        "11"
+      ],
+      "sales_amount": 731643950,
+      "pool_amount": 11
+    },
+    {
+      "issue": "2026122",
+      "draw_date": "2026-10-26",
+      "primary_numbers": [
+        "02",
+        "14",
+        "21",
+        "22",
+        "24"
+      ],
+      "secondary_numbers": [
+        "02",
+        "12"
+      ],
+      "sales_amount": 773998832,
+      "pool_amount": 7
+    },
+    {
+      "issue": "2026121",
+      "draw_date": "2026-10-24",
+      "primary_numbers": [
+        "06",
+        "08",
+        "19",
+        "24",
+        "25"
+      ],
+      "secondary_numbers": [
+        "01",
+        "08"
+      ],
+      "sales_amount": 804119354,
+      "pool_amount": 6
+    },
+    {
+      "issue": "2026120",
+      "draw_date": "2026-10-21",
+      "primary_numbers": [
+        "01",
+        "06",
+        "10",
+        "15",
+        "32"
+      ],
+      "secondary_numbers": [
+        "03",
+        "04"
+      ],
+      "sales_amount": 825893884,
+      "pool_amount": 3
+    },
+    {
+      "issue": "2026119",
+      "draw_date": "2026-10-19",
+      "primary_numbers": [
+        "03",
+        "06",
+        "20",
+        "24",
+        "32"
+      ],
+      "secondary_numbers": [
+        "04",
+        "07"
+      ],
+      "sales_amount": 824436635,
+      "pool_amount": 3
+    },
+    {
+      "issue": "2026118",
+      "draw_date": "2026-10-17",
+      "primary_numbers": [
+        "02",
+        "09",
+        "21",
+        "26",
+        "32"
+      ],
+      "secondary_numbers": [
+        "06",
+        "12"
+      ],
+      "sales_amount": 796723787,
+      "pool_amount": 2
+    },
+    {
+      "issue": "2026117",
+      "draw_date": "2026-10-14",
+      "primary_numbers": [
+        "04",
+        "13",
+        "19",
+        "29",
+        "31"
+      ],
+      "secondary_numbers": [
+        "02",
+        "12"
+      ],
+      "sales_amount": 746384997,
+      "pool_amount": 10
+    },
+    {
+      "issue": "2026116",
+      "draw_date": "2026-10-12",
+      "primary_numbers": [
+        "09",
+        "18",
+        "22",
+        "25",
+        "35"
+      ],
+      "secondary_numbers": [
+        "01",
+        "10"
+      ],
+      "sales_amount": 780428328,
+      "pool_amount": 2
+    },
+    {
+      "issue": "2026115",
+      "draw_date": "2026-10-10",
+      "primary_numbers": [
+        "12",
+        "20",
+        "32",
+        "33",
+        "35"
+      ],
+      "secondary_numbers": [
+        "06",
+        "07"
+      ],
+      "sales_amount": 733972024,
+      "pool_amount": 10
+    },
+    {
+      "issue": "2026114",
+      "draw_date": "2026-10-07",
+      "primary_numbers": [
+        "08",
+        "12",
+        "15",
+        "29",
+        "30"
+      ],
+      "secondary_numbers": [
+        "09",
+        "12"
+      ],
+      "sales_amount": 747810334,
+      "pool_amount": 5
+    },
+    {
+      "issue": "2026113",
+      "draw_date": "2026-10-05",
+      "primary_numbers": [
+        "02",
+        "04",
+        "06",
+        "10",
+        "11"
+      ],
+      "secondary_numbers": [
+        "01",
+        "10"
+      ],
+      "sales_amount": 733622134,
+      "pool_amount": 37
+    },
+    {
+      "issue": "2026112",
+      "draw_date": "2026-09-30",
+      "primary_numbers": [
+        "01",
+        "03",
+        "05",
+        "10",
+        "22"
+      ],
+      "secondary_numbers": [
+        "03",
+        "09"
+      ],
+      "sales_amount": 798649741,
+      "pool_amount": 6
+    },
+    {
+      "issue": "2026111",
+      "draw_date": "2026-09-28",
+      "primary_numbers": [
+        "10",
+        "11",
+        "17",
+        "26",
+        "29"
+      ],
+      "secondary_numbers": [
+        "01",
+        "03"
+      ],
+      "sales_amount": 819506211,
+      "pool_amount": 7
+    },
+    {
+      "issue": "2026110",
+      "draw_date": "2026-09-26",
+      "primary_numbers": [
+        "03",
+        "24",
+        "25",
+        "26",
+        "35"
+      ],
+      "secondary_numbers": [
+        "07",
+        "09"
+      ],
+      "sales_amount": 853999858,
+      "pool_amount": 6
+    },
+    {
+      "issue": "2026109",
+      "draw_date": "2026-09-23",
+      "primary_numbers": [
+        "12",
+        "14",
+        "16",
+        "27",
+        "34"
+      ],
+      "secondary_numbers": [
+        "04",
+        "08"
+      ],
+      "sales_amount": 875294743,
+      "pool_amount": 1
+    },
+    {
+      "issue": "2026108",
+      "draw_date": "2026-09-21",
+      "primary_numbers": [
+        "01",
+        "05",
+        "07",
+        "21",
+        "35"
+      ],
+      "secondary_numbers": [
+        "01",
+        "04"
+      ],
+      "sales_amount": 845758402,
+      "pool_amount": 3
+    },
+    {
+      "issue": "2026107",
+      "draw_date": "2026-09-19",
+      "primary_numbers": [
+        "02",
+        "05",
+        "07",
+        "14",
+        "22"
+      ],
+      "secondary_numbers": [
+        "04",
+        "10"
+      ],
+      "sales_amount": 831053727,
+      "pool_amount": 3
+    },
+    {
+      "issue": "2026106",
+      "draw_date": "2026-09-16",
+      "primary_numbers": [
+        "14",
+        "17",
+        "21",
+        "25",
+        "28"
+      ],
+      "secondary_numbers": [
+        "04",
+        "06"
+      ],
+      "sales_amount": 826970067,
+      "pool_amount": 3
+    },
+    {
+      "issue": "2026105",
+      "draw_date": "2026-09-14",
+      "primary_numbers": [
+        "10",
+        "14",
+        "30",
+        "33",
+        "34"
+      ],
+      "secondary_numbers": [
+        "09",
+        "12"
+      ],
+      "sales_amount": 797986462,
+      "pool_amount": 3
+    },
+    {
+      "issue": "2026104",
+      "draw_date": "2026-09-12",
+      "primary_numbers": [
+        "01",
+        "06",
+        "14",
+        "15",
+        "26"
+      ],
+      "secondary_numbers": [
+        "08",
+        "09"
+      ],
+      "sales_amount": 768328091,
+      "pool_amount": 7
+    },
+    {
+      "issue": "2026103",
+      "draw_date": "2026-09-09",
+      "primary_numbers": [
+        "03",
+        "16",
+        "17",
+        "32",
+        "35"
+      ],
+      "secondary_numbers": [
+        "02",
+        "12"
+      ],
+      "sales_amount": 763164025,
+      "pool_amount": 3
+    },
+    {
+      "issue": "2026102",
+      "draw_date": "2026-09-07",
+      "primary_numbers": [
+        "01",
+        "03",
+        "07",
+        "27",
+        "28"
+      ],
+      "secondary_numbers": [
+        "06",
+        "07"
+      ],
+      "sales_amount": 725321799,
+      "pool_amount": 1
+    },
+    {
+      "issue": "2026101",
+      "draw_date": "2026-09-05",
+      "primary_numbers": [
+        "09",
+        "11",
+        "18",
+        "26",
+        "33"
+      ],
+      "secondary_numbers": [
+        "09",
+        "11"
+      ],
+      "sales_amount": 692723357,
+      "pool_amount": 10
+    },
+    {
+      "issue": "2026100",
+      "draw_date": "2026-09-02",
+      "primary_numbers": [
+        "02",
+        "06",
+        "11",
+        "15",
+        "31"
+      ],
+      "secondary_numbers": [
+        "07",
+        "08"
+      ],
+      "sales_amount": 728785802,
+      "pool_amount": 6
+    },
+    {
+      "issue": "2026099",
+      "draw_date": "2026-08-31",
+      "primary_numbers": [
+        "02",
+        "17",
+        "20",
+        "29",
+        "33"
+      ],
+      "secondary_numbers": [
+        "08",
+        "09"
+      ],
+      "sales_amount": 728556728,
+      "pool_amount": 4
+    },
+    {
+      "issue": "2026098",
+      "draw_date": "2026-08-29",
+      "primary_numbers": [
+        "07",
+        "09",
+        "18",
+        "19",
+        "21"
+      ],
+      "secondary_numbers": [
+        "02",
+        "09"
+      ],
+      "sales_amount": 706544164,
+      "pool_amount": 15
+    },
+    {
+      "issue": "2026097",
+      "draw_date": "2026-08-26",
+      "primary_numbers": [
+        "03",
+        "10",
+        "12",
+        "20",
+        "25"
+      ],
+      "secondary_numbers": [
+        "01",
+        "09"
+      ],
+      "sales_amount": 762988476,
+      "pool_amount": 7
+    },
+    {
+      "issue": "2026096",
+      "draw_date": "2026-08-24",
+      "primary_numbers": [
+        "08",
+        "09",
+        "10",
+        "11",
+        "25"
+      ],
+      "secondary_numbers": [
+        "04",
+        "12"
+      ],
+      "sales_amount": 760346716,
+      "pool_amount": 9
+    },
+    {
+      "issue": "2026095",
+      "draw_date": "2026-08-22",
+      "primary_numbers": [
+        "04",
+        "06",
+        "08",
+        "10",
+        "14"
+      ],
+      "secondary_numbers": [
+        "04",
+        "05"
+      ],
+      "sales_amount": 801693150,
+      "pool_amount": 6
+    },
+    {
+      "issue": "2026094",
+      "draw_date": "2026-08-19",
+      "primary_numbers": [
+        "05",
+        "14",
+        "15",
+        "17",
+        "33"
+      ],
+      "secondary_numbers": [
+        "01",
+        "07"
+      ],
+      "sales_amount": 795085879,
+      "pool_amount": 3
+    },
+    {
+      "issue": "2026093",
+      "draw_date": "2026-08-17",
+      "primary_numbers": [
+        "08",
+        "10",
+        "22",
+        "26",
+        "29"
+      ],
+      "secondary_numbers": [
+        "03",
+        "10"
+      ],
+      "sales_amount": 772986653,
+      "pool_amount": 10
+    },
+    {
+      "issue": "2026092",
+      "draw_date": "2026-08-15",
+      "primary_numbers": [
+        "12",
+        "16",
+        "19",
+        "29",
+        "33"
+      ],
+      "secondary_numbers": [
+        "07",
+        "09"
+      ],
+      "sales_amount": 822403232,
+      "pool_amount": 4
+    },
+    {
+      "issue": "2026091",
+      "draw_date": "2026-08-12",
+      "primary_numbers": [
+        "03",
+        "04",
+        "07",
+        "12",
+        "32"
+      ],
+      "secondary_numbers": [
+        "01",
+        "02"
+      ],
+      "sales_amount": 835359282,
+      "pool_amount": 3
+    },
+    {
+      "issue": "2026090",
+      "draw_date": "2026-08-10",
+      "primary_numbers": [
+        "09",
+        "14",
+        "17",
+        "19",
+        "24"
+      ],
+      "secondary_numbers": [
+        "02",
+        "09"
+      ],
+      "sales_amount": 825721619,
+      "pool_amount": 2
+    },
+    {
+      "issue": "2026089",
+      "draw_date": "2026-08-08",
+      "primary_numbers": [
+        "03",
+        "07",
+        "12",
+        "14",
+        "26"
+      ],
+      "secondary_numbers": [
+        "05",
+        "11"
+      ],
+      "sales_amount": 817996545,
+      "pool_amount": 3
+    },
+    {
+      "issue": "2026088",
+      "draw_date": "2026-08-05",
+      "primary_numbers": [
+        "03",
+        "09",
+        "11",
+        "24",
+        "27"
+      ],
+      "secondary_numbers": [
+        "05",
+        "11"
+      ],
+      "sales_amount": 792266898,
+      "pool_amount": 2
+    },
+    {
+      "issue": "2026087",
+      "draw_date": "2026-08-03",
+      "primary_numbers": [
+        "05",
+        "10",
+        "16",
+        "24",
+        "27"
+      ],
+      "secondary_numbers": [
+        "04",
+        "10"
+      ],
+      "sales_amount": 768406559,
+      "pool_amount": 9
+    },
+    {
+      "issue": "2026086",
+      "draw_date": "2026-08-01",
+      "primary_numbers": [
+        "10",
+        "11",
+        "18",
+        "22",
+        "35"
+      ],
+      "secondary_numbers": [
+        "06",
+        "12"
+      ],
+      "sales_amount": 813207390,
+      "pool_amount": 2
+    },
+    {
+      "issue": "2026085",
+      "draw_date": "2026-07-29",
+      "primary_numbers": [
+        "03",
+        "04",
+        "14",
+        "28",
+        "31"
+      ],
+      "secondary_numbers": [
+        "05",
+        "07"
+      ],
+      "sales_amount": 804161465,
+      "pool_amount": 2
+    },
+    {
+      "issue": "2026084",
+      "draw_date": "2026-07-27",
+      "primary_numbers": [
+        "13",
+        "25",
+        "30",
+        "32",
+        "33"
+      ],
+      "secondary_numbers": [
+        "04",
+        "05"
+      ],
+      "sales_amount": 770490758,
+      "pool_amount": 8
+    },
+    {
+      "issue": "2026083",
+      "draw_date": "2026-07-25",
+      "primary_numbers": [
+        "14",
+        "15",
+        "16",
+        "23",
+        "26"
+      ],
+      "secondary_numbers": [
+        "07",
+        "09"
+      ],
+      "sales_amount": 772867560,
+      "pool_amount": 8
+    },
+    {
+      "issue": "2026082",
+      "draw_date": "2026-07-22",
+      "primary_numbers": [
+        "16",
+        "26",
+        "27",
+        "28",
+        "34"
+      ],
+      "secondary_numbers": [
+        "02",
+        "06"
+      ],
+      "sales_amount": 807119056,
+      "pool_amount": 5
+    },
+    {
+      "issue": "2026081",
+      "draw_date": "2026-07-20",
+      "primary_numbers": [
+        "08",
+        "16",
+        "18",
+        "24",
+        "34"
+      ],
+      "secondary_numbers": [
+        "09",
+        "12"
+      ],
+      "sales_amount": 784468404,
+      "pool_amount": 5
+    },
+    {
+      "issue": "2026080",
+      "draw_date": "2026-07-18",
+      "primary_numbers": [
+        "05",
+        "10",
+        "15",
+        "21",
+        "23"
+      ],
+      "secondary_numbers": [
+        "07",
+        "08"
+      ],
+      "sales_amount": 765513154,
+      "pool_amount": 10
+    },
+    {
+      "issue": "2026079",
+      "draw_date": "2026-07-15",
+      "primary_numbers": [
+        "06",
+        "08",
+        "23",
+        "26",
+        "27"
+      ],
+      "secondary_numbers": [
+        "05",
+        "12"
+      ],
+      "sales_amount": 794651243,
+      "pool_amount": 5
+    },
+    {
+      "issue": "2026078",
+      "draw_date": "2026-07-13",
+      "primary_numbers": [
+        "02",
+        "13",
+        "20",
+        "25",
+        "32"
+      ],
+      "secondary_numbers": [
+        "08",
+        "11"
+      ],
+      "sales_amount": 818797138,
+      "pool_amount": 5
+    },
+    {
+      "issue": "2026077",
+      "draw_date": "2026-07-11",
+      "primary_numbers": [
+        "04",
+        "14",
+        "19",
+        "24",
+        "27"
+      ],
+      "secondary_numbers": [
+        "06",
+        "07"
+      ],
+      "sales_amount": 797164073,
+      "pool_amount": 2
+    },
+    {
+      "issue": "2026076",
+      "draw_date": "2026-07-08",
+      "primary_numbers": [
+        "15",
+        "20",
+        "27",
+        "28",
+        "35"
+      ],
+      "secondary_numbers": [
+        "02",
+        "11"
+      ],
+      "sales_amount": 804904837,
+      "pool_amount": 4
+    },
+    {
+      "issue": "2026075",
+      "draw_date": "2026-07-06",
+      "primary_numbers": [
+        "01",
+        "06",
+        "16",
+        "18",
+        "26"
+      ],
+      "secondary_numbers": [
+        "04",
+        "10"
+      ],
+      "sales_amount": 814593834,
+      "pool_amount": 3
+    },
+    {
+      "issue": "2026074",
+      "draw_date": "2026-07-04",
+      "primary_numbers": [
+        "01",
+        "04",
+        "10",
+        "23",
+        "25"
+      ],
+      "secondary_numbers": [
+        "01",
+        "12"
+      ],
+      "sales_amount": 818314177,
+      "pool_amount": 6
+    },
+    {
+      "issue": "2026073",
+      "draw_date": "2026-07-01",
+      "primary_numbers": [
+        "04",
+        "10",
+        "22",
+        "23",
+        "33"
+      ],
+      "secondary_numbers": [
+        "02",
+        "12"
+      ],
+      "sales_amount": 798037522,
+      "pool_amount": 6
+    },
+    {
+      "issue": "2026072",
+      "draw_date": "2026-06-29",
+      "primary_numbers": [
+        "01",
+        "13",
+        "26",
+        "29",
+        "30"
+      ],
+      "secondary_numbers": [
+        "09",
+        "11"
+      ],
+      "sales_amount": 820383228,
+      "pool_amount": 5
+    },
+    {
+      "issue": "2026071",
+      "draw_date": "2026-06-27",
+      "primary_numbers": [
+        "05",
+        "13",
+        "22",
+        "26",
+        "32"
+      ],
+      "secondary_numbers": [
+        "02",
+        "03"
+      ],
+      "sales_amount": 844492277,
+      "pool_amount": 1
+    },
+    {
+      "issue": "2026070",
+      "draw_date": "2026-06-24",
+      "primary_numbers": [
+        "04",
+        "05",
+        "15",
+        "21",
+        "32"
+      ],
+      "secondary_numbers": [
+        "02",
+        "11"
+      ],
+      "sales_amount": 814894462,
+      "pool_amount": 1
+    },
+    {
+      "issue": "2026069",
+      "draw_date": "2026-06-22",
+      "primary_numbers": [
+        "12",
+        "19",
+        "21",
+        "24",
+        "29"
+      ],
+      "secondary_numbers": [
+        "03",
+        "10"
+      ],
+      "sales_amount": 757966458,
+      "pool_amount": 8
+    },
+    {
+      "issue": "2026068",
+      "draw_date": "2026-06-20",
+      "primary_numbers": [
+        "03",
+        "11",
+        "12",
+        "21",
+        "22"
+      ],
+      "secondary_numbers": [
+        "06",
+        "10"
+      ],
+      "sales_amount": 802145381,
+      "pool_amount": 5
+    },
+    {
+      "issue": "2026067",
+      "draw_date": "2026-06-17",
+      "primary_numbers": [
+        "06",
+        "16",
+        "18",
+        "19",
+        "28"
+      ],
+      "secondary_numbers": [
+        "07",
+        "11"
+      ],
+      "sales_amount": 791339917,
+      "pool_amount": 6
+    },
+    {
+      "issue": "2026066",
+      "draw_date": "2026-06-15",
+      "primary_numbers": [
+        "10",
+        "13",
+        "19",
+        "21",
+        "30"
+      ],
+      "secondary_numbers": [
+        "04",
+        "05"
+      ],
+      "sales_amount": 817519005,
+      "pool_amount": 2
+    },
+    {
+      "issue": "2026065",
+      "draw_date": "2026-06-13",
+      "primary_numbers": [
+        "04",
+        "11",
+        "12",
+        "13",
+        "25"
+      ],
+      "secondary_numbers": [
+        "04",
+        "08"
+      ],
+      "sales_amount": 802840285,
+      "pool_amount": 6
+    },
+    {
+      "issue": "2026064",
+      "draw_date": "2026-06-10",
+      "primary_numbers": [
+        "03",
+        "13",
+        "15",
+        "17",
+        "21"
+      ],
+      "secondary_numbers": [
+        "02",
+        "07"
+      ],
+      "sales_amount": 787631261,
+      "pool_amount": 4
+    },
+    {
+      "issue": "2026063",
+      "draw_date": "2026-06-08",
+      "primary_numbers": [
+        "03",
+        "15",
+        "20",
+        "29",
+        "31"
+      ],
+      "secondary_numbers": [
+        "01",
+        "12"
+      ],
+      "sales_amount": 762261292,
+      "pool_amount": 5
+    },
+    {
+      "issue": "2026062",
+      "draw_date": "2026-06-06",
+      "primary_numbers": [
+        "07",
+        "15",
+        "20",
+        "24",
+        "29"
+      ],
+      "secondary_numbers": [
+        "04",
+        "10"
+      ],
+      "sales_amount": 738675961,
+      "pool_amount": 15
+    },
+    {
+      "issue": "2026061",
+      "draw_date": "2026-06-03",
+      "primary_numbers": [
+        "10",
+        "12",
+        "26",
+        "31",
+        "35"
+      ],
+      "secondary_numbers": [
+        "02",
+        "12"
+      ],
+      "sales_amount": 807705564,
+      "pool_amount": 4
+    },
+    {
+      "issue": "2026060",
+      "draw_date": "2026-06-01",
+      "primary_numbers": [
+        "22",
+        "28",
+        "30",
+        "31",
+        "34"
+      ],
+      "secondary_numbers": [
+        "01",
+        "05"
+      ],
+      "sales_amount": 769160539,
+      "pool_amount": 37
+    },
+    {
+      "issue": "2026059",
+      "draw_date": "2026-05-30",
+      "primary_numbers": [
+        "06",
+        "13",
+        "17",
+        "19",
+        "26"
+      ],
+      "secondary_numbers": [
+        "07",
+        "08"
+      ],
+      "sales_amount": 818749861,
+      "pool_amount": 3
+    },
+    {
+      "issue": "2026058",
+      "draw_date": "2026-05-27",
+      "primary_numbers": [
+        "07",
+        "12",
+        "13",
+        "18",
+        "34"
+      ],
+      "secondary_numbers": [
+        "01",
+        "05"
+      ],
+      "sales_amount": 786536914,
+      "pool_amount": 5
+    },
+    {
+      "issue": "2026057",
+      "draw_date": "2026-05-25",
+      "primary_numbers": [
+        "23",
+        "25",
+        "26",
+        "27",
+        "34"
+      ],
+      "secondary_numbers": [
+        "04",
+        "10"
+      ],
+      "sales_amount": 801147297,
+      "pool_amount": 4
+    },
+    {
+      "issue": "2026056",
+      "draw_date": "2026-05-23",
+      "primary_numbers": [
+        "06",
+        "07",
+        "18",
+        "21",
+        "30"
+      ],
+      "secondary_numbers": [
+        "01",
+        "05"
+      ],
+      "sales_amount": 767589410,
+      "pool_amount": 6
+    },
+    {
+      "issue": "2026055",
+      "draw_date": "2026-05-20",
+      "primary_numbers": [
+        "09",
+        "10",
+        "20",
+        "33",
+        "35"
+      ],
+      "secondary_numbers": [
+        "04",
+        "11"
+      ],
+      "sales_amount": 757078646,
+      "pool_amount": 4
+    },
+    {
+      "issue": "2026054",
+      "draw_date": "2026-05-18",
+      "primary_numbers": [
+        "02",
+        "06",
+        "14",
+        "22",
+        "24"
+      ],
+      "secondary_numbers": [
+        "08",
+        "11"
+      ],
+      "sales_amount": 718927618,
+      "pool_amount": 13
+    },
+    {
+      "issue": "2026053",
+      "draw_date": "2026-05-16",
+      "primary_numbers": [
+        "02",
+        "09",
+        "14",
+        "20",
+        "31"
+      ],
+      "secondary_numbers": [
+        "05",
+        "09"
+      ],
+      "sales_amount": 738749152,
+      "pool_amount": 14
+    },
+    {
+      "issue": "2026052",
+      "draw_date": "2026-05-13",
+      "primary_numbers": [
+        "02",
+        "03",
+        "20",
+        "28",
+        "33"
+      ],
+      "secondary_numbers": [
+        "02",
+        "12"
+      ],
+      "sales_amount": 782179260,
+      "pool_amount": 9
+    },
+    {
+      "issue": "2026051",
+      "draw_date": "2026-05-11",
+      "primary_numbers": [
+        "13",
+        "18",
+        "28",
+        "32",
+        "33"
+      ],
+      "secondary_numbers": [
+        "02",
+        "11"
+      ],
+      "sales_amount": 799348751,
+      "pool_amount": 4
+    },
+    {
+      "issue": "2026050",
+      "draw_date": "2026-05-09",
+      "primary_numbers": [
+        "06",
+        "10",
+        "14",
+        "23",
+        "33"
+      ],
+      "secondary_numbers": [
+        "08",
+        "10"
+      ],
+      "sales_amount": 812279269,
+      "pool_amount": 6
+    },
+    {
+      "issue": "2026049",
+      "draw_date": "2026-05-06",
+      "primary_numbers": [
+        "01",
+        "06",
+        "14",
+        "15",
+        "17"
+      ],
+      "secondary_numbers": [
+        "02",
+        "03"
+      ],
+      "sales_amount": 786081563,
+      "pool_amount": 6
+    },
+    {
+      "issue": "2026048",
+      "draw_date": "2026-05-04",
+      "primary_numbers": [
+        "11",
+        "17",
+        "20",
+        "23",
+        "35"
+      ],
+      "secondary_numbers": [
+        "01",
+        "10"
+      ],
+      "sales_amount": 778139138,
+      "pool_amount": 7
+    },
+    {
+      "issue": "2026047",
+      "draw_date": "2026-05-02",
+      "primary_numbers": [
+        "09",
+        "20",
+        "21",
+        "23",
+        "28"
+      ],
+      "secondary_numbers": [
+        "06",
+        "11"
+      ],
+      "sales_amount": 776088009,
+      "pool_amount": 5
+    },
+    {
+      "issue": "2026046",
+      "draw_date": "2026-04-29",
+      "primary_numbers": [
+        "01",
+        "13",
+        "18",
+        "27",
+        "33"
+      ],
+      "secondary_numbers": [
+        "04",
+        "07"
+      ],
+      "sales_amount": 801117818,
+      "pool_amount": 6
+    },
+    {
+      "issue": "2026045",
+      "draw_date": "2026-04-27",
+      "primary_numbers": [
+        "01",
+        "15",
+        "21",
+        "26",
+        "33"
+      ],
+      "secondary_numbers": [
+        "04",
+        "07"
+      ],
+      "sales_amount": 795611860,
+      "pool_amount": 7
+    },
+    {
+      "issue": "2026044",
+      "draw_date": "2026-04-25",
+      "primary_numbers": [
+        "03",
+        "08",
+        "22",
+        "26",
+        "29"
+      ],
+      "secondary_numbers": [
+        "07",
+        "10"
+      ],
+      "sales_amount": 796949218,
+      "pool_amount": 8
+    },
+    {
+      "issue": "2026043",
+      "draw_date": "2026-04-22",
+      "primary_numbers": [
+        "08",
+        "12",
+        "14",
+        "19",
+        "22"
+      ],
+      "secondary_numbers": [
+        "11",
+        "12"
+      ],
+      "sales_amount": 835097420,
+      "pool_amount": 1
+    },
+    {
+      "issue": "2026042",
+      "draw_date": "2026-04-20",
+      "primary_numbers": [
+        "02",
+        "07",
+        "13",
+        "19",
+        "24"
+      ],
+      "secondary_numbers": [
+        "03",
+        "08"
+      ],
+      "sales_amount": 783361004,
+      "pool_amount": 5
+    },
+    {
+      "issue": "2026041",
+      "draw_date": "2026-04-18",
+      "primary_numbers": [
+        "24",
+        "25",
+        "27",
+        "29",
+        "34"
+      ],
+      "secondary_numbers": [
+        "02",
+        "06"
+      ],
+      "sales_amount": 804564900,
+      "pool_amount": 6
+    },
+    {
+      "issue": "2026040",
+      "draw_date": "2026-04-15",
+      "primary_numbers": [
+        "06",
+        "12",
+        "13",
+        "21",
+        "34"
+      ],
+      "secondary_numbers": [
+        "08",
+        "09"
+      ],
+      "sales_amount": 776038689,
+      "pool_amount": 6
+    },
+    {
+      "issue": "2026039",
+      "draw_date": "2026-04-13",
+      "primary_numbers": [
+        "09",
+        "11",
+        "20",
+        "26",
+        "27"
+      ],
+      "secondary_numbers": [
+        "06",
+        "09"
+      ],
+      "sales_amount": 760888094,
+      "pool_amount": 11
+    },
+    {
+      "issue": "2026038",
+      "draw_date": "2026-04-11",
+      "primary_numbers": [
+        "08",
+        "17",
+        "21",
+        "33",
+        "35"
+      ],
+      "secondary_numbers": [
+        "06",
+        "07"
+      ],
+      "sales_amount": 799997856,
+      "pool_amount": 2
+    },
+    {
+      "issue": "2026037",
+      "draw_date": "2026-04-08",
+      "primary_numbers": [
+        "07",
+        "12",
+        "13",
+        "28",
+        "32"
+      ],
+      "secondary_numbers": [
+        "06",
+        "08"
+      ],
+      "sales_amount": 756781636,
+      "pool_amount": 5
+    },
+    {
+      "issue": "2026036",
+      "draw_date": "2026-04-06",
+      "primary_numbers": [
+        "04",
+        "07",
+        "16",
+        "26",
+        "32"
+      ],
+      "secondary_numbers": [
+        "05",
+        "08"
+      ],
+      "sales_amount": 732445105,
+      "pool_amount": 9
+    },
+    {
+      "issue": "2026035",
+      "draw_date": "2026-04-04",
+      "primary_numbers": [
+        "02",
+        "22",
+        "30",
+        "33",
+        "34"
+      ],
+      "secondary_numbers": [
+        "08",
+        "12"
+      ],
+      "sales_amount": 744740092,
+      "pool_amount": 11
+    },
+    {
+      "issue": "2026034",
+      "draw_date": "2026-04-01",
+      "primary_numbers": [
+        "11",
+        "12",
+        "25",
+        "26",
+        "27"
+      ],
+      "secondary_numbers": [
+        "08",
+        "11"
+      ],
+      "sales_amount": 745020716,
+      "pool_amount": 6
+    },
+    {
+      "issue": "2026033",
+      "draw_date": "2026-03-30",
+      "primary_numbers": [
+        "03",
+        "05",
+        "07",
+        "09",
+        "18"
+      ],
+      "secondary_numbers": [
+        "02",
+        "10"
+      ],
+      "sales_amount": 743671788,
+      "pool_amount": 12
+    },
+    {
+      "issue": "2026032",
+      "draw_date": "2026-03-28",
+      "primary_numbers": [
+        "03",
+        "04",
+        "19",
+        "26",
+        "32"
+      ],
+      "secondary_numbers": [
+        "01",
+        "12"
+      ],
+      "sales_amount": 787204236,
+      "pool_amount": 6
+    },
+    {
+      "issue": "2026031",
+      "draw_date": "2026-03-25",
+      "primary_numbers": [
+        "06",
+        "08",
+        "22",
+        "29",
+        "34"
+      ],
+      "secondary_numbers": [
+        "05",
+        "07"
+      ],
+      "sales_amount": 762397268,
+      "pool_amount": 9
+    },
+    {
+      "issue": "2026030",
+      "draw_date": "2026-03-23",
+      "primary_numbers": [
+        "02",
+        "13",
+        "22",
+        "28",
+        "34"
+      ],
+      "secondary_numbers": [
+        "05",
+        "12"
+      ],
+      "sales_amount": 801741817,
+      "pool_amount": 8
+    },
+    {
+      "issue": "2026029",
+      "draw_date": "2026-03-21",
+      "primary_numbers": [
+        "03",
+        "05",
+        "17",
+        "33",
+        "35"
+      ],
+      "secondary_numbers": [
+        "05",
+        "07"
+      ],
+      "sales_amount": 834276730,
+      "pool_amount": 6
+    },
+    {
+      "issue": "2026028",
+      "draw_date": "2026-03-18",
+      "primary_numbers": [
+        "15",
+        "27",
+        "29",
+        "30",
+        "34"
+      ],
+      "secondary_numbers": [
+        "01",
+        "10"
+      ],
+      "sales_amount": 861344046,
+      "pool_amount": 1
+    },
+    {
+      "issue": "2026027",
+      "draw_date": "2026-03-16",
+      "primary_numbers": [
+        "09",
+        "10",
+        "11",
+        "12",
+        "16"
+      ],
+      "secondary_numbers": [
+        "01",
+        "11"
+      ],
+      "sales_amount": 799972392,
+      "pool_amount": 7
+    },
+    {
+      "issue": "2026026",
+      "draw_date": "2026-03-14",
+      "primary_numbers": [
+        "10",
+        "11",
+        "22",
+        "26",
+        "32"
+      ],
+      "secondary_numbers": [
+        "01",
+        "08"
+      ],
+      "sales_amount": 794063794,
+      "pool_amount": 3
+    },
+    {
+      "issue": "2026025",
+      "draw_date": "2026-03-11",
+      "primary_numbers": [
+        "03",
+        "15",
+        "24",
+        "28",
+        "29"
+      ],
+      "secondary_numbers": [
+        "03",
+        "07"
+      ],
+      "sales_amount": 761949362,
+      "pool_amount": 10
+    }
+  ],
+  "qxc": [
+    {
+      "issue": "2026125",
+      "draw_date": "2026-11-01",
+      "primary_numbers": [
+        "2",
+        "9",
+        "4",
+        "5",
+        "6",
+        "3"
+      ],
+      "secondary_numbers": [
+        "02"
+      ],
+      "sales_amount": 31,
+      "pool_amount": 14020048
+    },
+    {
+      "issue": "2026124",
+      "draw_date": "2026-10-30",
+      "primary_numbers": [
+        "2",
+        "1",
+        "2",
+        "1",
+        "9",
+        "1"
+      ],
+      "secondary_numbers": [
+        "06"
+      ],
+      "sales_amount": 22,
+      "pool_amount": 23715650
+    },
+    {
+      "issue": "2026123",
+      "draw_date": "2026-10-27",
+      "primary_numbers": [
+        "5",
+        "1",
+        "8",
+        "0",
+        "8",
+        "0"
+      ],
+      "secondary_numbers": [
+        "02"
+      ],
+      "sales_amount": 24,
+      "pool_amount": 15663882
+    },
+    {
+      "issue": "2026122",
+      "draw_date": "2026-10-25",
+      "primary_numbers": [
+        "9",
+        "9",
+        "7",
+        "5",
+        "0",
+        "4"
+      ],
+      "secondary_numbers": [
+        "09"
+      ],
+      "sales_amount": 43,
+      "pool_amount": 15998982
+    },
+    {
+      "issue": "2026121",
+      "draw_date": "2026-10-23",
+      "primary_numbers": [
+        "9",
+        "5",
+        "5",
+        "6",
+        "6",
+        "2"
+      ],
+      "secondary_numbers": [
+        "04"
+      ],
+      "sales_amount": 37,
+      "pool_amount": 23196448
+    },
+    {
+      "issue": "2026120",
+      "draw_date": "2026-10-20",
+      "primary_numbers": [
+        "8",
+        "9",
+        "1",
+        "1",
+        "5",
+        "9"
+      ],
+      "secondary_numbers": [
+        "05"
+      ],
+      "sales_amount": 38,
+      "pool_amount": 15416824
+    },
+    {
+      "issue": "2026119",
+      "draw_date": "2026-10-18",
+      "primary_numbers": [
+        "5",
+        "2",
+        "7",
+        "0",
+        "1",
+        "0"
+      ],
+      "secondary_numbers": [
+        "11"
+      ],
+      "sales_amount": 26,
+      "pool_amount": 15945192
+    },
+    {
+      "issue": "2026118",
+      "draw_date": "2026-10-16",
+      "primary_numbers": [
+        "0",
+        "6",
+        "8",
+        "4",
+        "2",
+        "8"
+      ],
+      "secondary_numbers": [
+        "07"
+      ],
+      "sales_amount": 35,
+      "pool_amount": 23608974
+    },
+    {
+      "issue": "2026117",
+      "draw_date": "2026-10-13",
+      "primary_numbers": [
+        "7",
+        "7",
+        "5",
+        "5",
+        "1",
+        "3"
+      ],
+      "secondary_numbers": [
+        "11"
+      ],
+      "sales_amount": 39,
+      "pool_amount": 15523102
+    },
+    {
+      "issue": "2026116",
+      "draw_date": "2026-10-11",
+      "primary_numbers": [
+        "8",
+        "7",
+        "1",
+        "5",
+        "7",
+        "0"
+      ],
+      "secondary_numbers": [
+        "06"
+      ],
+      "sales_amount": 34,
+      "pool_amount": 15998496
+    },
+    {
+      "issue": "2026115",
+      "draw_date": "2026-10-09",
+      "primary_numbers": [
+        "6",
+        "3",
+        "9",
+        "3",
+        "7",
+        "3"
+      ],
+      "secondary_numbers": [
+        "03"
+      ],
+      "sales_amount": 34,
+      "pool_amount": 23907286
+    },
+    {
+      "issue": "2026114",
+      "draw_date": "2026-10-06",
+      "primary_numbers": [
+        "1",
+        "3",
+        "8",
+        "4",
+        "1",
+        "5"
+      ],
+      "secondary_numbers": [
+        "09"
+      ],
+      "sales_amount": 31,
+      "pool_amount": 16531850
+    },
+    {
+      "issue": "2026113",
+      "draw_date": "2026-09-29",
+      "primary_numbers": [
+        "7",
+        "0",
+        "6",
+        "8",
+        "7",
+        "4"
+      ],
+      "secondary_numbers": [
+        "00"
+      ],
+      "sales_amount": 32,
+      "pool_amount": 16144844
+    },
+    {
+      "issue": "2026112",
+      "draw_date": "2026-09-27",
+      "primary_numbers": [
+        "4",
+        "2",
+        "6",
+        "4",
+        "1",
+        "4"
+      ],
+      "secondary_numbers": [
+        "08"
+      ],
+      "sales_amount": 29,
+      "pool_amount": 15775054
+    },
+    {
+      "issue": "2026111",
+      "draw_date": "2026-09-25",
+      "primary_numbers": [
+        "7",
+        "8",
+        "9",
+        "1",
+        "0",
+        "1"
+      ],
+      "secondary_numbers": [
+        "01"
+      ],
+      "sales_amount": 27,
+      "pool_amount": 24560396
+    },
+    {
+      "issue": "2026110",
+      "draw_date": "2026-09-22",
+      "primary_numbers": [
+        "6",
+        "2",
+        "5",
+        "9",
+        "6",
+        "9"
+      ],
+      "secondary_numbers": [
+        "13"
+      ],
+      "sales_amount": 50,
+      "pool_amount": 17175876
+    },
+    {
+      "issue": "2026109",
+      "draw_date": "2026-09-20",
+      "primary_numbers": [
+        "2",
+        "9",
+        "0",
+        "5",
+        "0",
+        "3"
+      ],
+      "secondary_numbers": [
+        "09"
+      ],
+      "sales_amount": 28,
+      "pool_amount": 17587914
+    },
+    {
+      "issue": "2026108",
+      "draw_date": "2026-09-18",
+      "primary_numbers": [
+        "9",
+        "5",
+        "2",
+        "0",
+        "8",
+        "6"
+      ],
+      "secondary_numbers": [
+        "09"
+      ],
+      "sales_amount": 39,
+      "pool_amount": 25316222
+    },
+    {
+      "issue": "2026107",
+      "draw_date": "2026-09-15",
+      "primary_numbers": [
+        "2",
+        "8",
+        "3",
+        "4",
+        "5",
+        "6"
+      ],
+      "secondary_numbers": [
+        "04"
+      ],
+      "sales_amount": 32,
+      "pool_amount": 16854278
+    },
+    {
+      "issue": "2026106",
+      "draw_date": "2026-09-13",
+      "primary_numbers": [
+        "5",
+        "1",
+        "9",
+        "5",
+        "8",
+        "5"
+      ],
+      "secondary_numbers": [
+        "11"
+      ],
+      "sales_amount": 44,
+      "pool_amount": 17370904
+    },
+    {
+      "issue": "2026105",
+      "draw_date": "2026-09-11",
+      "primary_numbers": [
+        "5",
+        "9",
+        "9",
+        "5",
+        "3",
+        "3"
+      ],
+      "secondary_numbers": [
+        "00"
+      ],
+      "sales_amount": 34,
+      "pool_amount": 24961344
+    },
+    {
+      "issue": "2026104",
+      "draw_date": "2026-09-08",
+      "primary_numbers": [
+        "7",
+        "4",
+        "0",
+        "7",
+        "2",
+        "8"
+      ],
+      "secondary_numbers": [
+        "14"
+      ],
+      "sales_amount": 42,
+      "pool_amount": 17332862
+    },
+    {
+      "issue": "2026103",
+      "draw_date": "2026-09-06",
+      "primary_numbers": [
+        "0",
+        "0",
+        "0",
+        "6",
+        "0",
+        "2"
+      ],
+      "secondary_numbers": [
+        "08"
+      ],
+      "sales_amount": 16,
+      "pool_amount": 17642292
+    },
+    {
+      "issue": "2026102",
+      "draw_date": "2026-09-04",
+      "primary_numbers": [
+        "1",
+        "7",
+        "5",
+        "5",
+        "8",
+        "8"
+      ],
+      "secondary_numbers": [
+        "06"
+      ],
+      "sales_amount": 40,
+      "pool_amount": 25186278
+    },
+    {
+      "issue": "2026101",
+      "draw_date": "2026-09-01",
+      "primary_numbers": [
+        "6",
+        "8",
+        "6",
+        "1",
+        "0",
+        "5"
+      ],
+      "secondary_numbers": [
+        "13"
+      ],
+      "sales_amount": 39,
+      "pool_amount": 17370196
+    },
+    {
+      "issue": "2026100",
+      "draw_date": "2026-08-30",
+      "primary_numbers": [
+        "8",
+        "3",
+        "1",
+        "1",
+        "7",
+        "3"
+      ],
+      "secondary_numbers": [
+        "00"
+      ],
+      "sales_amount": 23,
+      "pool_amount": 17720386
+    },
+    {
+      "issue": "2026099",
+      "draw_date": "2026-08-28",
+      "primary_numbers": [
+        "9",
+        "4",
+        "6",
+        "3",
+        "3",
+        "4"
+      ],
+      "secondary_numbers": [
+        "05"
+      ],
+      "sales_amount": 34,
+      "pool_amount": 25305764
+    },
+    {
+      "issue": "2026098",
+      "draw_date": "2026-08-25",
+      "primary_numbers": [
+        "5",
+        "6",
+        "8",
+        "6",
+        "3",
+        "3"
+      ],
+      "secondary_numbers": [
+        "03"
+      ],
+      "sales_amount": 34,
+      "pool_amount": 17328440
+    },
+    {
+      "issue": "2026097",
+      "draw_date": "2026-08-23",
+      "primary_numbers": [
+        "8",
+        "2",
+        "7",
+        "4",
+        "4",
+        "8"
+      ],
+      "secondary_numbers": [
+        "12"
+      ],
+      "sales_amount": 45,
+      "pool_amount": 17738382
+    },
+    {
+      "issue": "2026096",
+      "draw_date": "2026-08-21",
+      "primary_numbers": [
+        "1",
+        "4",
+        "2",
+        "6",
+        "9",
+        "5"
+      ],
+      "secondary_numbers": [
+        "05"
+      ],
+      "sales_amount": 32,
+      "pool_amount": 25798192
+    },
+    {
+      "issue": "2026095",
+      "draw_date": "2026-08-18",
+      "primary_numbers": [
+        "6",
+        "6",
+        "4",
+        "9",
+        "0",
+        "8"
+      ],
+      "secondary_numbers": [
+        "07"
+      ],
+      "sales_amount": 40,
+      "pool_amount": 17662328
+    },
+    {
+      "issue": "2026094",
+      "draw_date": "2026-08-16",
+      "primary_numbers": [
+        "0",
+        "6",
+        "0",
+        "2",
+        "4",
+        "0"
+      ],
+      "secondary_numbers": [
+        "00"
+      ],
+      "sales_amount": 12,
+      "pool_amount": 17662548
+    },
+    {
+      "issue": "2026093",
+      "draw_date": "2026-08-14",
+      "primary_numbers": [
+        "4",
+        "9",
+        "6",
+        "5",
+        "0",
+        "8"
+      ],
+      "secondary_numbers": [
+        "07"
+      ],
+      "sales_amount": 39,
+      "pool_amount": 25176544
+    },
+    {
+      "issue": "2026092",
+      "draw_date": "2026-08-11",
+      "primary_numbers": [
+        "7",
+        "8",
+        "3",
+        "8",
+        "5",
+        "6"
+      ],
+      "secondary_numbers": [
+        "12"
+      ],
+      "sales_amount": 49,
+      "pool_amount": 16587138
+    },
+    {
+      "issue": "2026091",
+      "draw_date": "2026-08-09",
+      "primary_numbers": [
+        "7",
+        "9",
+        "5",
+        "8",
+        "5",
+        "0"
+      ],
+      "secondary_numbers": [
+        "06"
+      ],
+      "sales_amount": 40,
+      "pool_amount": 16798926
+    },
+    {
+      "issue": "2026090",
+      "draw_date": "2026-08-07",
+      "primary_numbers": [
+        "7",
+        "0",
+        "1",
+        "6",
+        "1",
+        "2"
+      ],
+      "secondary_numbers": [
+        "06"
+      ],
+      "sales_amount": 23,
+      "pool_amount": 24885984
+    },
+    {
+      "issue": "2026089",
+      "draw_date": "2026-08-04",
+      "primary_numbers": [
+        "7",
+        "1",
+        "8",
+        "9",
+        "3",
+        "4"
+      ],
+      "secondary_numbers": [
+        "00"
+      ],
+      "sales_amount": 32,
+      "pool_amount": 16296846
+    },
+    {
+      "issue": "2026088",
+      "draw_date": "2026-08-02",
+      "primary_numbers": [
+        "9",
+        "5",
+        "1",
+        "9",
+        "5",
+        "9"
+      ],
+      "secondary_numbers": [
+        "02"
+      ],
+      "sales_amount": 40,
+      "pool_amount": 16625484
+    },
+    {
+      "issue": "2026087",
+      "draw_date": "2026-07-31",
+      "primary_numbers": [
+        "3",
+        "9",
+        "9",
+        "2",
+        "8",
+        "6"
+      ],
+      "secondary_numbers": [
+        "10"
+      ],
+      "sales_amount": 47,
+      "pool_amount": 24962268
+    },
+    {
+      "issue": "2026086",
+      "draw_date": "2026-07-28",
+      "primary_numbers": [
+        "9",
+        "7",
+        "1",
+        "0",
+        "3",
+        "4"
+      ],
+      "secondary_numbers": [
+        "00"
+      ],
+      "sales_amount": 24,
+      "pool_amount": 16987448
+    },
+    {
+      "issue": "2026085",
+      "draw_date": "2026-07-26",
+      "primary_numbers": [
+        "8",
+        "3",
+        "7",
+        "0",
+        "5",
+        "1"
+      ],
+      "secondary_numbers": [
+        "04"
+      ],
+      "sales_amount": 28,
+      "pool_amount": 17102340
+    },
+    {
+      "issue": "2026084",
+      "draw_date": "2026-07-24",
+      "primary_numbers": [
+        "6",
+        "3",
+        "8",
+        "4",
+        "4",
+        "0"
+      ],
+      "secondary_numbers": [
+        "07"
+      ],
+      "sales_amount": 32,
+      "pool_amount": 24865542
+    },
+    {
+      "issue": "2026083",
+      "draw_date": "2026-07-21",
+      "primary_numbers": [
+        "5",
+        "2",
+        "1",
+        "9",
+        "6",
+        "3"
+      ],
+      "secondary_numbers": [
+        "12"
+      ],
+      "sales_amount": 38,
+      "pool_amount": 16831732
+    },
+    {
+      "issue": "2026082",
+      "draw_date": "2026-07-19",
+      "primary_numbers": [
+        "9",
+        "4",
+        "7",
+        "1",
+        "0",
+        "4"
+      ],
+      "secondary_numbers": [
+        "07"
+      ],
+      "sales_amount": 32,
+      "pool_amount": 17284378
+    },
+    {
+      "issue": "2026081",
+      "draw_date": "2026-07-17",
+      "primary_numbers": [
+        "4",
+        "2",
+        "3",
+        "3",
+        "5",
+        "5"
+      ],
+      "secondary_numbers": [
+        "08"
+      ],
+      "sales_amount": 30,
+      "pool_amount": 24755596
+    },
+    {
+      "issue": "2026080",
+      "draw_date": "2026-07-14",
+      "primary_numbers": [
+        "3",
+        "1",
+        "2",
+        "4",
+        "9",
+        "4"
+      ],
+      "secondary_numbers": [
+        "06"
+      ],
+      "sales_amount": 29,
+      "pool_amount": 16510816
+    },
+    {
+      "issue": "2026079",
+      "draw_date": "2026-07-12",
+      "primary_numbers": [
+        "5",
+        "6",
+        "8",
+        "3",
+        "8",
+        "7"
+      ],
+      "secondary_numbers": [
+        "14"
+      ],
+      "sales_amount": 51,
+      "pool_amount": 17039050
+    },
+    {
+      "issue": "2026078",
+      "draw_date": "2026-07-10",
+      "primary_numbers": [
+        "4",
+        "4",
+        "8",
+        "7",
+        "5",
+        "1"
+      ],
+      "secondary_numbers": [
+        "12"
+      ],
+      "sales_amount": 41,
+      "pool_amount": 24610918
+    },
+    {
+      "issue": "2026077",
+      "draw_date": "2026-07-07",
+      "primary_numbers": [
+        "5",
+        "4",
+        "0",
+        "5",
+        "5",
+        "2"
+      ],
+      "secondary_numbers": [
+        "09"
+      ],
+      "sales_amount": 30,
+      "pool_amount": 16723146
+    },
+    {
+      "issue": "2026076",
+      "draw_date": "2026-07-05",
+      "primary_numbers": [
+        "8",
+        "0",
+        "5",
+        "1",
+        "5",
+        "0"
+      ],
+      "secondary_numbers": [
+        "02"
+      ],
+      "sales_amount": 21,
+      "pool_amount": 17117406
+    },
+    {
+      "issue": "2026075",
+      "draw_date": "2026-07-03",
+      "primary_numbers": [
+        "4",
+        "7",
+        "4",
+        "5",
+        "8",
+        "2"
+      ],
+      "secondary_numbers": [
+        "03"
+      ],
+      "sales_amount": 33,
+      "pool_amount": 24742186
+    },
+    {
+      "issue": "2026074",
+      "draw_date": "2026-06-30",
+      "primary_numbers": [
+        "9",
+        "4",
+        "8",
+        "8",
+        "1",
+        "2"
+      ],
+      "secondary_numbers": [
+        "06"
+      ],
+      "sales_amount": 38,
+      "pool_amount": 16889362
+    },
+    {
+      "issue": "2026073",
+      "draw_date": "2026-06-28",
+      "primary_numbers": [
+        "6",
+        "6",
+        "8",
+        "4",
+        "8",
+        "9"
+      ],
+      "secondary_numbers": [
+        "00"
+      ],
+      "sales_amount": 41,
+      "pool_amount": 17325444
+    },
+    {
+      "issue": "2026072",
+      "draw_date": "2026-06-26",
+      "primary_numbers": [
+        "0",
+        "8",
+        "3",
+        "4",
+        "5",
+        "6"
+      ],
+      "secondary_numbers": [
+        "06"
+      ],
+      "sales_amount": 32,
+      "pool_amount": 25110154
+    },
+    {
+      "issue": "2026071",
+      "draw_date": "2026-06-23",
+      "primary_numbers": [
+        "4",
+        "7",
+        "9",
+        "6",
+        "3",
+        "5"
+      ],
+      "secondary_numbers": [
+        "07"
+      ],
+      "sales_amount": 41,
+      "pool_amount": 17066082
+    },
+    {
+      "issue": "2026070",
+      "draw_date": "2026-06-21",
+      "primary_numbers": [
+        "3",
+        "1",
+        "5",
+        "1",
+        "4",
+        "6"
+      ],
+      "secondary_numbers": [
+        "06"
+      ],
+      "sales_amount": 26,
+      "pool_amount": 17363616
+    },
+    {
+      "issue": "2026069",
+      "draw_date": "2026-06-19",
+      "primary_numbers": [
+        "7",
+        "9",
+        "5",
+        "4",
+        "3",
+        "2"
+      ],
+      "secondary_numbers": [
+        "07"
+      ],
+      "sales_amount": 37,
+      "pool_amount": 24704992
+    },
+    {
+      "issue": "2026068",
+      "draw_date": "2026-06-16",
+      "primary_numbers": [
+        "7",
+        "5",
+        "1",
+        "1",
+        "6",
+        "2"
+      ],
+      "secondary_numbers": [
+        "05"
+      ],
+      "sales_amount": 27,
+      "pool_amount": 17149520
+    },
+    {
+      "issue": "2026067",
+      "draw_date": "2026-06-14",
+      "primary_numbers": [
+        "3",
+        "6",
+        "5",
+        "7",
+        "1",
+        "4"
+      ],
+      "secondary_numbers": [
+        "03"
+      ],
+      "sales_amount": 29,
+      "pool_amount": 18270946
+    },
+    {
+      "issue": "2026066",
+      "draw_date": "2026-06-12",
+      "primary_numbers": [
+        "3",
+        "5",
+        "6",
+        "9",
+        "7",
+        "0"
+      ],
+      "secondary_numbers": [
+        "12"
+      ],
+      "sales_amount": 42,
+      "pool_amount": 26545672
+    },
+    {
+      "issue": "2026065",
+      "draw_date": "2026-06-09",
+      "primary_numbers": [
+        "7",
+        "4",
+        "9",
+        "0",
+        "7",
+        "3"
+      ],
+      "secondary_numbers": [
+        "01"
+      ],
+      "sales_amount": 31,
+      "pool_amount": 17935848
+    },
+    {
+      "issue": "2026064",
+      "draw_date": "2026-06-07",
+      "primary_numbers": [
+        "2",
+        "3",
+        "3",
+        "7",
+        "2",
+        "5"
+      ],
+      "secondary_numbers": [
+        "09"
+      ],
+      "sales_amount": 31,
+      "pool_amount": 18593568
+    },
+    {
+      "issue": "2026063",
+      "draw_date": "2026-06-05",
+      "primary_numbers": [
+        "5",
+        "0",
+        "7",
+        "6",
+        "6",
+        "6"
+      ],
+      "secondary_numbers": [
+        "05"
+      ],
+      "sales_amount": 35,
+      "pool_amount": 26580410
+    },
+    {
+      "issue": "2026062",
+      "draw_date": "2026-06-02",
+      "primary_numbers": [
+        "5",
+        "6",
+        "7",
+        "0",
+        "3",
+        "1"
+      ],
+      "secondary_numbers": [
+        "03"
+      ],
+      "sales_amount": 25,
+      "pool_amount": 17563290
+    },
+    {
+      "issue": "2026061",
+      "draw_date": "2026-05-31",
+      "primary_numbers": [
+        "0",
+        "2",
+        "0",
+        "8",
+        "4",
+        "8"
+      ],
+      "secondary_numbers": [
+        "12"
+      ],
+      "sales_amount": 34,
+      "pool_amount": 17206620
+    },
+    {
+      "issue": "2026060",
+      "draw_date": "2026-05-29",
+      "primary_numbers": [
+        "3",
+        "1",
+        "3",
+        "0",
+        "3",
+        "2"
+      ],
+      "secondary_numbers": [
+        "14"
+      ],
+      "sales_amount": 26,
+      "pool_amount": 25208832
+    },
+    {
+      "issue": "2026059",
+      "draw_date": "2026-05-26",
+      "primary_numbers": [
+        "0",
+        "6",
+        "9",
+        "2",
+        "3",
+        "4"
+      ],
+      "secondary_numbers": [
+        "04"
+      ],
+      "sales_amount": 28,
+      "pool_amount": 16562206
+    },
+    {
+      "issue": "2026058",
+      "draw_date": "2026-05-24",
+      "primary_numbers": [
+        "3",
+        "7",
+        "4",
+        "1",
+        "2",
+        "3"
+      ],
+      "secondary_numbers": [
+        "01"
+      ],
+      "sales_amount": 21,
+      "pool_amount": 17054062
+    },
+    {
+      "issue": "2026057",
+      "draw_date": "2026-05-22",
+      "primary_numbers": [
+        "3",
+        "3",
+        "5",
+        "0",
+        "5",
+        "6"
+      ],
+      "secondary_numbers": [
+        "01"
+      ],
+      "sales_amount": 23,
+      "pool_amount": 25236408
+    },
+    {
+      "issue": "2026056",
+      "draw_date": "2026-05-19",
+      "primary_numbers": [
+        "2",
+        "0",
+        "7",
+        "2",
+        "5",
+        "0"
+      ],
+      "secondary_numbers": [
+        "12"
+      ],
+      "sales_amount": 28,
+      "pool_amount": 16795464
+    },
+    {
+      "issue": "2026055",
+      "draw_date": "2026-05-17",
+      "primary_numbers": [
+        "5",
+        "5",
+        "6",
+        "3",
+        "8",
+        "5"
+      ],
+      "secondary_numbers": [
+        "03"
+      ],
+      "sales_amount": 35,
+      "pool_amount": 17129272
+    },
+    {
+      "issue": "2026054",
+      "draw_date": "2026-05-15",
+      "primary_numbers": [
+        "9",
+        "6",
+        "4",
+        "5",
+        "3",
+        "2"
+      ],
+      "secondary_numbers": [
+        "08"
+      ],
+      "sales_amount": 37,
+      "pool_amount": 25196052
+    },
+    {
+      "issue": "2026053",
+      "draw_date": "2026-05-12",
+      "primary_numbers": [
+        "4",
+        "3",
+        "3",
+        "2",
+        "1",
+        "8"
+      ],
+      "secondary_numbers": [
+        "12"
+      ],
+      "sales_amount": 33,
+      "pool_amount": 16935980
+    },
+    {
+      "issue": "2026052",
+      "draw_date": "2026-05-10",
+      "primary_numbers": [
+        "2",
+        "3",
+        "5",
+        "2",
+        "5",
+        "6"
+      ],
+      "secondary_numbers": [
+        "12"
+      ],
+      "sales_amount": 35,
+      "pool_amount": 17144188
+    },
+    {
+      "issue": "2026051",
+      "draw_date": "2026-05-08",
+      "primary_numbers": [
+        "6",
+        "8",
+        "7",
+        "3",
+        "3",
+        "8"
+      ],
+      "secondary_numbers": [
+        "12"
+      ],
+      "sales_amount": 47,
+      "pool_amount": 25403702
+    },
+    {
+      "issue": "2026050",
+      "draw_date": "2026-05-05",
+      "primary_numbers": [
+        "2",
+        "2",
+        "6",
+        "2",
+        "5",
+        "3"
+      ],
+      "secondary_numbers": [
+        "00"
+      ],
+      "sales_amount": 20,
+      "pool_amount": 16606362
+    },
+    {
+      "issue": "2026049",
+      "draw_date": "2026-05-03",
+      "primary_numbers": [
+        "2",
+        "7",
+        "8",
+        "9",
+        "5",
+        "0"
+      ],
+      "secondary_numbers": [
+        "07"
+      ],
+      "sales_amount": 38,
+      "pool_amount": 16392162
+    },
+    {
+      "issue": "2026048",
+      "draw_date": "2026-05-01",
+      "primary_numbers": [
+        "4",
+        "5",
+        "2",
+        "9",
+        "6",
+        "1"
+      ],
+      "secondary_numbers": [
+        "05"
+      ],
+      "sales_amount": 32,
+      "pool_amount": 24902500
+    },
+    {
+      "issue": "2026047",
+      "draw_date": "2026-04-28",
+      "primary_numbers": [
+        "3",
+        "9",
+        "8",
+        "2",
+        "5",
+        "0"
+      ],
+      "secondary_numbers": [
+        "08"
+      ],
+      "sales_amount": 35,
+      "pool_amount": 17108558
+    },
+    {
+      "issue": "2026046",
+      "draw_date": "2026-04-26",
+      "primary_numbers": [
+        "8",
+        "8",
+        "5",
+        "6",
+        "2",
+        "3"
+      ],
+      "secondary_numbers": [
+        "13"
+      ],
+      "sales_amount": 45,
+      "pool_amount": 17629280
+    },
+    {
+      "issue": "2026045",
+      "draw_date": "2026-04-24",
+      "primary_numbers": [
+        "1",
+        "3",
+        "2",
+        "8",
+        "9",
+        "6"
+      ],
+      "secondary_numbers": [
+        "14"
+      ],
+      "sales_amount": 43,
+      "pool_amount": 25972354
+    },
+    {
+      "issue": "2026044",
+      "draw_date": "2026-04-21",
+      "primary_numbers": [
+        "7",
+        "6",
+        "2",
+        "0",
+        "9",
+        "1"
+      ],
+      "secondary_numbers": [
+        "01"
+      ],
+      "sales_amount": 26,
+      "pool_amount": 18413848
+    },
+    {
+      "issue": "2026043",
+      "draw_date": "2026-04-19",
+      "primary_numbers": [
+        "6",
+        "5",
+        "9",
+        "5",
+        "8",
+        "9"
+      ],
+      "secondary_numbers": [
+        "11"
+      ],
+      "sales_amount": 53,
+      "pool_amount": 18516020
+    },
+    {
+      "issue": "2026042",
+      "draw_date": "2026-04-17",
+      "primary_numbers": [
+        "6",
+        "5",
+        "1",
+        "8",
+        "1",
+        "3"
+      ],
+      "secondary_numbers": [
+        "06"
+      ],
+      "sales_amount": 30,
+      "pool_amount": 26276702
+    },
+    {
+      "issue": "2026041",
+      "draw_date": "2026-04-14",
+      "primary_numbers": [
+        "7",
+        "9",
+        "1",
+        "1",
+        "4",
+        "9"
+      ],
+      "secondary_numbers": [
+        "13"
+      ],
+      "sales_amount": 44,
+      "pool_amount": 17547320
+    },
+    {
+      "issue": "2026040",
+      "draw_date": "2026-04-12",
+      "primary_numbers": [
+        "0",
+        "7",
+        "7",
+        "1",
+        "8",
+        "7"
+      ],
+      "secondary_numbers": [
+        "04"
+      ],
+      "sales_amount": 34,
+      "pool_amount": 17922842
+    },
+    {
+      "issue": "2026039",
+      "draw_date": "2026-04-10",
+      "primary_numbers": [
+        "0",
+        "6",
+        "6",
+        "2",
+        "5",
+        "2"
+      ],
+      "secondary_numbers": [
+        "12"
+      ],
+      "sales_amount": 33,
+      "pool_amount": 26719876
+    },
+    {
+      "issue": "2026038",
+      "draw_date": "2026-04-07",
+      "primary_numbers": [
+        "0",
+        "7",
+        "1",
+        "3",
+        "0",
+        "2"
+      ],
+      "secondary_numbers": [
+        "13"
+      ],
+      "sales_amount": 26,
+      "pool_amount": 17731814
+    },
+    {
+      "issue": "2026037",
+      "draw_date": "2026-04-05",
+      "primary_numbers": [
+        "9",
+        "9",
+        "6",
+        "9",
+        "4",
+        "0"
+      ],
+      "secondary_numbers": [
+        "01"
+      ],
+      "sales_amount": 38,
+      "pool_amount": 17475184
+    },
+    {
+      "issue": "2026036",
+      "draw_date": "2026-04-03",
+      "primary_numbers": [
+        "2",
+        "8",
+        "8",
+        "9",
+        "7",
+        "9"
+      ],
+      "secondary_numbers": [
+        "08"
+      ],
+      "sales_amount": 51,
+      "pool_amount": 27875616
+    },
+    {
+      "issue": "2026035",
+      "draw_date": "2026-03-31",
+      "primary_numbers": [
+        "7",
+        "4",
+        "2",
+        "7",
+        "2",
+        "7"
+      ],
+      "secondary_numbers": [
+        "02"
+      ],
+      "sales_amount": 31,
+      "pool_amount": 19002972
+    },
+    {
+      "issue": "2026034",
+      "draw_date": "2026-03-29",
+      "primary_numbers": [
+        "3",
+        "9",
+        "9",
+        "1",
+        "5",
+        "3"
+      ],
+      "secondary_numbers": [
+        "05"
+      ],
+      "sales_amount": 35,
+      "pool_amount": 19351222
+    },
+    {
+      "issue": "2026033",
+      "draw_date": "2026-03-27",
+      "primary_numbers": [
+        "1",
+        "8",
+        "9",
+        "1",
+        "9",
+        "3"
+      ],
+      "secondary_numbers": [
+        "14"
+      ],
+      "sales_amount": 45,
+      "pool_amount": 27392228
+    },
+    {
+      "issue": "2026032",
+      "draw_date": "2026-03-24",
+      "primary_numbers": [
+        "3",
+        "1",
+        "6",
+        "4",
+        "4",
+        "5"
+      ],
+      "secondary_numbers": [
+        "14"
+      ],
+      "sales_amount": 37,
+      "pool_amount": 17949512
+    },
+    {
+      "issue": "2026031",
+      "draw_date": "2026-03-22",
+      "primary_numbers": [
+        "6",
+        "8",
+        "9",
+        "5",
+        "2",
+        "2"
+      ],
+      "secondary_numbers": [
+        "13"
+      ],
+      "sales_amount": 45,
+      "pool_amount": 18327048
+    },
+    {
+      "issue": "2026030",
+      "draw_date": "2026-03-20",
+      "primary_numbers": [
+        "1",
+        "9",
+        "8",
+        "1",
+        "5",
+        "9"
+      ],
+      "secondary_numbers": [
+        "13"
+      ],
+      "sales_amount": 46,
+      "pool_amount": 27665494
+    },
+    {
+      "issue": "2026029",
+      "draw_date": "2026-03-17",
+      "primary_numbers": [
+        "1",
+        "4",
+        "0",
+        "4",
+        "3",
+        "2"
+      ],
+      "secondary_numbers": [
+        "11"
+      ],
+      "sales_amount": 25,
+      "pool_amount": 17945560
+    },
+    {
+      "issue": "2026028",
+      "draw_date": "2026-03-15",
+      "primary_numbers": [
+        "7",
+        "9",
+        "8",
+        "0",
+        "1",
+        "1"
+      ],
+      "secondary_numbers": [
+        "06"
+      ],
+      "sales_amount": 32,
+      "pool_amount": 19505278
+    },
+    {
+      "issue": "2026027",
+      "draw_date": "2026-03-13",
+      "primary_numbers": [
+        "8",
+        "7",
+        "7",
+        "3",
+        "6",
+        "0"
+      ],
+      "secondary_numbers": [
+        "09"
+      ],
+      "sales_amount": 40,
+      "pool_amount": 27731470
+    },
+    {
+      "issue": "2026026",
+      "draw_date": "2026-03-10",
+      "primary_numbers": [
+        "2",
+        "6",
+        "9",
+        "8",
+        "3",
+        "8"
+      ],
+      "secondary_numbers": [
+        "14"
+      ],
+      "sales_amount": 50,
+      "pool_amount": 18489692
+    }
+  ]
+}
