@@ -16,6 +16,4 @@
 
 # Domain and AI Models
 -keep class com.zeng.lottery.data.model.** { *; }
--keep class com.zeng.lottery.ai.AiConfig { *; }
--keep class com.zeng.lottery.ai.AiProvider { *; }
--keep class com.zeng.lottery.ai.KeyStoreManager { *; }
+-keep class com.zeng.lottery.ai.** { *; }

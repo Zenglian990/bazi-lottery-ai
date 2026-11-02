@@ -1,5 +1,6 @@
 package com.zeng.lottery.data.api
 
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -14,15 +15,23 @@ object ApiClient {
     @Volatile
     private var customBaseUrl: String = DEFAULT_BASE_URL
 
-    fun setBaseUrl(url: String) {
-        val trimmed = url.trim()
+    fun setBaseUrl(url: String?) {
+        val trimmed = url?.trim() ?: ""
+        if (trimmed.isBlank() || trimmed == "http://" || trimmed == "https://") {
+            customBaseUrl = DEFAULT_BASE_URL
+            return
+        }
         val withScheme = if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
             "https://$trimmed"
         } else {
             trimmed
         }
         val formatted = if (!withScheme.endsWith("/")) "$withScheme/" else withScheme
-        customBaseUrl = formatted
+        customBaseUrl = if (formatted.toHttpUrlOrNull() != null) {
+            formatted
+        } else {
+            DEFAULT_BASE_URL
+        }
     }
 
     fun getBaseUrl(): String = customBaseUrl

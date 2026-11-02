@@ -35,6 +35,8 @@ class LotteryRepository(
                 _isOffline.value = false
                 res
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
             _isOffline.value = true
             null
@@ -57,6 +59,8 @@ class LotteryRepository(
                 _isOffline.value = false
                 remote
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
             _isOffline.value = true
             BaziEngine.analyzeDestiny(dateTime, isMale)
@@ -70,6 +74,8 @@ class LotteryRepository(
                 _isOffline.value = false
                 remote
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
             _isOffline.value = true
             offlineEngine.computeStats(lotteryType)
@@ -106,6 +112,8 @@ class LotteryRepository(
                 _isOffline.value = false
                 remote
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
             _isOffline.value = true
             offlineEngine.generateRecommendation(destiny, lotteryType, count, strategy)

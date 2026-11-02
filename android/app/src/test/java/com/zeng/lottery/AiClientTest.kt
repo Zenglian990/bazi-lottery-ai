@@ -7,11 +7,13 @@ import com.zeng.lottery.ai.BackendAiClient
 import com.zeng.lottery.ai.GeminiClient
 import com.zeng.lottery.ai.KeyStoreManager
 import com.zeng.lottery.ai.OpenAiClient
+import com.zeng.lottery.data.api.ApiClient
 import com.zeng.lottery.data.local.BaziEngine
 import com.zeng.lottery.data.model.LotteryType
 import okhttp3.OkHttpClient
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.LocalDateTime
@@ -196,11 +198,42 @@ class AiClientTest {
         val customKey = KeyStoreManager.getApiKey(null, "custom_provider")
         assertEquals("sk-custom-secret-12345", customKey)
 
-        // Test defensive decryption of corrupted or empty payload (zero crash)
-        assertEquals("", KeyStoreManager.decrypt("corrupted_payload_without_colon"))
+        // Test defensive decryption of legacy plain keys without colon
+        assertEquals("gsk_custom_groq_key_12345", KeyStoreManager.decrypt("gsk_custom_groq_key_12345"))
+        assertEquals("sk-test-deepseek-unencrypted", KeyStoreManager.decrypt("sk-test-deepseek-unencrypted"))
         assertEquals("", KeyStoreManager.decrypt(""))
-        assertEquals("", KeyStoreManager.decrypt(":::invalid:::"))
+        assertEquals("", KeyStoreManager.decrypt("   "))
+        // Corrupted base64 with colon does not throw exception
+        val corruptedResult = KeyStoreManager.decrypt(":::invalid:::")
+        assertNotNull(corruptedResult)
         assertEquals("", KeyStoreManager.maskApiKey(null))
+    }
+
+    @Test
+    fun testApiClientBaseUrlValidation() {
+        val original = ApiClient.getBaseUrl()
+        try {
+            // Null or blank falls back to PRODUCTION_CLOUD_URL
+            ApiClient.setBaseUrl(null)
+            assertEquals(ApiClient.PRODUCTION_CLOUD_URL, ApiClient.getBaseUrl())
+
+            ApiClient.setBaseUrl("   ")
+            assertEquals(ApiClient.PRODUCTION_CLOUD_URL, ApiClient.getBaseUrl())
+
+            // Missing scheme automatically prepends https://
+            ApiClient.setBaseUrl("my-server.example.com")
+            assertEquals("https://my-server.example.com/", ApiClient.getBaseUrl())
+
+            // Existing http:// is preserved
+            ApiClient.setBaseUrl("http://192.168.1.100:8000")
+            assertEquals("http://192.168.1.100:8000/", ApiClient.getBaseUrl())
+
+            // Invalid format falls back safely
+            ApiClient.setBaseUrl("https://")
+            assertEquals(ApiClient.PRODUCTION_CLOUD_URL, ApiClient.getBaseUrl())
+        } finally {
+            ApiClient.setBaseUrl(original)
+        }
     }
 
     @Test

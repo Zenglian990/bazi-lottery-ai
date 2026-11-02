@@ -14,20 +14,23 @@ class DynamicBaseUrlInterceptor(
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
-        val currentBaseUrlStr = baseUrlProvider()
+        return try {
+            val currentBaseUrlStr = baseUrlProvider()
+            val newBaseUrl = currentBaseUrlStr.toHttpUrlOrNull() ?: return chain.proceed(originalRequest)
 
-        val newBaseUrl = currentBaseUrlStr.toHttpUrlOrNull() ?: return chain.proceed(originalRequest)
+            val newUrl = originalRequest.url.newBuilder()
+                .scheme(newBaseUrl.scheme)
+                .host(newBaseUrl.host)
+                .port(newBaseUrl.port)
+                .build()
 
-        val newUrl = originalRequest.url.newBuilder()
-            .scheme(newBaseUrl.scheme)
-            .host(newBaseUrl.host)
-            .port(newBaseUrl.port)
-            .build()
+            val newRequest = originalRequest.newBuilder()
+                .url(newUrl)
+                .build()
 
-        val newRequest = originalRequest.newBuilder()
-            .url(newUrl)
-            .build()
-
-        return chain.proceed(newRequest)
+            chain.proceed(newRequest)
+        } catch (e: Throwable) {
+            chain.proceed(originalRequest)
+        }
     }
 }

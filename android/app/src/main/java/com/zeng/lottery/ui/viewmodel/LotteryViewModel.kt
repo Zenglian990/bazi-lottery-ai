@@ -142,7 +142,7 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
         selectJob = viewModelScope.launch {
             _isLoading.value = true
             try {
-                withTimeout(6000L) {
+                withTimeout(5500L) {
                     _stats.value = repository.getStats(type)
                     val currentDestiny = _destiny.value ?: repository.getDestiny(_birthDateTime.value, _isMale.value)
                     _destiny.value = currentDestiny
@@ -152,6 +152,8 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
                         strategy = _selectedStrategy.value
                     )
                 }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                return@launch
             } catch (e: Exception) {
                 val currentDestiny = _destiny.value ?: BaziEngine.analyzeDestiny(_birthDateTime.value, _isMale.value)
                 _destiny.value = currentDestiny
@@ -178,7 +180,7 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
         rerollJob = viewModelScope.launch {
             _isLoading.value = true
             try {
-                withTimeout(6500L) {
+                withTimeout(5500L) {
                     val currentDestiny = _destiny.value ?: repository.getDestiny(_birthDateTime.value, _isMale.value)
                     _destiny.value = currentDestiny
                     val rec = repository.getRecommendations(
@@ -187,6 +189,9 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
                         strategy = _selectedStrategy.value
                     )
                     _recommendation.value = rec
+                    if (repository.isOffline.value) {
+                        _toastMessage.value = "云端响应离线，已启动离线纯算推演引擎为您选号"
+                    }
                 }
             } catch (e: TimeoutCancellationException) {
                 val currentDestiny = _destiny.value ?: BaziEngine.analyzeDestiny(_birthDateTime.value, _isMale.value)
@@ -198,6 +203,8 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
                     strategy = _selectedStrategy.value
                 )
                 _toastMessage.value = "云端响应较慢，已为您无缝切换至离线纯算引擎极速推演"
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                return@launch
             } catch (e: Exception) {
                 val currentDestiny = _destiny.value ?: BaziEngine.analyzeDestiny(_birthDateTime.value, _isMale.value)
                 _destiny.value = currentDestiny
@@ -207,6 +214,7 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
                     count = 1,
                     strategy = _selectedStrategy.value
                 )
+                _toastMessage.value = "网络连接异常，已启动离线易道推演引擎为您选号"
             } finally {
                 _isLoading.value = false
             }
@@ -220,6 +228,8 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
                 withTimeout(4000L) {
                     _stats.value = repository.getStats(_selectedLottery.value)
                 }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                return@launch
             } catch (e: Exception) {
                 _stats.value = offlineEngine.computeStats(_selectedLottery.value)
             } finally {
@@ -255,6 +265,8 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
                         strategy = _selectedStrategy.value
                     )
                 }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                return@launch
             } catch (e: Exception) {
                 val d = BaziEngine.analyzeDestiny(_birthDateTime.value, _isMale.value)
                 _destiny.value = d
@@ -286,6 +298,8 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
                         strategy = _selectedStrategy.value
                     )
                 }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                return@launch
             } catch (e: Exception) {
                 val d = _destiny.value ?: BaziEngine.analyzeDestiny(_birthDateTime.value, _isMale.value)
                 _destiny.value = d

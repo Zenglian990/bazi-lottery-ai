@@ -59,7 +59,7 @@ import com.zeng.lottery.ui.theme.ImperialRed
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AiSettingsDialog(
-    currentConfig: AiConfig,
+    currentConfig: AiConfig = AiConfig(),
     onDismiss: () -> Unit,
     onSaveConfig: (AiConfig) -> Unit
 ) {
@@ -251,7 +251,7 @@ fun AiSettingsDialog(
 
                         OutlinedTextField(
                             value = deepseekModel,
-                            onValueChange = { deepseekModel = it },
+                            onValueChange = { deepseekModel = (it ?: "").filter { c -> c != '\r' && c != '\n' } },
                             label = { Text("Model Name") },
                             placeholder = { Text("deepseek-flash") },
                             modifier = Modifier.fillMaxWidth(),
@@ -260,7 +260,7 @@ fun AiSettingsDialog(
 
                         OutlinedTextField(
                             value = deepseekBaseUrl,
-                            onValueChange = { deepseekBaseUrl = it },
+                            onValueChange = { deepseekBaseUrl = (it ?: "").filter { c -> c != '\r' && c != '\n' } },
                             label = { Text("官方 API 端点") },
                             placeholder = { Text("https://api.deepseek.com/v1") },
                             modifier = Modifier.fillMaxWidth(),

@@ -174,16 +174,17 @@ object KeyStoreManager {
             return decryptXor(encryptedPayload)
         }
         if (!encryptedPayload.contains(":")) {
-            return if (encryptedPayload.startsWith("sk-") || encryptedPayload.startsWith("AIza")) {
-                encryptedPayload
-            } else {
-                decryptXor(encryptedPayload)
-            }
+            // Legacy unencrypted plain text key (supports DeepSeek, Gemini, OpenAI, Groq, SiliconFlow, etc.)
+            return encryptedPayload.trim()
         }
         return try {
             val parts = encryptedPayload.split(":", limit = 2)
             val iv = decodeBase64(parts[0])
             val cipherBytes = decodeBase64(parts[1])
+            if (iv.isEmpty() || cipherBytes.isEmpty()) {
+                val xor = decryptXor(encryptedPayload)
+                return if (xor.isNotBlank()) xor else encryptedPayload.trim()
+            }
 
             val cipher = Cipher.getInstance(TRANSFORMATION)
             val spec = GCMParameterSpec(GCM_TAG_LENGTH, iv)
@@ -194,10 +195,8 @@ object KeyStoreManager {
             val xorResult = decryptXor(encryptedPayload)
             if (xorResult.isNotBlank()) {
                 xorResult
-            } else if (encryptedPayload.startsWith("sk-") || encryptedPayload.startsWith("AIza")) {
-                encryptedPayload
             } else {
-                ""
+                encryptedPayload.trim()
             }
         }
     }
@@ -206,7 +205,11 @@ object KeyStoreManager {
         return try {
             Base64.encodeToString(bytes, Base64.NO_WRAP)
         } catch (e: Throwable) {
-            java.util.Base64.getEncoder().encodeToString(bytes)
+            try {
+                java.util.Base64.getEncoder().encodeToString(bytes)
+            } catch (e2: Throwable) {
+                ""
+            }
         }
     }
 
@@ -214,7 +217,11 @@ object KeyStoreManager {
         return try {
             Base64.decode(str, Base64.NO_WRAP)
         } catch (e: Throwable) {
-            java.util.Base64.getDecoder().decode(str)
+            try {
+                java.util.Base64.getDecoder().decode(str)
+            } catch (e2: Throwable) {
+                ByteArray(0)
+            }
         }
     }
 

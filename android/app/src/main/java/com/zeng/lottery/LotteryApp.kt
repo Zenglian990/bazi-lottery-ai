@@ -323,10 +323,11 @@ fun LotteryApp(
                     )
 
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        val isCloudSelected = inputUrl.trimEnd('/') == ApiClient.PRODUCTION_CLOUD_URL.trimEnd('/')
                         SuggestionChip(
                             onClick = { inputUrl = ApiClient.PRODUCTION_CLOUD_URL },
                             label = { Text("⚡ 谷歌云官方云端服务", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
-                            colors = if (inputUrl == ApiClient.PRODUCTION_CLOUD_URL) {
+                            colors = if (isCloudSelected) {
                                 SuggestionChipDefaults.suggestionChipColors(
                                     containerColor = FortuneGold.copy(alpha = 0.25f),
                                     labelColor = FortuneGold
@@ -343,7 +344,7 @@ fun LotteryApp(
 
                     OutlinedTextField(
                         value = inputUrl,
-                        onValueChange = { inputUrl = it },
+                        onValueChange = { inputUrl = (it ?: "").filter { c -> c != '\r' && c != '\n' } },
                         label = { Text("API Base URL") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
