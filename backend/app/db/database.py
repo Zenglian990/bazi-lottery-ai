@@ -165,8 +165,32 @@ def get_draws(
 ) -> List[Dict[str, Any]]:
     """
     Retrieve historical draws for specified lottery type ordered from newest to oldest.
+    Auto-seeds if database is empty.
     """
     target_path = Path(db_path or settings.DB_PATH)
+
+    # Check if table exists and records exist; if missing or 0, auto-init & seed
+    try:
+        with get_db_connection(target_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='lottery_draws'")
+            table_exists = cursor.fetchone() is not None
+            if not table_exists:
+                init_db(target_path, seed_if_empty=True)
+            else:
+                cursor.execute(
+                    "SELECT COUNT(*) as cnt FROM lottery_draws WHERE lottery_type = ?",
+                    (lottery_type.lower(),),
+                )
+                row = cursor.fetchone()
+                cnt = row["cnt"] if row else 0
+                if cnt == 0:
+                    logger.info(f"Database empty for '{lottery_type}', auto-seeding...")
+                    seed_database_if_empty(target_path)
+    except Exception as e:
+        logger.warning(f"Auto-seed check encountered exception, re-initializing: {e}")
+        init_db(target_path, seed_if_empty=True)
+
     query = """
     SELECT lottery_type, issue, draw_date, primary_numbers, secondary_numbers, sales_amount, pool_amount
     FROM lottery_draws

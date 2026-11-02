@@ -105,6 +105,9 @@ fun LotteryApp(
     val showDivinationSheet by viewModel.showDivinationSheet.collectAsState()
     val showAiSettingsDialog by viewModel.showAiSettingsDialog.collectAsState()
 
+    val userName by viewModel.userName.collectAsState()
+    val betCount by viewModel.betCount.collectAsState()
+
     var selectedNavIndex by remember { mutableIntStateOf(0) }
     var showSettingsDialog by remember { mutableStateOf(false) }
 
@@ -228,8 +231,11 @@ fun LotteryApp(
                         lotteryType = selectedLottery,
                         recommendationResponse = recommendation,
                         selectedStrategy = selectedStrategy,
+                        betCount = betCount,
+                        userName = userName,
                         isLoading = isLoading,
                         onStrategySelected = { viewModel.selectStrategy(it) },
+                        onBetCountSelected = { viewModel.setBetCount(it) },
                         onReroll = { viewModel.reroll() },
                         onOpenDivination = { viewModel.openDivinationSheet() }
                     )
@@ -244,6 +250,8 @@ fun LotteryApp(
                         isLunar = isLunar,
                         isMale = isMale,
                         destiny = destiny,
+                        userName = userName,
+                        onUserNameChanged = { viewModel.setUserName(it) },
                         onDateTimeChanged = { viewModel.setBirthDateTime(it) },
                         onLunarChanged = { viewModel.setLunar(it) },
                         onGenderChanged = { viewModel.setGender(it) }
@@ -251,13 +259,18 @@ fun LotteryApp(
                 }
                 1 -> {
                     // 2. 命盘 Screen (Wuxing Radar + Day Master Strength)
-                    DestinyChartScreen(destiny = destiny)
+                    DestinyChartScreen(
+                        destiny = destiny,
+                        userName = userName
+                    )
 
                     BirthInputScreen(
                         selectedDateTime = birthDateTime,
                         isLunar = isLunar,
                         isMale = isMale,
                         destiny = destiny,
+                        userName = userName,
+                        onUserNameChanged = { viewModel.setUserName(it) },
                         onDateTimeChanged = { viewModel.setBirthDateTime(it) },
                         onLunarChanged = { viewModel.setLunar(it) },
                         onGenderChanged = { viewModel.setGender(it) }
@@ -283,12 +296,17 @@ fun LotteryApp(
                         isLunar = isLunar,
                         isMale = isMale,
                         destiny = destiny,
+                        userName = userName,
+                        onUserNameChanged = { viewModel.setUserName(it) },
                         onDateTimeChanged = { viewModel.setBirthDateTime(it) },
                         onLunarChanged = { viewModel.setLunar(it) },
                         onGenderChanged = { viewModel.setGender(it) }
                     )
 
-                    DestinyChartScreen(destiny = destiny)
+                    DestinyChartScreen(
+                        destiny = destiny,
+                        userName = userName
+                    )
                 }
             }
         }

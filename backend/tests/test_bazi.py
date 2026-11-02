@@ -112,20 +112,23 @@ class TestWuxing110PointEnergy:
             assert res_weak["strength_ratio"] < 0.50
 
     def test_xi_yong_shen_complement_strength(self):
-        """Strong charts favor draining elements (wood, fire, earth); weak charts favor supporting (water, metal)."""
+        """Strong charts favor draining elements (木, 火, 土); weak charts favor supporting (水, 金). Pure Chinese output."""
         res_strong = calculate_four_pillars("1990-08-15T08:30:00")
         xi_yong = res_strong["xi_yong_shen"]
         ji_shen = res_strong["ji_shen"]
 
-        assert "wood" in xi_yong or "fire" in xi_yong or "earth" in xi_yong
-        assert "water" in ji_shen or "metal" in ji_shen
+        # Validate pure Chinese localization
+        assert any(e in xi_yong for e in ["木", "火", "土"])
+        assert any(e in ji_shen for e in ["水", "金"])
 
     def test_lacking_elements_under_5_points(self):
-        """Elements with score < 5.0 are listed in lacking_elements."""
+        """Elements with score < 5.0 are listed in lacking_elements in Chinese."""
         # 1974-02-23 04:00:00: spring wood chart
         res = calculate_four_pillars("1974-02-23T04:00:00")
+        zh_to_en = {"金": "metal", "木": "wood", "水": "water", "火": "fire", "土": "earth"}
         for elem in res["lacking_elements"]:
-            assert res["wuxing_scores"][elem] < 5.0
+            en_elem = zh_to_en.get(elem, elem)
+            assert res["wuxing_scores"][en_elem] < 5.0
 
 
 class TestBaziDestinyApi:

@@ -1,10 +1,10 @@
 package com.zeng.lottery.ui.viewmodel
 
 import android.app.Application
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.viewModelScope
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import com.zeng.lottery.ai.AiConfig
 import com.zeng.lottery.ai.AiDivinationManager
 import com.zeng.lottery.ai.KeyStoreManager
@@ -47,6 +47,12 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
     private var refreshJob: Job? = null
     private var selectJob: Job? = null
     private var destinyJob: Job? = null
+
+    private val _userName = MutableStateFlow(prefs?.getString("user_name", "曾先生") ?: "曾先生")
+    val userName: StateFlow<String> = _userName.asStateFlow()
+
+    private val _betCount = MutableStateFlow(5)
+    val betCount: StateFlow<Int> = _betCount.asStateFlow()
 
     private val _selectedLottery = MutableStateFlow(LotteryType.SSQ)
     val selectedLottery: StateFlow<LotteryType> = _selectedLottery.asStateFlow()
@@ -113,8 +119,31 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
         prefs?.edit()?.putString(KEY_SERVER_URL, initialUrl)?.apply()
         _serverUrl.value = ApiClient.getBaseUrl()
 
-        // Initial compute
-        refreshAll()
+        // Eagerly prime UI within 5ms from offline engine to prevent any 0-draw or blank card states
+        val initialDestiny = repository.getOfflineDestiny(_birthDateTime.value, _isMale.value)
+        _destiny.value = initialDestiny
+        _stats.value = repository.getOfflineStats(_selectedLottery.value)
+        _recommendation.value = repository.getOfflineRecommendations(
+            destiny = initialDestiny,
+            lotteryType = _selectedLottery.value,
+            count = _betCount.value,
+            strategy = _selectedStrategy.value
+        )
+
+        // Then non-blocking cloud sync in background
+        syncFromCloud()
+    }
+
+    fun setUserName(name: String) {
+        val trimmed = name.trim().ifEmpty { "曾先生" }
+        _userName.value = trimmed
+        prefs?.edit()?.putString("user_name", trimmed)?.apply()
+    }
+
+    fun setBetCount(count: Int) {
+        val validCount = count.coerceIn(1, 20)
+        _betCount.value = validCount
+        reroll()
     }
 
     fun clearToastMessage() {
@@ -138,32 +167,33 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
 
     fun selectLottery(type: LotteryType) {
         _selectedLottery.value = type
+        // Immediately show offline stats & recommendations for instant responsiveness
+        val currentDestiny = _destiny.value ?: repository.getOfflineDestiny(_birthDateTime.value, _isMale.value)
+        _stats.value = repository.getOfflineStats(type)
+        _recommendation.value = repository.getOfflineRecommendations(
+            destiny = currentDestiny,
+            lotteryType = type,
+            count = _betCount.value,
+            strategy = _selectedStrategy.value
+        )
+
         selectJob?.cancel()
         selectJob = viewModelScope.launch {
             _isLoading.value = true
             try {
                 withTimeout(5500L) {
                     _stats.value = repository.getStats(type)
-                    val currentDestiny = _destiny.value ?: repository.getDestiny(_birthDateTime.value, _isMale.value)
-                    _destiny.value = currentDestiny
                     _recommendation.value = repository.getRecommendations(
                         destiny = currentDestiny,
                         lotteryType = type,
+                        count = _betCount.value,
                         strategy = _selectedStrategy.value
                     )
                 }
             } catch (e: kotlinx.coroutines.CancellationException) {
                 return@launch
             } catch (e: Exception) {
-                val currentDestiny = _destiny.value ?: BaziEngine.analyzeDestiny(_birthDateTime.value, _isMale.value)
-                _destiny.value = currentDestiny
-                _stats.value = offlineEngine.computeStats(type)
-                _recommendation.value = offlineEngine.generateRecommendation(
-                    destiny = currentDestiny,
-                    lotteryType = type,
-                    count = 1,
-                    strategy = _selectedStrategy.value
-                )
+                // Keep offline values on network error or timeout
             } finally {
                 _isLoading.value = false
             }
@@ -176,16 +206,24 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun reroll() {
+        // Immediate local reroll
+        val currentDestiny = _destiny.value ?: repository.getOfflineDestiny(_birthDateTime.value, _isMale.value)
+        _recommendation.value = repository.getOfflineRecommendations(
+            destiny = currentDestiny,
+            lotteryType = _selectedLottery.value,
+            count = _betCount.value,
+            strategy = _selectedStrategy.value
+        )
+
         rerollJob?.cancel()
         rerollJob = viewModelScope.launch {
             _isLoading.value = true
             try {
                 withTimeout(5500L) {
-                    val currentDestiny = _destiny.value ?: repository.getDestiny(_birthDateTime.value, _isMale.value)
-                    _destiny.value = currentDestiny
                     val rec = repository.getRecommendations(
                         destiny = currentDestiny,
                         lotteryType = _selectedLottery.value,
+                        count = _betCount.value,
                         strategy = _selectedStrategy.value
                     )
                     _recommendation.value = rec
@@ -194,26 +232,10 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
                     }
                 }
             } catch (e: TimeoutCancellationException) {
-                val currentDestiny = _destiny.value ?: BaziEngine.analyzeDestiny(_birthDateTime.value, _isMale.value)
-                _destiny.value = currentDestiny
-                _recommendation.value = offlineEngine.generateRecommendation(
-                    destiny = currentDestiny,
-                    lotteryType = _selectedLottery.value,
-                    count = 1,
-                    strategy = _selectedStrategy.value
-                )
-                _toastMessage.value = "云端响应较慢，已为您无缝切换至离线纯算引擎极速推演"
+                _toastMessage.value = "云端响应超时，已为您无缝切换至离线纯算引擎极速推演"
             } catch (e: kotlinx.coroutines.CancellationException) {
                 return@launch
             } catch (e: Exception) {
-                val currentDestiny = _destiny.value ?: BaziEngine.analyzeDestiny(_birthDateTime.value, _isMale.value)
-                _destiny.value = currentDestiny
-                _recommendation.value = offlineEngine.generateRecommendation(
-                    destiny = currentDestiny,
-                    lotteryType = _selectedLottery.value,
-                    count = 1,
-                    strategy = _selectedStrategy.value
-                )
                 _toastMessage.value = "网络连接异常，已启动离线易道推演引擎为您选号"
             } finally {
                 _isLoading.value = false
@@ -221,19 +243,24 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun refreshStats() {
+    fun refreshStats(onComplete: ((Boolean) -> Unit)? = null) {
         viewModelScope.launch {
             _isLoading.value = true
+            var success = false
             try {
                 withTimeout(4000L) {
-                    _stats.value = repository.getStats(_selectedLottery.value)
+                    val s = repository.getStats(_selectedLottery.value)
+                    _stats.value = s
+                    success = s.totalDraws > 0
                 }
             } catch (e: kotlinx.coroutines.CancellationException) {
                 return@launch
             } catch (e: Exception) {
-                _stats.value = offlineEngine.computeStats(_selectedLottery.value)
+                _stats.value = repository.getOfflineStats(_selectedLottery.value)
+                success = true
             } finally {
                 _isLoading.value = false
+                onComplete?.invoke(success)
             }
         }
     }
@@ -252,32 +279,54 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
     }
 
     private fun refreshDestinyAndRecommend() {
+        val d = repository.getOfflineDestiny(_birthDateTime.value, _isMale.value)
+        _destiny.value = d
+        _recommendation.value = repository.getOfflineRecommendations(
+            destiny = d,
+            lotteryType = _selectedLottery.value,
+            count = _betCount.value,
+            strategy = _selectedStrategy.value
+        )
+
         destinyJob?.cancel()
         destinyJob = viewModelScope.launch {
             _isLoading.value = true
             try {
                 withTimeout(6500L) {
-                    val d = repository.getDestiny(_birthDateTime.value, _isMale.value)
-                    _destiny.value = d
+                    val remoteD = repository.getDestiny(_birthDateTime.value, _isMale.value)
+                    _destiny.value = remoteD
                     _recommendation.value = repository.getRecommendations(
-                        destiny = d,
+                        destiny = remoteD,
                         lotteryType = _selectedLottery.value,
+                        count = _betCount.value,
                         strategy = _selectedStrategy.value
                     )
                 }
             } catch (e: kotlinx.coroutines.CancellationException) {
                 return@launch
             } catch (e: Exception) {
-                val d = BaziEngine.analyzeDestiny(_birthDateTime.value, _isMale.value)
-                _destiny.value = d
-                _recommendation.value = offlineEngine.generateRecommendation(
-                    destiny = d,
-                    lotteryType = _selectedLottery.value,
-                    count = 1,
-                    strategy = _selectedStrategy.value
-                )
+                // Keep offline values on network error or timeout
             } finally {
                 _isLoading.value = false
+            }
+        }
+    }
+
+    private fun syncFromCloud() {
+        viewModelScope.launch {
+            try {
+                repository.checkHealth()
+                val d = repository.getDestiny(_birthDateTime.value, _isMale.value)
+                _destiny.value = d
+                _stats.value = repository.getStats(_selectedLottery.value)
+                _recommendation.value = repository.getRecommendations(
+                    destiny = d,
+                    lotteryType = _selectedLottery.value,
+                    count = _betCount.value,
+                    strategy = _selectedStrategy.value
+                )
+            } catch (e: Exception) {
+                // Keep already primed local state
             }
         }
     }
@@ -295,22 +344,23 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
                     _recommendation.value = repository.getRecommendations(
                         destiny = d,
                         lotteryType = _selectedLottery.value,
+                        count = _betCount.value,
                         strategy = _selectedStrategy.value
                     )
                 }
             } catch (e: kotlinx.coroutines.CancellationException) {
                 return@launch
             } catch (e: Exception) {
-                val d = _destiny.value ?: BaziEngine.analyzeDestiny(_birthDateTime.value, _isMale.value)
+                val d = _destiny.value ?: repository.getOfflineDestiny(_birthDateTime.value, _isMale.value)
                 _destiny.value = d
                 if (_stats.value == null) {
-                    _stats.value = offlineEngine.computeStats(_selectedLottery.value)
+                    _stats.value = repository.getOfflineStats(_selectedLottery.value)
                 }
                 if (_recommendation.value == null) {
-                    _recommendation.value = offlineEngine.generateRecommendation(
+                    _recommendation.value = repository.getOfflineRecommendations(
                         destiny = d,
                         lotteryType = _selectedLottery.value,
-                        count = 1,
+                        count = _betCount.value,
                         strategy = _selectedStrategy.value
                     )
                 }

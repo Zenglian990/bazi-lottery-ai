@@ -50,7 +50,7 @@ fun WuxingRadarChart(
     strength: String = "",
     modifier: Modifier = Modifier
 ) {
-    val labels = listOf("金 (Metal)", "木 (Wood)", "水 (Water)", "火 (Fire)", "土 (Earth)")
+    val labels = listOf("金", "木", "水", "火", "土")
     val rawValues = listOf(scores.metal, scores.wood, scores.water, scores.fire, scores.earth)
     val colors = listOf(ElementMetal, ElementWood, ElementWater, ElementFire, ElementEarth)
 
@@ -189,8 +189,9 @@ fun WuxingRadarChart(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceAround
             ) {
+                val normalizedXiYong = xiYongShen.map { com.zeng.lottery.data.local.BaziEngine.ELEMENT_ZH[it.lowercase()] ?: it }
                 listOf("金", "木", "水", "火", "土").forEachIndexed { i, elem ->
-                    val isXiYong = xiYongShen.contains(elem)
+                    val isXiYong = normalizedXiYong.contains(elem)
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier

@@ -40,6 +40,50 @@ def parse_datetime_str(dt_str: Optional[str]) -> datetime:
         return datetime.now()
 
 
+# 12 Shichen to canonical clock time (hour, minute) and default sect
+SHICHEN_MAPPING: Dict[str, Tuple[int, int, int]] = {
+    "早子": (0, 30, 2),
+    "早子时": (0, 30, 2),
+    "晨子": (0, 30, 2),
+    "晚子": (23, 30, 2),
+    "晚子时": (23, 30, 2),
+    "夜子": (23, 30, 2),
+    "夜子时": (23, 30, 2),
+    "子": (0, 30, 2),
+    "子时": (0, 30, 2),
+    "丑": (2, 0, 2),
+    "丑时": (2, 0, 2),
+    "寅": (4, 0, 2),
+    "寅时": (4, 0, 2),
+    "卯": (6, 0, 2),
+    "卯时": (6, 0, 2),
+    "辰": (8, 0, 2),
+    "辰时": (8, 0, 2),
+    "巳": (10, 0, 2),
+    "巳时": (10, 0, 2),
+    "午": (12, 0, 2),
+    "午时": (12, 0, 2),
+    "未": (14, 0, 2),
+    "未时": (14, 0, 2),
+    "申": (16, 0, 2),
+    "申时": (16, 0, 2),
+    "酉": (18, 0, 2),
+    "酉时": (18, 0, 2),
+    "戌": (20, 0, 2),
+    "戌时": (20, 0, 2),
+    "亥": (22, 0, 2),
+    "亥时": (22, 0, 2),
+}
+
+
+def parse_shichen(shichen_str: Optional[str]) -> Optional[Tuple[int, int, int]]:
+    """Parse Chinese 12 Shichen string into (hour, minute, default_sect)."""
+    if not shichen_str:
+        return None
+    cleaned = shichen_str.strip()
+    return SHICHEN_MAPPING.get(cleaned)
+
+
 def adjust_true_solar_time(dt: datetime, longitude: Optional[float]) -> datetime:
     """
     Adjust clock time (UTC+8 / CST 120.0°E baseline) to True Solar Time based on longitude.
@@ -56,14 +100,23 @@ def calculate_four_pillars(
     calendar_type: str = "solar",
     longitude: Optional[float] = 120.0,
     sect: int = 2,
+    shichen: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Calculate Four Pillars (Year, Month, Day, Hour) and astronomical ephemeris.
+    Supports 12 Shichen names with early/late Zi hour handling.
     """
     if isinstance(birth_datetime, datetime):
         base_dt = birth_datetime
     else:
         base_dt = parse_datetime_str(birth_datetime)
+
+    # Apply Shichen override if specified
+    shichen_parsed = parse_shichen(shichen)
+    if shichen_parsed:
+        h, m, s_sect = shichen_parsed
+        base_dt = base_dt.replace(hour=h, minute=m, second=0, microsecond=0)
+        sect = s_sect
 
     # True Solar Time adjustment
     dt = adjust_true_solar_time(base_dt, longitude)
@@ -144,4 +197,9 @@ def calculate_four_pillars(
         "lacking_elements_zh": wuxing_analysis["lacking_elements_zh"],
         "xi_yong_shen_zh": wuxing_analysis["xi_yong_shen_zh"],
         "ji_shen_zh": wuxing_analysis["ji_shen_zh"],
+        "lacking_elements_en": wuxing_analysis.get("lacking_elements_en", []),
+        "xi_yong_shen_en": wuxing_analysis.get("xi_yong_shen_en", []),
+        "ji_shen_en": wuxing_analysis.get("ji_shen_en", []),
+        "day_master_element_zh": wuxing_analysis.get("day_master_element_zh", ""),
+        "shichen": shichen,
     }

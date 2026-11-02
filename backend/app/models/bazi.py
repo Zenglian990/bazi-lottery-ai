@@ -67,6 +67,8 @@ class BaziDestinyRequest(BaseModel):
     gender: Optional[str] = Field(default="male", description="'male' or 'female'")
     longitude: Optional[float] = Field(default=120.0, description="Birth location longitude (for True Solar Time)")
     sect: Optional[int] = Field(default=2, description="1: Sect 1 早子时换日派, 2: Sect 2 晚子时派")
+    user_name: Optional[str] = Field(default=None, description="缘主姓名 (结合五格剖象与笔画数理)")
+    shichen: Optional[str] = Field(default=None, description="出生时辰 (如: 早子时, 晚子时, 丑时...)")
 
 
 class BaziDestinyResponse(BaseModel):
@@ -79,6 +81,7 @@ class BaziDestinyResponse(BaseModel):
     wuxing_percentage: Dict[str, float] = Field(..., description="Wuxing score percentages")
     day_master: str = Field(..., description="Day Master stem (日主天干), e.g. '庚'")
     day_master_element: str = Field(..., description="Day Master element, e.g. 'metal'")
+    day_master_element_zh: Optional[str] = Field(default=None, description="Day Master element in Chinese, e.g. '金'")
     strength: str = Field(..., description="'身强' or '身弱'")
     strength_ratio: Optional[float] = Field(default=None, description="Ratio of self-party energy score (>= 0.5 is 身强)")
     lacking_elements: List[str] = Field(default_factory=list, description="Lacking elements (score < 5.0)")
@@ -87,25 +90,35 @@ class BaziDestinyResponse(BaseModel):
     lacking_elements_zh: Optional[List[str]] = Field(default=None, description="Lacking elements in Chinese")
     xi_yong_shen_zh: Optional[List[str]] = Field(default=None, description="Favorable elements in Chinese")
     ji_shen_zh: Optional[List[str]] = Field(default=None, description="Unfavorable elements in Chinese")
+    user_name: Optional[str] = Field(default=None, description="缘主姓名")
+    shichen: Optional[str] = Field(default=None, description="出生时辰")
+    name_numerology: Optional[Dict[str, Any]] = Field(default=None, description="姓名五格数理分析")
 
     @model_validator(mode="after")
     def populate_alias_and_chinese(self) -> "BaziDestinyResponse":
         if self.pillars is None:
             self.pillars = self.four_pillars
         elem_map = {"wood": "木", "fire": "火", "earth": "土", "metal": "金", "water": "水"}
+        self.xi_yong_shen = [elem_map.get(e, e) for e in self.xi_yong_shen]
+        self.ji_shen = [elem_map.get(e, e) for e in self.ji_shen]
+        self.lacking_elements = [elem_map.get(e, e) for e in self.lacking_elements]
         if self.lacking_elements_zh is None:
-            self.lacking_elements_zh = [elem_map.get(e, e) for e in self.lacking_elements]
+            self.lacking_elements_zh = self.lacking_elements
         if self.xi_yong_shen_zh is None:
-            self.xi_yong_shen_zh = [elem_map.get(e, e) for e in self.xi_yong_shen]
+            self.xi_yong_shen_zh = self.xi_yong_shen
         if self.ji_shen_zh is None:
-            self.ji_shen_zh = [elem_map.get(e, e) for e in self.ji_shen]
+            self.ji_shen_zh = self.ji_shen
+        if self.day_master_element_zh is None:
+            self.day_master_element_zh = elem_map.get(self.day_master_element, self.day_master_element)
         return self
 
 
 class LotteryRecommendation(BaseModel):
     """A single lottery ticket recommendation."""
+    bet_index: Optional[int] = Field(default=1, description="注号 (1, 2, 3...)")
     primary_numbers: List[str] = Field(..., description="Primary zone numbers (e.g. 6 red balls for SSQ)")
     secondary_numbers: Optional[List[str]] = Field(default=None, description="Secondary zone numbers (e.g. 1 blue ball for SSQ)")
+    formatted_ticket: Optional[str] = Field(default=None, description="Formatted ticket string, e.g. '03 06 11 18 21 28 + 09'")
     wuxing_distribution: Dict[str, int] = Field(..., description="Wuxing element counts in chosen numbers")
     score_rationale: str = Field(..., description="Cultural and statistical selection rationale")
 
@@ -124,6 +137,8 @@ class BaziRecommendRequest(BaseModel):
     w_freq: Optional[float] = Field(default=None, description="Weight for historical frequency")
     w_omission: Optional[float] = Field(default=None, description="Weight for omission value")
     deterministic: Optional[bool] = Field(default=False, description="Deterministic top-ranked selection if True")
+    user_name: Optional[str] = Field(default=None, description="缘主姓名")
+    shichen: Optional[str] = Field(default=None, description="出生时辰 (如: 早子时, 丑时...)")
 
 
 class BaziRecommendResponse(BaseModel):
@@ -132,3 +147,36 @@ class BaziRecommendResponse(BaseModel):
     strategy: str = Field(..., description="Applied recommendation strategy")
     recommendations: List[LotteryRecommendation] = Field(..., description="List of generated tickets")
     bazi_summary: Optional[Dict[str, Any]] = Field(default=None, description="Summary of user's Bazi destiny")
+    copy_text: Optional[str] = Field(default=None, description="Unified plain text representation for copying all bets")
+    user_name: Optional[str] = Field(default=None, description="缘主姓名")
+    today_liuri: Optional[Dict[str, Any]] = Field(default=None, description="今日流日干支与气运")
+
+
+class TodayFortuneRequest(BaseModel):
+    """Request model for Today's Fortune & LiuRi analysis."""
+    birth_datetime: Optional[str] = Field(default=None, description="User's birth datetime for natal resonance")
+    calendar_type: Optional[str] = Field(default="solar", description="'solar' or 'lunar'")
+    gender: Optional[str] = Field(default="male", description="'male' or 'female'")
+    longitude: Optional[float] = Field(default=120.0, description="Location longitude")
+    sect: Optional[int] = Field(default=2, description="Sect 1 or 2")
+    user_name: Optional[str] = Field(default=None, description="缘主姓名")
+    shichen: Optional[str] = Field(default=None, description="出生时辰")
+
+
+class TodayFortuneResponse(BaseModel):
+    """Response model for Today's Fortune & LiuRi analysis."""
+    solar_date: str = Field(..., description="公历日期 YYYY-MM-DD")
+    solar_datetime: str = Field(..., description="公历完整时间 YYYY-MM-DD HH:MM:SS")
+    lunar_date: str = Field(..., description="农历日期")
+    ganzhi_year: str = Field(..., description="今日流年干支")
+    ganzhi_month: str = Field(..., description="今日流月干支")
+    ganzhi_day: str = Field(..., description="今日流日干支")
+    ganzhi_hour: str = Field(..., description="今日流时干支")
+    day_nayin: str = Field(..., description="今日流日纳音五行")
+    cai_shen_position: str = Field(..., description="财神方位")
+    xi_shen_position: str = Field(..., description="喜神方位")
+    day_yi: List[str] = Field(default_factory=list, description="今日黄历宜")
+    day_ji: List[str] = Field(default_factory=list, description="今日黄历忌")
+    chong_sha: str = Field(..., description="冲煞信息")
+    resonance: Optional[Dict[str, Any]] = Field(default=None, description="缘主八字与今日流日天人感应共振")
+

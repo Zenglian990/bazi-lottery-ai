@@ -152,9 +152,9 @@ def analyze_wuxing_energy(
         xi_yong_shen = [mother_element, day_master_element]
         ji_shen = [officer_element, wealth_element, child_element]
 
-    lacking_zh = [ELEMENT_NAMES_ZH[e] for e in lacking_elements]
-    xi_yong_zh = [ELEMENT_NAMES_ZH[e] for e in xi_yong_shen]
-    ji_shen_zh = [ELEMENT_NAMES_ZH[e] for e in ji_shen]
+    lacking_zh = [ELEMENT_NAMES_ZH.get(e, e) for e in lacking_elements]
+    xi_yong_zh = [ELEMENT_NAMES_ZH.get(e, e) for e in xi_yong_shen]
+    ji_shen_zh = [ELEMENT_NAMES_ZH.get(e, e) for e in ji_shen]
 
     return {
         "scores": {k: round(v, 2) for k, v in scores.items()},
@@ -162,13 +162,17 @@ def analyze_wuxing_energy(
         "total_score": round(total_score, 2),
         "day_master": day_stem,
         "day_master_element": day_master_element,
+        "day_master_element_zh": ELEMENT_NAMES_ZH.get(day_master_element, day_master_element),
         "strength": strength,
         "strength_ratio": strength_ratio,
         "self_party_score": round(self_party_score, 2),
-        "lacking_elements": lacking_elements,
-        "xi_yong_shen": xi_yong_shen,
-        "ji_shen": ji_shen,
+        "lacking_elements": lacking_zh,
+        "xi_yong_shen": xi_yong_zh,
+        "ji_shen": ji_shen_zh,
         "lacking_elements_zh": lacking_zh,
         "xi_yong_shen_zh": xi_yong_zh,
         "ji_shen_zh": ji_shen_zh,
+        "lacking_elements_en": lacking_elements,
+        "xi_yong_shen_en": xi_yong_shen,
+        "ji_shen_en": ji_shen,
     }

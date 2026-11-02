@@ -59,8 +59,23 @@ data class BaziDestiny(
     @SerializedName("xi_yong_shen")
     val xiYongShen: List<String> = emptyList(),
     @SerializedName("ji_shen")
-    val jiShen: List<String> = emptyList()
+    val jiShen: List<String> = emptyList(),
+    @SerializedName("xi_yong_shen_zh")
+    val xiYongShenZh: List<String>? = null,
+    @SerializedName("ji_shen_zh")
+    val jiShenZh: List<String>? = null,
+    @SerializedName("lacking_elements_zh")
+    val lackingElementsZh: List<String>? = null
 )
+
+val BaziDestiny.displayXiYongShen: List<String>
+    get() = (xiYongShenZh ?: xiYongShen).map { com.zeng.lottery.data.local.BaziEngine.ELEMENT_ZH[it.lowercase()] ?: it }
+
+val BaziDestiny.displayJiShen: List<String>
+    get() = (jiShenZh ?: jiShen).map { com.zeng.lottery.data.local.BaziEngine.ELEMENT_ZH[it.lowercase()] ?: it }
+
+val BaziDestiny.displayLackingElements: List<String>
+    get() = (lackingElementsZh ?: lackingElements).map { com.zeng.lottery.data.local.BaziEngine.ELEMENT_ZH[it.lowercase()] ?: it }
 
 data class BaziDestinyRequest(
     @SerializedName("birth_datetime")

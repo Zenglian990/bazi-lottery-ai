@@ -1,7 +1,7 @@
 """Lottery Pydantic v2 data models, rules, and API contracts."""
 from enum import Enum
 from typing import List, Optional, Dict, Any, Union
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 class LotteryType(str, Enum):
     SSQ = "ssq"
@@ -70,6 +70,19 @@ class LotteryStatsResponse(BaseModel):
     latest_draw_date: Optional[str] = None
     primary_zone: ZoneStat
     secondary_zone: Optional[ZoneStat] = None
+
+    # Dual-compatible fields for Android client
+    total_draws: Optional[int] = None
+    last_issue: Optional[str] = None
+    stats: Optional[Dict[str, Dict[str, Any]]] = None
+
+    @model_validator(mode="after")
+    def populate_dual_compat_fields(self) -> "LotteryStatsResponse":
+        if self.total_draws is None:
+            self.total_draws = self.draws_analyzed
+        if self.last_issue is None:
+            self.last_issue = self.latest_issue
+        return self
 
 class HotColdNumbers(BaseModel):
     hot_numbers: List[str]

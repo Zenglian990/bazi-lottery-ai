@@ -1,11 +1,17 @@
 package com.zeng.lottery
 
+import com.google.gson.Gson
 import com.zeng.lottery.data.local.BaziEngine
 import com.zeng.lottery.data.local.OfflineLotteryEngine
+import com.zeng.lottery.data.model.LotteryStats
 import com.zeng.lottery.data.model.LotteryType
+import com.zeng.lottery.data.model.displayJiShen
+import com.zeng.lottery.data.model.displayLackingElements
+import com.zeng.lottery.data.model.displayXiYongShen
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -13,6 +19,8 @@ import java.time.LocalDateTime
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ViewModelTest {
+
+    private val gson = Gson()
 
     @Test
     fun testOfflineLotteryRecommendationWorkflow() = runTest {
@@ -43,11 +51,43 @@ class ViewModelTest {
     }
 
     @Test
+    fun testMultiBetRecommendationWorkflow() {
+        val dt = LocalDateTime.of(1990, 8, 15, 8, 30)
+        val destiny = BaziEngine.analyzeDestiny(dt, isMale = true)
+        val engine = OfflineLotteryEngine(context = null)
+
+        val rec1 = engine.generateRecommendation(destiny, LotteryType.SSQ, count = 1)
+        assertEquals(1, rec1.recommendations.size)
+
+        val rec5 = engine.generateRecommendation(destiny, LotteryType.SSQ, count = 5)
+        assertEquals(5, rec5.recommendations.size)
+        rec5.recommendations.forEach { item ->
+            assertEquals(6, item.primaryNumbers.size)
+            assertEquals(1, item.secondaryNumbers.size)
+        }
+
+        val rec10 = engine.generateRecommendation(destiny, LotteryType.DLT, count = 10)
+        assertEquals(10, rec10.recommendations.size)
+        rec10.recommendations.forEach { item ->
+            assertEquals(5, item.primaryNumbers.size)
+            assertEquals(2, item.secondaryNumbers.size)
+        }
+    }
+
+    @Test
     fun testOfflineStatsComputation() {
         val engine = OfflineLotteryEngine(context = null)
         val stats = engine.computeStats(LotteryType.SSQ)
         assertNotNull(stats)
         assertEquals("ssq", stats.lotteryType)
+        assertTrue("totalDraws should be 100 from offline seed", stats.totalDraws >= 100)
+        assertEquals("2026125", stats.lastIssue)
+        val primary = stats.stats["primary"]
+        assertNotNull(primary)
+        assertEquals(33, primary?.size)
+        val secondary = stats.stats["secondary"]
+        assertNotNull(secondary)
+        assertEquals(16, secondary?.size)
     }
 
     @Test
@@ -62,5 +102,85 @@ class ViewModelTest {
         assertEquals(d1.fourPillars.hour.fullText, d2.fourPillars.hour.fullText)
         assertEquals(d1.dayMaster, d2.dayMaster)
         assertEquals(d1.strength, d2.strength)
+    }
+
+    @Test
+    fun testChineseLocalizationOfWuxing() {
+        val dt = LocalDateTime.of(1990, 8, 15, 8, 30)
+        val destiny = BaziEngine.analyzeDestiny(dt, isMale = true)
+
+        val allowedElements = listOf("金", "木", "水", "火", "土")
+
+        val xiYong = destiny.displayXiYongShen
+        assertTrue("xiYongShen must not be empty", xiYong.isNotEmpty())
+        assertTrue("All xiYongShen elements must be pure Chinese", xiYong.all { it in allowedElements })
+        assertFalse("No English element tokens allowed", xiYong.any { it in listOf("wood", "fire", "earth", "metal", "water") })
+
+        val ji = destiny.displayJiShen
+        assertTrue("All jiShen elements must be pure Chinese", ji.all { it in allowedElements })
+
+        val lacking = destiny.displayLackingElements
+        assertTrue("All lackingElements must be pure Chinese", lacking.all { it in allowedElements })
+    }
+
+    @Test
+    fun testLotteryStatsDualContractDeserialization() {
+        // Contract 1: Backend FastAPI response format
+        val backendJson = """
+            {
+                "lottery_type": "ssq",
+                "draws_analyzed": 100,
+                "latest_issue": "2026125",
+                "latest_draw_date": "2026-11-01",
+                "primary_zone": {
+                    "zone_name": "红球区",
+                    "zone_code": "primary",
+                    "stats": [
+                        {"number": "01", "total_count": 18, "frequency": 0.18, "hot_status": "hot", "current_omission": 2, "max_omission": 14, "avg_omission": 5.2},
+                        {"number": "02", "total_count": 8, "frequency": 0.08, "hot_status": "cold", "current_omission": 11, "max_omission": 20, "avg_omission": 11.5}
+                    ]
+                },
+                "secondary_zone": {
+                    "zone_name": "蓝球区",
+                    "zone_code": "secondary",
+                    "stats": [
+                        {"number": "01", "total_count": 10, "frequency": 0.10, "hot_status": "warm", "current_omission": 5, "max_omission": 18, "avg_omission": 9.0}
+                    ]
+                }
+            }
+        """.trimIndent()
+
+        val parsedFromBackend = gson.fromJson(backendJson, LotteryStats::class.java)
+        assertEquals("ssq", parsedFromBackend.lotteryType)
+        assertEquals(100, parsedFromBackend.totalDraws)
+        assertEquals("2026125", parsedFromBackend.lastIssue)
+        assertTrue(parsedFromBackend.stats.containsKey("primary"))
+        assertEquals(2, parsedFromBackend.stats["primary"]?.size)
+        assertEquals(18, parsedFromBackend.stats["primary"]?.get("01")?.frequency)
+        assertTrue(parsedFromBackend.stats["primary"]?.get("01")?.isHot == true)
+        assertTrue(parsedFromBackend.stats["primary"]?.get("02")?.isCold == true)
+        assertTrue(parsedFromBackend.stats.containsKey("secondary"))
+        assertEquals(1, parsedFromBackend.stats["secondary"]?.size)
+
+        // Contract 2: Client Map format
+        val clientJson = """
+            {
+                "lottery_type": "ssq",
+                "total_draws": 100,
+                "last_issue": "2026125",
+                "stats": {
+                    "primary": {
+                        "01": {"frequency": 18, "rate": 0.18, "is_hot": true, "is_cold": false, "current_omission": 2, "max_omission": 14, "avg_omission": 5.2}
+                    }
+                }
+            }
+        """.trimIndent()
+
+        val parsedFromClient = gson.fromJson(clientJson, LotteryStats::class.java)
+        assertEquals("ssq", parsedFromClient.lotteryType)
+        assertEquals(100, parsedFromClient.totalDraws)
+        assertEquals("2026125", parsedFromClient.lastIssue)
+        assertEquals(1, parsedFromClient.stats["primary"]?.size)
+        assertEquals(18, parsedFromClient.stats["primary"]?.get("01")?.frequency)
     }
 }

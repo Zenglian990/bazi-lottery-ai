@@ -132,6 +132,23 @@ def calculate_lottery_stats(
         cold_factor=settings.COLD_THRESHOLD_FACTOR,
     )
 
+    pri_stats_map = {
+        s.number: {
+            "number": s.number,
+            "frequency": s.total_count,
+            "rate": s.frequency,
+            "is_hot": s.hot_status == "hot",
+            "is_cold": s.hot_status == "cold",
+            "current_omission": s.current_omission,
+            "max_omission": s.max_omission,
+            "avg_omission": s.avg_omission,
+        }
+        for s in pri_stats
+    }
+    stats_dict: Dict[str, Dict[str, Any]] = {
+        "primary": pri_stats_map,
+    }
+
     sec_stat_obj = None
     if len(rule.zones) > 1:
         secondary_rule = rule.zones[1]
@@ -150,12 +167,28 @@ def calculate_lottery_stats(
             zone_code=secondary_rule.zone_code,
             stats=sec_stats,
         )
+        stats_dict["secondary"] = {
+            s.number: {
+                "number": s.number,
+                "frequency": s.total_count,
+                "rate": s.frequency,
+                "is_hot": s.hot_status == "hot",
+                "is_cold": s.hot_status == "cold",
+                "current_omission": s.current_omission,
+                "max_omission": s.max_omission,
+                "avg_omission": s.avg_omission,
+            }
+            for s in sec_stats
+        }
 
     latest_draw = draws[0] if draws else None
+    latest_iss = latest_draw.get("issue") if latest_draw else None
     return LotteryStatsResponse(
         lottery_type=lottery_type.lower(),
         draws_analyzed=len(draws),
-        latest_issue=latest_draw.get("issue") if latest_draw else None,
+        total_draws=len(draws),
+        latest_issue=latest_iss,
+        last_issue=latest_iss,
         latest_draw_date=latest_draw.get("draw_date") if latest_draw else None,
         primary_zone=ZoneStat(
             zone_name=primary_rule.zone_name,
@@ -163,6 +196,7 @@ def calculate_lottery_stats(
             stats=pri_stats,
         ),
         secondary_zone=sec_stat_obj,
+        stats=stats_dict,
     )
 
 def calculate_hot_cold(

@@ -1,14 +1,26 @@
 """Hetu numerology mapping, 5-tier lucky number pooling, and A-Res weighted lottery recommendation engine."""
 import math
 import random
+from datetime import datetime
 from typing import Dict, List, Tuple, Any, Optional
+from lunar_python import Solar, Lunar
 
 from backend.app.services.wuxing_engine import (
     ELEMENT_NAMES_ZH,
     ZH_TO_ELEMENT,
+    STEM_ELEMENTS,
+    BRANCH_HIDDEN_STEMS,
+    MOTHER_ELEMENT,
 )
 from backend.app.services.lottery_rules import get_lottery_rule
 from backend.app.db.database import get_draws
+from backend.app.services.name_numerology import analyze_name_numerology
+
+# Element normalization mapping between Chinese and English keys
+ZH_TO_EN_ELEMENT: Dict[str, str] = {
+    "木": "wood", "火": "fire", "土": "earth", "金": "metal", "水": "water",
+    "wood": "wood", "fire": "fire", "earth": "earth", "metal": "metal", "water": "water",
+}
 
 # Classical Hetu (河图) Ten Numbers Mapping: Tail Modulo 10 -> Element
 # 天一生水 地六成之 (1, 6 -> Water)
@@ -76,18 +88,23 @@ def compute_bazi_score(
 ) -> Tuple[float, str]:
     """
     Calculate 5-tier Bazi score and tier classification for a candidate ball number.
+    Safely normalizes both Chinese ('金','木','水','火','土') and English ('metal','wood',...) keys.
     """
     elem = get_hetu_element(number)
-    primary_xi = xi_yong_shen[0] if xi_yong_shen else ""
-    secondary_xi = xi_yong_shen[1:] if len(xi_yong_shen) > 1 else []
+    xi_norm = [ZH_TO_EN_ELEMENT.get(e, e) for e in xi_yong_shen]
+    lacking_norm = [ZH_TO_EN_ELEMENT.get(e, e) for e in lacking_elements]
+    ji_norm = [ZH_TO_EN_ELEMENT.get(e, e) for e in ji_shen]
+
+    primary_xi = xi_norm[0] if xi_norm else ""
+    secondary_xi = xi_norm[1:] if len(xi_norm) > 1 else []
 
     if elem == primary_xi:
         return TIER_WEIGHTS["tier1_primary"], "Tier 1"
     elif elem in secondary_xi:
         return TIER_WEIGHTS["tier2_supporting"], "Tier 2"
-    elif elem in lacking_elements:
+    elif elem in lacking_norm:
         return TIER_WEIGHTS["tier3_deficiency"], "Tier 3"
-    elif elem in ji_shen:
+    elif elem in ji_norm:
         return TIER_WEIGHTS["tier5_taboo"], "Tier 5"
     else:
         return TIER_WEIGHTS["tier4_neutral"], "Tier 4"
@@ -217,9 +234,12 @@ def calculate_candidate_weights(
     omission_mode: str,
     lottery_type: str,
     zone_index: int,
+    harmonious_elements: Optional[List[str]] = None,
+    name_lucky_numbers: Optional[List[int]] = None,
 ) -> List[Tuple[int, float]]:
     """
     Compute hybrid tri-factor weights for all numbers in [min_val, max_val].
+    Includes today's LiuRi cosmic resonance (+20%) and personal name numerology bonuses.
     """
     freq_map, omission_map = get_historical_feature_maps(lottery_type, zone_index)
 
@@ -232,6 +252,9 @@ def calculate_candidate_weights(
     omissions = [omission_map.get(n, 10.0) for n in pool]
     min_o, max_o = min(omissions), max(omissions)
     span_o = max(max_o - min_o, 1e-6)
+
+    norm_harmony = [ZH_TO_EN_ELEMENT.get(e, e) for e in (harmonious_elements or [])]
+    lucky_set = set(name_lucky_numbers or [])
 
     candidates_with_weights: List[Tuple[int, float]] = []
     for n in pool:
@@ -256,7 +279,17 @@ def calculate_candidate_weights(
         # Combined weight
         weight = w_bazi * bazi_score + w_freq * freq_score + w_omission * omission_score
         weight = max(float(weight), 1e-4)
-        candidates_with_weights.append((n, weight))
+
+        # 4. LiuRi Celestial Energy Resonance Boost (+20% for harmonious elements)
+        n_elem = get_hetu_element(n)
+        if norm_harmony and n_elem in norm_harmony:
+            weight *= 1.20
+
+        # 5. Personal Name Numerology Bonus (+15% for name lucky numbers or tail matching)
+        if lucky_set and (n in lucky_set or (n % 10 or 10) in lucky_set):
+            weight *= 1.15
+
+        candidates_with_weights.append((n, round(weight, 5)))
 
     return candidates_with_weights
 
@@ -278,19 +311,21 @@ def generate_score_rationale(
     w_bazi: float,
     w_freq: float,
     w_omission: float,
+    user_name: Optional[str] = None,
+    today_harmony_text: Optional[str] = None,
 ) -> str:
     """Generate professional Chinese astrological & statistical rationale string."""
-    primary_xi = xi_yong_shen[0] if xi_yong_shen else "wood"
-    xi_zh = [ELEMENT_NAMES_ZH.get(e, e) for e in xi_yong_shen]
+    xi_norm = [ZH_TO_EN_ELEMENT.get(e, e) for e in xi_yong_shen]
+    xi_zh = [ELEMENT_NAMES_ZH.get(e, e) for e in xi_norm]
     xi_tails = []
-    for e in xi_yong_shen[:2]:
-        tails = [str(t) for t in ELEMENT_TO_TAILS.get(e, [])]
-        xi_tails.append(f"{ELEMENT_NAMES_ZH.get(e, e)}({'与'.join(tails)})")
+    for en_e, zh_e in zip(xi_norm[:2], xi_zh[:2]):
+        tails = [str(t) for t in ELEMENT_TO_TAILS.get(en_e, [])]
+        xi_tails.append(f"{zh_e}({'与'.join(tails)})")
 
-    tails_text = "、".join(xi_tails)
+    tails_text = "、".join(xi_tails) if xi_tails else "用神"
 
     # Calculate match count with Xi Yong Shen
-    matches = sum(1 for n in chosen_primary if get_hetu_element(n) in xi_yong_shen)
+    matches = sum(1 for n in chosen_primary if get_hetu_element(n) in xi_norm)
     match_pct = round((matches / max(len(chosen_primary), 1)) * 100, 1)
 
     strategy_desc = {
@@ -301,7 +336,10 @@ def generate_score_rationale(
         "cold_reversal": "大遗漏极冷翻转",
     }.get(strategy.lower(), "综合三元混合")
 
-    return f"命中喜用神{tails_text}契合度 {match_pct}%，结合{strategy_desc}模型(八字:{w_bazi:.2f}, 频次:{w_freq:.2f}, 遗漏:{w_omission:.2f})加权生成"
+    prefix = f"缘主【{user_name}】" if user_name else ""
+    harmony_clause = f"，{today_harmony_text}" if today_harmony_text else ""
+
+    return f"{prefix}命中喜用神{tails_text}契合度 {match_pct}%{harmony_clause}，结合{strategy_desc}模型(八字:{w_bazi:.2f}, 频次:{w_freq:.2f}, 遗漏:{w_omission:.2f})加权生成"
 
 
 def recommend_lottery_tickets(
@@ -313,9 +351,13 @@ def recommend_lottery_tickets(
     w_freq: Optional[float] = None,
     w_omission: Optional[float] = None,
     deterministic: bool = False,
+    user_name: Optional[str] = None,
+    shichen: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Main recommendation engine producing legal, ascending, non-duplicate ticket recommendations.
+    Supports multi-bet cross-ticket deduplication, today's LiuRi cosmic resonance (+20%),
+    Chinese name numerology, and unified copy text.
     """
     rule = get_lottery_rule(lottery_type)
     if not rule:
@@ -335,6 +377,54 @@ def recommend_lottery_tickets(
         w_omission=w_omission,
     )
 
+    # 1. Today's LiuRi Celestial Energy Calculation
+    now = datetime.now()
+    solar_now = Solar.fromDate(now)
+    lunar_now = solar_now.getLunar()
+    ganzhi_year = lunar_now.getYearInGanZhi()
+    ganzhi_month = lunar_now.getMonthInGanZhi()
+    ganzhi_day = lunar_now.getDayInGanZhi()
+    ganzhi_hour = lunar_now.getTimeInGanZhi()
+    day_stem = lunar_now.getDayGan()
+    day_branch = lunar_now.getDayZhi()
+    day_stem_elem = STEM_ELEMENTS.get(day_stem, "metal")
+    day_branch_hiddens = BRANCH_HIDDEN_STEMS.get(day_branch, [("戊", 1.0)])
+    day_branch_elem = STEM_ELEMENTS.get(day_branch_hiddens[0][0], "earth")
+
+    # Harmonious elements with user's Xi Yong Shen
+    user_xi_norm = [ZH_TO_EN_ELEMENT.get(e, e) for e in xi_yong_shen]
+    active_today_elems = {day_stem_elem, day_branch_elem}
+    generating_elems = {MOTHER_ELEMENT.get(e, "") for e in user_xi_norm}
+
+    harmonious_elems = list(active_today_elems.intersection(user_xi_norm).union(
+        active_today_elems.intersection(generating_elems)
+    ))
+    if not harmonious_elems:
+        harmonious_elems = [day_stem_elem, day_branch_elem]
+
+    today_harmony_text = (
+        f"融合今日流日{ganzhi_day}({ELEMENT_NAMES_ZH.get(day_stem_elem)}{ELEMENT_NAMES_ZH.get(day_branch_elem)})"
+        f"气运共振(+20%)"
+    )
+
+    today_liuri_info = {
+        "solar_date": solar_now.toYmd(),
+        "lunar_date": lunar_now.toString(),
+        "ganzhi_day": ganzhi_day,
+        "day_nayin": lunar_now.getDayNaYin(),
+        "cai_shen": lunar_now.getDayPositionCai(),
+        "xi_shen": lunar_now.getDayPositionXi(),
+        "day_yi": lunar_now.getDayYi()[:5],
+        "day_ji": lunar_now.getDayJi()[:5],
+        "harmonious_elements": [ELEMENT_NAMES_ZH.get(e, e) for e in harmonious_elems],
+    }
+
+    # 2. Chinese Name Numerology
+    name_lucky_numbers = None
+    if user_name:
+        name_info = analyze_name_numerology(user_name)
+        name_lucky_numbers = name_info.get("name_lucky_numbers", [])
+
     # Primary zone candidates with weights
     p_weights = calculate_candidate_weights(
         min_val=p_rule.min_value,
@@ -348,6 +438,8 @@ def recommend_lottery_tickets(
         omission_mode=om_mode,
         lottery_type=rule.lottery_type.value,
         zone_index=0,
+        harmonious_elements=harmonious_elems,
+        name_lucky_numbers=name_lucky_numbers,
     )
 
     # Secondary zone candidates with weights if applicable
@@ -365,16 +457,39 @@ def recommend_lottery_tickets(
             omission_mode=om_mode,
             lottery_type=rule.lottery_type.value,
             zone_index=1,
+            harmonious_elements=harmonious_elems,
+            name_lucky_numbers=name_lucky_numbers,
         )
 
+    seen_tickets = set()
     recommendations = []
-    for _ in range(count):
+    max_attempts = max(count * 60, 400)
+    attempts = 0
+
+    while len(recommendations) < count and attempts < max_attempts:
+        attempts += 1
+
         # Sample Primary Zone
-        if deterministic:
-            # Deterministic: sort by weight descending
+        if deterministic and count == 1:
+            # Deterministic single ticket: strictly top-ranked
             sorted_p = sorted(p_weights, key=lambda x: x[1], reverse=True)
             chosen_p = sorted([x[0] for x in sorted_p[:p_rule.count]])
+        elif deterministic and count > 1:
+            # Deterministic multi-ticket: deterministic pseudo-random reservoir
+            rng_p = random.Random(attempts * 10007 + int(resolved_wb * 100) + int(resolved_wf * 100))
+            keys = []
+            for item, w in p_weights:
+                weight = max(float(w), 1e-6)
+                u = max(rng_p.random(), 1e-12)
+                key = u ** (1.0 / weight)
+                keys.append((key, item))
+            keys.sort(key=lambda x: x[0], reverse=True)
+            if p_rule.unique:
+                chosen_p = sorted([item for _, item in keys[:p_rule.count]])
+            else:
+                chosen_p = [keys[i % len(keys)][1] for i in range(p_rule.count)]
         else:
+            # Non-deterministic A-Res reservoir sampling
             if p_rule.unique:
                 chosen_p = a_res_weighted_sample_without_replacement(p_weights, p_rule.count)
             else:
@@ -389,9 +504,22 @@ def recommend_lottery_tickets(
         s_formatted = None
         chosen_s: List[int] = []
         if s_rule and s_weights:
-            if deterministic:
+            if deterministic and count == 1:
                 sorted_s = sorted(s_weights, key=lambda x: x[1], reverse=True)
                 chosen_s = sorted([x[0] for x in sorted_s[:s_rule.count]])
+            elif deterministic and count > 1:
+                rng_s = random.Random(attempts * 99991 + int(resolved_wo * 100))
+                keys_s = []
+                for item, w in s_weights:
+                    weight = max(float(w), 1e-6)
+                    u = max(rng_s.random(), 1e-12)
+                    key = u ** (1.0 / weight)
+                    keys_s.append((key, item))
+                keys_s.sort(key=lambda x: x[0], reverse=True)
+                if s_rule.unique:
+                    chosen_s = sorted([item for _, item in keys_s[:s_rule.count]])
+                else:
+                    chosen_s = [keys_s[i % len(keys_s)][1] for i in range(s_rule.count)]
             else:
                 if s_rule.unique:
                     chosen_s = a_res_weighted_sample_without_replacement(s_weights, s_rule.count)
@@ -402,6 +530,17 @@ def recommend_lottery_tickets(
                 chosen_s.sort()
 
             s_formatted = [s_rule.format_pattern % v for v in chosen_s]
+
+        # Cross-ticket deduplication
+        ticket_key = (tuple(p_formatted), tuple(s_formatted) if s_formatted else ())
+        if ticket_key in seen_tickets:
+            continue
+        seen_tickets.add(ticket_key)
+
+        bet_idx = len(recommendations) + 1
+        formatted_ticket = " ".join(p_formatted)
+        if s_formatted:
+            formatted_ticket += " + " + " ".join(s_formatted)
 
         # Ticket Wuxing Distribution
         all_ticket_nums = chosen_p + chosen_s
@@ -416,19 +555,39 @@ def recommend_lottery_tickets(
             w_bazi=resolved_wb,
             w_freq=resolved_wf,
             w_omission=resolved_wo,
+            user_name=user_name,
+            today_harmony_text=today_harmony_text,
         )
 
         recommendations.append({
+            "bet_index": bet_idx,
             "primary_numbers": p_formatted,
             "secondary_numbers": s_formatted,
+            "formatted_ticket": formatted_ticket,
             "wuxing_distribution": wuxing_dist,
             "score_rationale": rationale,
         })
+
+    # Assemble unified copy_text for one-click copying
+    lines = [f"【曾练彩票助手 - {rule.chinese_name} {len(recommendations)}注机选推荐】"]
+    if user_name:
+        lines.append(f"缘主姓名：{user_name}")
+    lines.append(f"今日流日：{ganzhi_year}年 {ganzhi_month}月 {ganzhi_day}日 {ganzhi_hour}")
+    lines.append(f"推演策略：{strategy or 'balanced'}")
+    lines.append("-" * 38)
+    for rec in recommendations:
+        lines.append(f"第{rec['bet_index']:02d}注: {rec['formatted_ticket']}")
+    lines.append("-" * 38)
+    lines.append("祝您财星高照，吉祥如意！(彩票纯属概率游戏，请理性购彩)")
+    copy_text = "\n".join(lines)
 
     return {
         "lottery_type": rule.lottery_type.value,
         "strategy": strategy or "balanced",
         "recommendations": recommendations,
+        "copy_text": copy_text,
+        "user_name": user_name,
+        "today_liuri": today_liuri_info,
         "bazi_summary": {
             "day_master": bazi_analysis.get("day_master", ""),
             "day_master_element": bazi_analysis.get("day_master_element", ""),

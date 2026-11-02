@@ -26,7 +26,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.zeng.lottery.data.local.BaziEngine
 import com.zeng.lottery.data.model.BaziDestiny
+import com.zeng.lottery.data.model.displayJiShen
+import com.zeng.lottery.data.model.displayLackingElements
+import com.zeng.lottery.data.model.displayXiYongShen
 import com.zeng.lottery.ui.components.WuxingRadarChart
 import com.zeng.lottery.ui.theme.ElementEarth
 import com.zeng.lottery.ui.theme.ElementFire
@@ -40,6 +44,7 @@ import com.zeng.lottery.ui.theme.ImperialRed
 @Composable
 fun DestinyChartScreen(
     destiny: BaziDestiny?,
+    userName: String = "曾先生",
     modifier: Modifier = Modifier
 ) {
     if (destiny == null) return
@@ -48,10 +53,39 @@ fun DestinyChartScreen(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
+        // User Name & Destiny Header Card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f)
+            )
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "【$userName】命理五行气运盘",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = FortuneGold
+                )
+                Text(
+                    text = "八字原局",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
         // 1. Pentagon Polar Radar Chart Canvas
         WuxingRadarChart(
             scores = destiny.wuxingScores,
-            xiYongShen = destiny.xiYongShen,
+            xiYongShen = destiny.displayXiYongShen,
             dayMaster = destiny.dayMaster,
             strength = destiny.strength
         )
@@ -116,7 +150,7 @@ fun DestinyChartScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    destiny.xiYongShen.forEach { elem ->
+                    destiny.displayXiYongShen.forEach { elem ->
                         val color = getElementColor(elem)
                         SuggestionChip(
                             onClick = {},
@@ -137,7 +171,7 @@ fun DestinyChartScreen(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 // Lacking Elements (缺失五行)
-                if (destiny.lackingElements.isNotEmpty()) {
+                if (destiny.displayLackingElements.isNotEmpty()) {
                     Text(
                         text = "命理缺失五行 (急需数理弥补):",
                         style = MaterialTheme.typography.labelSmall,
@@ -145,7 +179,7 @@ fun DestinyChartScreen(
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        destiny.lackingElements.forEach { elem ->
+                        destiny.displayLackingElements.forEach { elem ->
                             val color = getElementColor(elem)
                             SuggestionChip(
                                 onClick = {},
@@ -166,7 +200,7 @@ fun DestinyChartScreen(
                 }
 
                 // Ji Shen (忌神)
-                if (destiny.jiShen.isNotEmpty()) {
+                if (destiny.displayJiShen.isNotEmpty()) {
                     Text(
                         text = "偏旺忌神 (避讳偏冷):",
                         style = MaterialTheme.typography.labelSmall,
@@ -174,7 +208,7 @@ fun DestinyChartScreen(
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        destiny.jiShen.forEach { elem ->
+                        destiny.displayJiShen.forEach { elem ->
                             SuggestionChip(
                                 onClick = {},
                                 label = {
@@ -193,7 +227,8 @@ fun DestinyChartScreen(
 }
 
 private fun getElementColor(elem: String): Color {
-    return when (elem) {
+    val zh = BaziEngine.ELEMENT_ZH[elem.lowercase()] ?: elem
+    return when (zh) {
         "金" -> ElementMetal
         "木" -> ElementWood
         "水" -> ElementWater

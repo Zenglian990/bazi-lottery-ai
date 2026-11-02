@@ -119,4 +119,21 @@ class LotteryRepository(
             offlineEngine.generateRecommendation(destiny, lotteryType, count, strategy)
         }
     }
+
+    fun getOfflineStats(lotteryType: LotteryType): LotteryStats {
+        return offlineEngine.computeStats(lotteryType)
+    }
+
+    fun getOfflineDestiny(dateTime: LocalDateTime, isMale: Boolean = true): BaziDestiny {
+        return BaziEngine.analyzeDestiny(dateTime, isMale)
+    }
+
+    fun getOfflineRecommendations(
+        destiny: BaziDestiny,
+        lotteryType: LotteryType,
+        count: Int = 5,
+        strategy: String = "balanced"
+    ): BaziRecommendationResponse {
+        return offlineEngine.generateRecommendation(destiny, lotteryType, count, strategy)
+    }
 }

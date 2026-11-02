@@ -35,16 +35,30 @@ class OfflineLotteryEngine(private val context: Context? = null) {
     }
 
     private fun getDrawsForType(lotteryType: LotteryType): List<DrawItem> {
-        if (cachedSeedMap == null && context != null) {
-            try {
-                context.assets.open("seed_lottery_data.json").use { stream ->
-                    val reader = InputStreamReader(stream)
-                    val type = object : TypeToken<Map<String, List<DrawItem>>>() {}.type
-                    cachedSeedMap = gson.fromJson(reader, type)
+        if (cachedSeedMap == null) {
+            if (context != null) {
+                try {
+                    context.assets.open("seed_lottery_data.json").use { stream ->
+                        val reader = InputStreamReader(stream)
+                        val type = object : TypeToken<Map<String, List<DrawItem>>>() {}.type
+                        cachedSeedMap = gson.fromJson(reader, type)
+                    }
+                } catch (e: Exception) {
+                    // Fall through to classloader
                 }
-            } catch (e: Exception) {
-                // Return empty if asset load fails
-                return emptyList()
+            }
+            if (cachedSeedMap == null) {
+                try {
+                    val stream = OfflineLotteryEngine::class.java.classLoader?.getResourceAsStream("seed_lottery_data.json")
+                        ?: OfflineLotteryEngine::class.java.classLoader?.getResourceAsStream("assets/seed_lottery_data.json")
+                    stream?.use { s ->
+                        val reader = InputStreamReader(s)
+                        val type = object : TypeToken<Map<String, List<DrawItem>>>() {}.type
+                        cachedSeedMap = gson.fromJson(reader, type)
+                    }
+                } catch (e: Exception) {
+                    // Return empty if fallback fails
+                }
             }
         }
         return cachedSeedMap?.get(lotteryType.code) ?: emptyList()
@@ -116,25 +130,25 @@ class OfflineLotteryEngine(private val context: Context? = null) {
         lotteryType.secondaryRange?.let { secRange ->
             for (num in secRange) {
                 val numStr = String.format("%02d", num)
-                val appearances = draws.map { it.secondaryNumbers.contains(numStr) }
+                val appearances = draws.map { it.secondaryNumbers?.contains(numStr) == true }
                 val freq = appearances.count { it }
                 val rate = freq.toFloat() / totalDraws
 
-                val recentFreq = recentDraws.count { it.secondaryNumbers.contains(numStr) }
+                val recentFreq = recentDraws.count { it.secondaryNumbers?.contains(numStr) == true }
                 val expectedRecentFreq = windowSize * (lotteryType.secondaryCount.toFloat() / (secRange.last - secRange.first + 1))
                 val isHot = recentFreq >= expectedRecentFreq * 1.25f
                 val isCold = recentFreq <= expectedRecentFreq * 0.75f
 
                 var currentOmission = 0
                 for (draw in draws) {
-                    if (draw.secondaryNumbers.contains(numStr)) break
+                    if (draw.secondaryNumbers?.contains(numStr) == true) break
                     currentOmission++
                 }
 
                 var maxOmission = 0
                 var curOmission = 0
                 for (draw in draws.reversed()) {
-                    if (draw.secondaryNumbers.contains(numStr)) {
+                    if (draw.secondaryNumbers?.contains(numStr) == true) {
                         if (curOmission > maxOmission) maxOmission = curOmission
                         curOmission = 0
                     } else {

@@ -1,5 +1,6 @@
 package com.zeng.lottery.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,7 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Casino
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -26,23 +27,30 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zeng.lottery.data.local.BaziEngine
 import com.zeng.lottery.data.model.BaziRecommendationResponse
 import com.zeng.lottery.data.model.LotteryType
+import com.zeng.lottery.data.model.RecommendationItem
 import com.zeng.lottery.ui.components.BallColorType
 import com.zeng.lottery.ui.components.LotteryBall
 import com.zeng.lottery.ui.theme.FortuneGold
 import com.zeng.lottery.ui.theme.ImperialRed
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -50,17 +58,19 @@ fun RecommendScreen(
     lotteryType: LotteryType,
     recommendationResponse: BaziRecommendationResponse?,
     selectedStrategy: String,
+    betCount: Int = 5,
+    userName: String = "曾先生",
     isLoading: Boolean,
     onStrategySelected: (String) -> Unit,
+    onBetCountSelected: (Int) -> Unit = {},
     onReroll: () -> Unit,
     onOpenDivination: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
     val strategies = listOf("命理吉数优先", "稳健大数据", "冷热追号")
-
-    val recItem = recommendationResponse?.recommendations?.firstOrNull()
-    val primaryBalls = recItem?.primaryNumbers ?: emptyList()
-    val secondaryBalls = recItem?.secondaryNumbers ?: emptyList()
+    val recommendations = recommendationResponse?.recommendations ?: emptyList()
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -73,13 +83,14 @@ fun RecommendScreen(
             modifier = Modifier.padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Header Row: User Name & Lottery Title
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "生辰吉数机选方案 (${lotteryType.title})",
+                    text = "【$userName】专属吉数机选 (${lotteryType.title})",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -92,7 +103,38 @@ fun RecommendScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Bet Count Selector Chips (1注 / 5注 / 10注)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceAround
+            ) {
+                listOf(
+                    Pair(1, "1注 (¥2)"),
+                    Pair(5, "5注 (¥10 · 标准票)"),
+                    Pair(10, "10注 (¥20)")
+                ).forEach { (count, label) ->
+                    val isSelected = betCount == count
+                    FilterChip(
+                        selected = isSelected,
+                        onClick = { onBetCountSelected(count) },
+                        label = {
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                            )
+                        },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = ImperialRed.copy(alpha = 0.25f),
+                            selectedLabelColor = ImperialRed
+                        )
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Strategy Toggle Chips
             Row(
@@ -119,50 +161,125 @@ fun RecommendScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-            // 3D Lottery Ball Rack with Staggered Spring Animation
-            if (primaryBalls.isNotEmpty()) {
-                FlowRow(
+            // Multi-Bet Ticket Cards List
+            if (recommendations.isNotEmpty()) {
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalArrangement = Arrangement.Center
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    // Primary Balls (Red)
-                    primaryBalls.forEachIndexed { index, numStr ->
-                        val num = numStr.toIntOrNull() ?: 0
-                        val elem = BaziEngine.getHetuElementZh(num)
-                        LotteryBall(
-                            number = numStr,
-                            colorType = BallColorType.RED,
-                            wuxingElement = elem,
-                            delayMs = (index * 45L)
-                        )
-                    }
+                    recommendations.forEachIndexed { index, item ->
+                        val ticketLabel = if (index < 26) ('A' + index).toString() else "${index + 1}"
+                        val primaryBalls = item.primaryNumbers
+                        val secondaryBalls = item.secondaryNumbers
 
-                    // Divider if secondary balls exist
-                    if (secondaryBalls.isNotEmpty()) {
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Box(
-                            modifier = Modifier
-                                .height(40.dp)
-                                .width(2.dp)
-                                .align(Alignment.CenterVertically)
-                                .background(Color.Gray.copy(alpha = 0.35f))
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-
-                        // Secondary Balls (Blue for SSQ/DLT, Gold for QXC)
-                        val secColor = if (lotteryType == LotteryType.QXC) BallColorType.GOLD else BallColorType.BLUE
-                        secondaryBalls.forEachIndexed { index, numStr ->
-                            val num = numStr.toIntOrNull() ?: 0
-                            val elem = BaziEngine.getHetuElementZh(num)
-                            LotteryBall(
-                                number = numStr,
-                                colorType = secColor,
-                                wuxingElement = elem,
-                                delayMs = ((primaryBalls.size + index) * 45L)
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
                             )
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                // Single Bet Card Header with Copy Button
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "第 [$ticketLabel] 注",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = FortuneGold
+                                    )
+
+                                    OutlinedButton(
+                                        onClick = {
+                                            val text = formatSingleBet(lotteryType, item, index)
+                                            clipboardManager.setText(AnnotatedString(text))
+                                            Toast.makeText(context, "已复制单注: $text", Toast.LENGTH_SHORT).show()
+                                        },
+                                        shape = RoundedCornerShape(8.dp),
+                                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                                        modifier = Modifier.height(28.dp),
+                                        colors = ButtonDefaults.outlinedButtonColors(contentColor = FortuneGold)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.ContentCopy,
+                                            contentDescription = "单注复制",
+                                            modifier = Modifier.size(12.dp),
+                                            tint = FortuneGold
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text("单注复制", fontSize = 11.sp)
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                // 3D Balls Row
+                                FlowRow(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    primaryBalls.forEachIndexed { pIdx, numStr ->
+                                        val num = numStr.toIntOrNull() ?: 0
+                                        val elem = BaziEngine.getHetuElementZh(num)
+                                        LotteryBall(
+                                            number = numStr,
+                                            colorType = BallColorType.RED,
+                                            wuxingElement = elem,
+                                            delayMs = (pIdx * 30L)
+                                        )
+                                    }
+
+                                    if (secondaryBalls.isNotEmpty()) {
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Box(
+                                            modifier = Modifier
+                                                .height(36.dp)
+                                                .width(1.5.dp)
+                                                .align(Alignment.CenterVertically)
+                                                .background(Color.Gray.copy(alpha = 0.35f))
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+
+                                        val secColor = if (lotteryType == LotteryType.QXC) BallColorType.GOLD else BallColorType.BLUE
+                                        secondaryBalls.forEachIndexed { sIdx, numStr ->
+                                            val num = numStr.toIntOrNull() ?: 0
+                                            val elem = BaziEngine.getHetuElementZh(num)
+                                            LotteryBall(
+                                                number = numStr,
+                                                colorType = secColor,
+                                                wuxingElement = elem,
+                                                delayMs = ((primaryBalls.size + sIdx) * 30L)
+                                            )
+                                        }
+                                    }
+                                }
+
+                                if (item.wuxingDistribution.isNotEmpty()) {
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        item.wuxingDistribution.forEach { (elem, count) ->
+                                            val zh = BaziEngine.ELEMENT_ZH[elem.lowercase()] ?: elem
+                                            Text(
+                                                text = "$zh:$count",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontSize = 10.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier.padding(horizontal = 4.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -175,50 +292,68 @@ fun RecommendScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Rationale and Wuxing distribution card
-            recItem?.let { item ->
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
-                            shape = RoundedCornerShape(12.dp)
+            // Rationale Card (from first bet)
+            recommendations.firstOrNull()?.let { item ->
+                if (item.scoreRationale.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .padding(12.dp)
+                    ) {
+                        Text(
+                            text = "选号玄机与大数据依据:",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = FortuneGold
                         )
-                        .padding(12.dp)
-                ) {
-                    Text(
-                        text = "选号玄机与大数据依据:",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = FortuneGold
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = item.scoreRationale,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 12.sp
-                    )
-
-                    if (item.wuxingDistribution.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            item.wuxingDistribution.forEach { (elem, count) ->
-                                Text(
-                                    text = "${BaziEngine.ELEMENT_ZH[elem] ?: elem}:$count",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontSize = 11.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = item.scoreRationale,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 12.sp
+                        )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Full Ticket Copy Button ("全票复制 (全部N注)")
+            if (recommendations.isNotEmpty()) {
+                OutlinedButton(
+                    onClick = {
+                        val fullTicketText = buildFullTicketString(lotteryType, recommendations, userName)
+                        clipboardManager.setText(AnnotatedString(fullTicketText))
+                        Toast.makeText(context, "已复制全部 ${recommendations.size} 注彩票号码至剪贴板", Toast.LENGTH_SHORT).show()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(46.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = FortuneGold)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ContentCopy,
+                        contentDescription = "全票复制",
+                        modifier = Modifier.size(18.dp),
+                        tint = FortuneGold
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "全票复制 (全部 ${recommendations.size} 注 · ¥${recommendations.size * 2})",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+            }
 
             // One-click Smart Re-Roll Button
             Button(
@@ -226,7 +361,7 @@ fun RecommendScreen(
                 enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp),
+                    .height(48.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = ImperialRed,
@@ -263,7 +398,7 @@ fun RecommendScreen(
                 onClick = onOpenDivination,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp),
+                    .height(46.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = FortuneGold,
@@ -280,10 +415,44 @@ fun RecommendScreen(
                 Text(
                     text = "易道大师 AI 解盘",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp,
+                    fontSize = 14.sp,
                     color = Color.Black
                 )
             }
         }
     }
+}
+
+private fun formatSingleBet(
+    lotteryType: LotteryType,
+    item: RecommendationItem,
+    index: Int
+): String {
+    val label = if (index < 26) ('A' + index).toString() else "${index + 1}"
+    val pri = item.primaryNumbers.joinToString(" ")
+    val sec = if (item.secondaryNumbers.isNotEmpty()) " + " + item.secondaryNumbers.joinToString(" ") else ""
+    return "${lotteryType.title} [$label] $pri$sec"
+}
+
+private fun buildFullTicketString(
+    lotteryType: LotteryType,
+    items: List<RecommendationItem>,
+    userName: String
+): String {
+    val sb = StringBuilder()
+    sb.appendLine("【曾练彩票助手 · 生辰八字祥瑞票】")
+    sb.appendLine("缘主: $userName")
+    sb.appendLine("彩种: ${lotteryType.title} (${items.size}注 · ¥${items.size * 2})")
+    val nowStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+    sb.appendLine("推算时间: $nowStr")
+    sb.appendLine("--------------------------------")
+    items.forEachIndexed { idx, item ->
+        val label = if (idx < 26) ('A' + idx).toString() else "${idx + 1}"
+        val pri = item.primaryNumbers.joinToString(" ")
+        val sec = if (item.secondaryNumbers.isNotEmpty()) " + " + item.secondaryNumbers.joinToString(" ") else ""
+        sb.appendLine("[$label] $pri$sec")
+    }
+    sb.appendLine("--------------------------------")
+    sb.appendLine("祝君中奖，理性购彩！")
+    return sb.toString()
 }

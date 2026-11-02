@@ -11,7 +11,7 @@ SEEDS_DIR = DB_DIR / "seeds"
 
 class Settings:
     PROJECT_NAME: str = "曾练彩票助手 - 易道乾坤与大数据分析中枢"
-    VERSION: str = "1.0.0"
+    VERSION: str = "1.1.0"
     API_V1_PREFIX: str = "/api"
 
     # Database settings
