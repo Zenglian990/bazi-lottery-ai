@@ -151,7 +151,7 @@ fun AiSettingsDialog(
                                 }
                                 AiProvider.DIRECT_DEEPSEEK -> {
                                     Text(
-                                        text = "国内顶级中文推理，支持 deepseek-flash 极速与 deepseek-v4-pro 旗舰深度推理",
+                                        text = "国内最强纯中文推理，支持 Flash 极速与 V4-Pro 旗舰深度推演 (1M上下文)",
                                         style = MaterialTheme.typography.bodySmall,
                                         fontSize = 11.sp,
                                         color = FortuneGold.copy(alpha = 0.85f)
@@ -219,7 +219,7 @@ fun AiSettingsDialog(
                         )
 
                         Text(
-                            text = "官方最新模型规格切换：",
+                            text = "选择模型规格：",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

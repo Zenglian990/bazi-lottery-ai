@@ -8,7 +8,7 @@
 [![Unit Tests](https://img.shields.io/badge/Backend%20Pytest-144%2F144%20Passed-success.svg)]()
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)]()
 
-> 基于**生辰八字天干地支推算**、**河图五行数理**、**历史开奖大数据加权**并集成**国内顶级 DeepSeek (V3/R1) 与 Google Gemini (2.5/3.8 Flash) AI 双模智能解盘**的现代化专业级彩票助手。采用前后端分离架构，由高性能云端 RESTful API 后端服务与原生 Android Jetpack Compose 客户端协同构成。搭载全新东方轻奢暗金 Taiji 乾坤 Logo。
+> 基于**生辰八字天干地支推算**、**河图五行数理**、**历史开奖大数据加权**并集成**国内顶级 DeepSeek (deepseek-flash / deepseek-v4-pro 1M上下文) 与 Google Gemini (gemini-3.8-flash / gemini-2.5-flash) AI 多模智能解盘**的现代化专业级彩票助手。采用前后端分离架构，由高性能云端 RESTful API 后端服务与原生 Android Jetpack Compose 客户端协同构成。搭载全新东方轻奢暗金 Taiji 乾坤 Logo。
 
 ---
 
@@ -199,14 +199,14 @@ blissful-archimedes/
 如需启用云端大模型解盘，可配置以下环境变量（支持写在 `.env` 文件或容器环境中）：
 
 ```bash
-# 国内顶级模型 DeepSeek 配置 (可选，推荐)
+# 国内顶级 DeepSeek 模型配置 (推荐)
 export DEEPSEEK_API_KEY="your-deepseek-api-key"
 export DEEPSEEK_BASE_URL="https://api.deepseek.com/v1"
-export DEEPSEEK_MODEL="deepseek-flash" # 可选: deepseek-flash (极速/思考/1M) 或 deepseek-v4-pro (旗舰深度推理/1M)
+export DEEPSEEK_MODEL="deepseek-flash"
 
 # 谷歌 Gemini 前沿模型配置 (可选)
 export GEMINI_API_KEY="your-gemini-api-key"
-export GEMINI_MODEL="gemini-3.8-flash" # 可选: gemini-3.8-flash (最新前沿推荐) 或 gemini-2.5-flash
+export GEMINI_MODEL="gemini-3.8-flash"
 
 # OpenAI 兼容接口配置 (可选)
 export OPENAI_API_KEY="your-openai-api-key"
@@ -388,7 +388,7 @@ adb install android/app/build/outputs/apk/debug/app-debug.apk
                               /                 \
                              ▼                   ▼
                  【模式一: 用户直连模式】     【模式二: 后端安全中继模式】
-                 - Direct Gemini v1beta      - 转发至 POST /api/ai/divination
+                 - Direct DeepSeek / Gemini  - 转发至 POST /api/ai/divination
                  - Direct OpenAI 兼容端点     - 前端零配置、无需填 Key
                  - EncryptedKeyStore 加密    - 服务端安全管控与频次限制
                  - OkHttp SSE 打字机流式     - 服务端 Fallback 离线算法保底
@@ -398,7 +398,7 @@ adb install android/app/build/outputs/apk/debug/app-debug.apk
 
 适用于不愿将个人 Key 上传到服务端的资深用户：
 1. 打开 Android 客户端设置页。
-2. 在「AI 提供商」选择 **Google Gemini** 或 **OpenAI 兼容端点**。
+2. 在「AI 提供商」选择 **DeepSeek 深度求索**、**Google Gemini** 或 **OpenAI 兼容端点**。支持快捷切换 `deepseek-flash`、`deepseek-v4-pro` 与 `gemini-3.8-flash`、`gemini-2.5-flash`。
 3. 填入您的专属 API Key（如 `AIzaSy...` 或 `sk-...`）。
 4. （若选择 OpenAI）可自定义 Base URL（例如支持 DeepSeek、Moonshot、OneAPI 等代理端点）及 Model 模型名。
 5. **安全存储机制**：密钥通过 `AndroidKeyStore` 利用硬件安全模块（TEE/StrongBox）进行 AES-GCM-256 加密存储在 `EncryptedSharedPreferences` 中，任何第三方应用与日志均无法窃取。

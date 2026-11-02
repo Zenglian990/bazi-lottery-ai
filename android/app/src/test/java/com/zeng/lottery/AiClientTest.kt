@@ -106,6 +106,24 @@ class AiClientTest {
         assertEquals("【数理玄机】尾数一六合水。", delta)
         assertFalse(isDone)
 
+        // Test DeepSeek reasoning_content chunk in thinking mode
+        val reasoningChunk = """
+            {
+              "id": "chatcmpl-reasoning-1",
+              "choices": [
+                {
+                  "index": 0,
+                  "delta": {
+                    "reasoning_content": "推演天干合化，水木相生..."
+                  }
+                }
+              ]
+            }
+        """.trimIndent()
+        val (rDelta, rDone) = openAiClient.parseOpenAiDelta(reasoningChunk)
+        assertEquals("推演天干合化，水木相生...", rDelta)
+        assertFalse(rDone)
+
         // Test [DONE] sentinel
         val (doneDelta, doneStatus) = openAiClient.parseOpenAiDelta("[DONE]")
         assertEquals("", doneDelta)
@@ -140,6 +158,13 @@ class AiClientTest {
         assertTrue("Encrypted payload should contain colon IV separator", encrypted.contains(":"))
         val decrypted = KeyStoreManager.decrypt(encrypted)
         assertEquals(secretKey, decrypted)
+
+        // Test Default Model Names in AiConfig
+        val defaultConfig = AiConfig()
+        assertEquals("deepseek-flash", defaultConfig.deepseekModel)
+        assertEquals("gemini-3.8-flash", defaultConfig.geminiModel)
+        assertEquals(AiProvider.DIRECT_DEEPSEEK.defaultModel, "deepseek-flash")
+        assertEquals(AiProvider.DIRECT_GEMINI.defaultModel, "gemini-3.8-flash")
 
         // Test Config Save & Load with JVM Fallback
         val testConfig = AiConfig(

@@ -347,7 +347,8 @@ async def _call_openai_api(
         data = resp.json()
         choices = data.get("choices", [])
         if choices:
-            return choices[0].get("message", {}).get("content", "")
+            msg = choices[0].get("message", {})
+            return msg.get("content") or msg.get("reasoning_content") or ""
         raise ValueError("Empty response from OpenAI API")
 
 
@@ -454,7 +455,8 @@ async def stream_divination_chunks(request: BaziDivinationRequest) -> AsyncGener
                                     json_data = json.loads(data_str)
                                     choices = json_data.get("choices", [])
                                     if choices:
-                                        delta = choices[0].get("delta", {}).get("content", "")
+                                        delta_obj = choices[0].get("delta", {})
+                                        delta = delta_obj.get("content") or delta_obj.get("reasoning_content") or ""
                                         if delta:
                                             emitted_any = True
                                             yield delta

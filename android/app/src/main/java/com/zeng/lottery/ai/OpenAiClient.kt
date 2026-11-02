@@ -35,7 +35,11 @@ class OpenAiClient(private val okHttpClient: OkHttpClient) {
             if (choices != null && choices.size() > 0) {
                 val choice = choices.get(0).asJsonObject
                 val delta = choice.getAsJsonObject("delta")
-                val content = delta?.get("content")?.asString ?: ""
+                val content = when {
+                    delta != null && delta.has("content") && !delta.get("content").isJsonNull -> delta.get("content").asString
+                    delta != null && delta.has("reasoning_content") && !delta.get("reasoning_content").isJsonNull -> delta.get("reasoning_content").asString
+                    else -> ""
+                }
                 Pair(content, false)
             } else {
                 Pair("", false)
