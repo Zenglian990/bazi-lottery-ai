@@ -82,6 +82,25 @@ class LotteryRepository(
         }
     }
 
+    suspend fun getHistoryDraws(lotteryType: LotteryType, limit: Int = 50): List<com.zeng.lottery.data.model.DrawItem> {
+        return try {
+            withTimeout(4000L) {
+                val remote = apiService.getHistory(lotteryType.code, limit = limit)
+                _isOffline.value = false
+                if (remote.records.isNotEmpty()) remote.records else offlineEngine.getHistoryDraws(lotteryType, limit)
+            }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            _isOffline.value = true
+            offlineEngine.getHistoryDraws(lotteryType, limit)
+        }
+    }
+
+    fun getOfflineHistoryDraws(lotteryType: LotteryType, limit: Int = 50): List<com.zeng.lottery.data.model.DrawItem> {
+        return offlineEngine.getHistoryDraws(lotteryType, limit)
+    }
+
     suspend fun getRecommendations(
         destiny: BaziDestiny,
         lotteryType: LotteryType,

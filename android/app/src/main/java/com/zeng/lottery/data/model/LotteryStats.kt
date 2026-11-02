@@ -187,6 +187,15 @@ data class DrawItem(
     val poolAmount: Long? = null
 )
 
+data class HistoryResponse(
+    @SerializedName("lottery_type")
+    val lotteryType: String = "",
+    val page: Int = 1,
+    val limit: Int = 50,
+    val total: Int = 0,
+    val records: List<DrawItem> = emptyList()
+)
+
 data class HealthResponse(
     val status: String = "",
     val version: String = "",

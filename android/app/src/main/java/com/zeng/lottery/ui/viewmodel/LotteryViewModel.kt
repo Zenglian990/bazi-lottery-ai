@@ -13,6 +13,7 @@ import com.zeng.lottery.data.local.BaziEngine
 import com.zeng.lottery.data.local.OfflineLotteryEngine
 import com.zeng.lottery.data.model.BaziDestiny
 import com.zeng.lottery.data.model.BaziRecommendationResponse
+import com.zeng.lottery.data.model.DrawItem
 import com.zeng.lottery.data.model.LotteryStats
 import com.zeng.lottery.data.model.LotteryType
 import com.zeng.lottery.data.repository.LotteryRepository
@@ -72,6 +73,9 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
     private val _stats = MutableStateFlow<LotteryStats?>(null)
     val stats: StateFlow<LotteryStats?> = _stats.asStateFlow()
 
+    private val _historyDraws = MutableStateFlow<List<DrawItem>>(emptyList())
+    val historyDraws: StateFlow<List<DrawItem>> = _historyDraws.asStateFlow()
+
     private val _recommendation = MutableStateFlow<BaziRecommendationResponse?>(null)
     val recommendation: StateFlow<BaziRecommendationResponse?> = _recommendation.asStateFlow()
 
@@ -123,6 +127,7 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
         val initialDestiny = repository.getOfflineDestiny(_birthDateTime.value, _isMale.value)
         _destiny.value = initialDestiny
         _stats.value = repository.getOfflineStats(_selectedLottery.value)
+        _historyDraws.value = repository.getOfflineHistoryDraws(_selectedLottery.value, 50)
         _recommendation.value = repository.getOfflineRecommendations(
             destiny = initialDestiny,
             lotteryType = _selectedLottery.value,
@@ -167,9 +172,10 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
 
     fun selectLottery(type: LotteryType) {
         _selectedLottery.value = type
-        // Immediately show offline stats & recommendations for instant responsiveness
+        // Immediately show offline stats, history & recommendations for instant responsiveness
         val currentDestiny = _destiny.value ?: repository.getOfflineDestiny(_birthDateTime.value, _isMale.value)
         _stats.value = repository.getOfflineStats(type)
+        _historyDraws.value = repository.getOfflineHistoryDraws(type, 50)
         _recommendation.value = repository.getOfflineRecommendations(
             destiny = currentDestiny,
             lotteryType = type,
@@ -183,6 +189,10 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
             try {
                 withTimeout(5500L) {
                     _stats.value = repository.getStats(type)
+                    val remoteHist = repository.getHistoryDraws(type, 50)
+                    if (remoteHist.isNotEmpty()) {
+                        _historyDraws.value = remoteHist
+                    }
                     _recommendation.value = repository.getRecommendations(
                         destiny = currentDestiny,
                         lotteryType = type,
@@ -251,12 +261,17 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
                 withTimeout(4000L) {
                     val s = repository.getStats(_selectedLottery.value)
                     _stats.value = s
+                    val remoteHist = repository.getHistoryDraws(_selectedLottery.value, 50)
+                    if (remoteHist.isNotEmpty()) {
+                        _historyDraws.value = remoteHist
+                    }
                     success = s.totalDraws > 0
                 }
             } catch (e: kotlinx.coroutines.CancellationException) {
                 return@launch
             } catch (e: Exception) {
                 _stats.value = repository.getOfflineStats(_selectedLottery.value)
+                _historyDraws.value = repository.getOfflineHistoryDraws(_selectedLottery.value, 50)
                 success = true
             } finally {
                 _isLoading.value = false
@@ -319,6 +334,10 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
                 val d = repository.getDestiny(_birthDateTime.value, _isMale.value)
                 _destiny.value = d
                 _stats.value = repository.getStats(_selectedLottery.value)
+                val remoteHist = repository.getHistoryDraws(_selectedLottery.value, 50)
+                if (remoteHist.isNotEmpty()) {
+                    _historyDraws.value = remoteHist
+                }
                 _recommendation.value = repository.getRecommendations(
                     destiny = d,
                     lotteryType = _selectedLottery.value,
@@ -341,6 +360,10 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
                     val d = repository.getDestiny(_birthDateTime.value, _isMale.value)
                     _destiny.value = d
                     _stats.value = repository.getStats(_selectedLottery.value)
+                    val remoteHist = repository.getHistoryDraws(_selectedLottery.value, 50)
+                    if (remoteHist.isNotEmpty()) {
+                        _historyDraws.value = remoteHist
+                    }
                     _recommendation.value = repository.getRecommendations(
                         destiny = d,
                         lotteryType = _selectedLottery.value,
@@ -355,6 +378,9 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
                 _destiny.value = d
                 if (_stats.value == null) {
                     _stats.value = repository.getOfflineStats(_selectedLottery.value)
+                }
+                if (_historyDraws.value.isEmpty()) {
+                    _historyDraws.value = repository.getOfflineHistoryDraws(_selectedLottery.value, 50)
                 }
                 if (_recommendation.value == null) {
                     _recommendation.value = repository.getOfflineRecommendations(

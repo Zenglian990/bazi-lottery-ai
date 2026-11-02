@@ -33,6 +33,13 @@ interface LotteryApiService {
     @GET("/api/lottery/omission/{type}")
     suspend fun getOmission(@Path("type") type: String): LotteryStats
 
+    @GET("/api/lottery/history/{type}")
+    suspend fun getHistory(
+        @Path("type") type: String,
+        @Query("limit") limit: Int = 50,
+        @Query("page") page: Int = 1
+    ): com.zeng.lottery.data.model.HistoryResponse
+
     @POST("/api/bazi/destiny")
     suspend fun calculateDestiny(@Body request: BaziDestinyRequest): BaziDestiny
 

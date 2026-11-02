@@ -91,6 +91,44 @@ class ViewModelTest {
     }
 
     @Test
+    fun testOfflineHistoryDrawsRetrieval() {
+        val engine = OfflineLotteryEngine(context = null)
+        
+        // 1. SSQ
+        val ssqHistory = engine.getHistoryDraws(LotteryType.SSQ, limit = 50)
+        assertNotNull(ssqHistory)
+        assertTrue("SSQ should have at least 50 history draws", ssqHistory.size >= 50)
+        val firstSsq = ssqHistory.first()
+        assertEquals("2026125", firstSsq.issue)
+        assertEquals("2026-11-01", firstSsq.drawDate)
+        assertEquals(6, firstSsq.primaryNumbers.size)
+        assertEquals(1, firstSsq.secondaryNumbers?.size)
+
+        // 2. DLT
+        val dltHistory = engine.getHistoryDraws(LotteryType.DLT, limit = 30)
+        assertNotNull(dltHistory)
+        assertEquals(30, dltHistory.size)
+        val firstDlt = dltHistory.first()
+        assertEquals(5, firstDlt.primaryNumbers.size)
+        assertEquals(2, firstDlt.secondaryNumbers?.size)
+
+        // 3. FC3D
+        val fc3dHistory = engine.getHistoryDraws(LotteryType.FC3D, limit = 20)
+        assertNotNull(fc3dHistory)
+        assertEquals(20, fc3dHistory.size)
+        val firstFc3d = fc3dHistory.first()
+        assertEquals(3, firstFc3d.primaryNumbers.size)
+
+        // 4. QXC
+        val qxcHistory = engine.getHistoryDraws(LotteryType.QXC, limit = 10)
+        assertNotNull(qxcHistory)
+        assertEquals(10, qxcHistory.size)
+        val firstQxc = qxcHistory.first()
+        assertEquals(6, firstQxc.primaryNumbers.size)
+        assertEquals(1, firstQxc.secondaryNumbers?.size)
+    }
+
+    @Test
     fun testDestinyPillarConsistency() {
         val dt = LocalDateTime.of(1990, 8, 15, 8, 30)
         val d1 = BaziEngine.analyzeDestiny(dt, isMale = true)

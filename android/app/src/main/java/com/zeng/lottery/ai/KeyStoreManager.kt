@@ -138,52 +138,49 @@ object KeyStoreManager {
     }
 
     /**
-     * Encrypt plain text using AES-256 GCM with automatic XOR defense fallback.
-     * Guaranteed to never throw any exception to the caller.
+     * Encrypt plain text using safe salted XOR obfuscation.
+     * Guaranteed to never throw any exception or trigger Knox hardware keystore locks on real devices.
      */
     fun encrypt(plainText: String): String {
         if (plainText.isEmpty()) return ""
         return try {
-            val key = getSecretKey()
-            val cipher = Cipher.getInstance(TRANSFORMATION)
-            val fallbackIv = ByteArray(IV_LENGTH).apply { SecureRandom().nextBytes(this) }
-            try {
-                // KeyStore provider generates random IV (avoids InvalidAlgorithmParameterException on real devices)
-                cipher.init(Cipher.ENCRYPT_MODE, key)
-            } catch (e: Throwable) {
-                // In case provider requires explicit GCM parameter spec (e.g. JVM SunJCE)
-                cipher.init(Cipher.ENCRYPT_MODE, key, GCMParameterSpec(GCM_TAG_LENGTH, fallbackIv))
-            }
-            val iv = cipher.iv ?: fallbackIv
-            val cipherBytes = cipher.doFinal(plainText.toByteArray(StandardCharsets.UTF_8))
-            val ivBase64 = encodeBase64(iv)
-            val cipherBase64 = encodeBase64(cipherBytes)
-            "$ivBase64:$cipherBase64"
-        } catch (e: Throwable) {
             encryptXor(plainText)
+        } catch (e: Throwable) {
+            try {
+                "x1_fallback:" + encodeBase64(plainText.toByteArray(StandardCharsets.UTF_8))
+            } catch (e2: Throwable) {
+                plainText
+            }
         }
     }
 
     /**
-     * Decrypt AES-256 GCM encrypted string with automatic fallback.
+     * Decrypt string with multi-layer fallback (XOR salted, legacy AES-256 GCM, and plain text).
      * Guaranteed to never throw any exception to the caller.
      */
     fun decrypt(encryptedPayload: String): String {
         if (encryptedPayload.isBlank()) return ""
-        if (encryptedPayload.startsWith("x1_")) {
-            return decryptXor(encryptedPayload)
+        val trimmed = encryptedPayload.trim()
+        if (trimmed.startsWith("x1_fallback:")) {
+            return try {
+                String(decodeBase64(trimmed.substring("x1_fallback:".length)), StandardCharsets.UTF_8)
+            } catch (_: Throwable) { "" }
         }
-        if (!encryptedPayload.contains(":")) {
+        if (trimmed.startsWith("x1_")) {
+            val res = decryptXor(trimmed)
+            if (res.isNotBlank()) return res
+        }
+        if (!trimmed.contains(":")) {
             // Legacy unencrypted plain text key (supports DeepSeek, Gemini, OpenAI, Groq, SiliconFlow, etc.)
-            return encryptedPayload.trim()
+            return trimmed
         }
         return try {
-            val parts = encryptedPayload.split(":", limit = 2)
+            val parts = trimmed.split(":", limit = 2)
             val iv = decodeBase64(parts[0])
             val cipherBytes = decodeBase64(parts[1])
             if (iv.isEmpty() || cipherBytes.isEmpty()) {
-                val xor = decryptXor(encryptedPayload)
-                return if (xor.isNotBlank()) xor else encryptedPayload.trim()
+                val xor = decryptXor(trimmed)
+                return if (xor.isNotBlank()) xor else trimmed
             }
 
             val cipher = Cipher.getInstance(TRANSFORMATION)
@@ -192,11 +189,11 @@ object KeyStoreManager {
             val plainBytes = cipher.doFinal(cipherBytes)
             String(plainBytes, StandardCharsets.UTF_8)
         } catch (e: Throwable) {
-            val xorResult = decryptXor(encryptedPayload)
+            val xorResult = decryptXor(trimmed)
             if (xorResult.isNotBlank()) {
                 xorResult
             } else {
-                encryptedPayload.trim()
+                trimmed
             }
         }
     }

@@ -107,6 +107,7 @@ fun LotteryApp(
 
     val userName by viewModel.userName.collectAsState()
     val betCount by viewModel.betCount.collectAsState()
+    val historyDraws by viewModel.historyDraws.collectAsState()
 
     var selectedNavIndex by remember { mutableIntStateOf(0) }
     var showSettingsDialog by remember { mutableStateOf(false) }
@@ -285,6 +286,7 @@ fun LotteryApp(
 
                     StatsScreen(
                         stats = stats,
+                        historyDraws = historyDraws,
                         lotteryType = selectedLottery,
                         onRefreshStats = { viewModel.refreshStats() }
                     )

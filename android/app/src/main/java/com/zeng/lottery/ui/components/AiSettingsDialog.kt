@@ -14,8 +14,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -42,7 +44,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -63,6 +68,7 @@ fun AiSettingsDialog(
     onDismiss: () -> Unit,
     onSaveConfig: (AiConfig) -> Unit
 ) {
+    val clipboardManager = LocalClipboardManager.current
     var selectedProvider by remember { mutableStateOf(currentConfig.provider) }
     var deepseekKey by remember { mutableStateOf(currentConfig.deepseekApiKey ?: "") }
     var deepseekBaseUrl by remember { mutableStateOf(currentConfig.deepseekBaseUrl ?: "https://api.deepseek.com/v1") }
@@ -203,19 +209,44 @@ fun AiSettingsDialog(
                         OutlinedTextField(
                             value = deepseekKey,
                             onValueChange = { input ->
-                                deepseekKey = (input ?: "").filter { it != '\r' && it != '\n' }
+                                try {
+                                    deepseekKey = input
+                                } catch (_: Throwable) {}
                             },
                             label = { Text("DeepSeek API Key") },
                             placeholder = { Text("sk-...") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             visualTransformation = if (showDeepseekKey) VisualTransformation.None else PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = if (showDeepseekKey) KeyboardType.Ascii else KeyboardType.Password,
+                                autoCorrect = false,
+                                imeAction = ImeAction.Done
+                            ),
                             trailingIcon = {
-                                IconButton(onClick = { showDeepseekKey = !showDeepseekKey }) {
-                                    Icon(
-                                        imageVector = if (showDeepseekKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                        contentDescription = "切换可见性"
-                                    )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    IconButton(
+                                        onClick = {
+                                            try {
+                                                val clip = clipboardManager.getText()?.text
+                                                if (!clip.isNullOrBlank()) {
+                                                    deepseekKey = clip.trim().replace("\r", "").replace("\n", "")
+                                                }
+                                            } catch (_: Throwable) {}
+                                        }
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.ContentPaste,
+                                            contentDescription = "粘贴剪贴板",
+                                            tint = FortuneGold
+                                        )
+                                    }
+                                    IconButton(onClick = { showDeepseekKey = !showDeepseekKey }) {
+                                        Icon(
+                                            imageVector = if (showDeepseekKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                            contentDescription = "切换可见性"
+                                        )
+                                    }
                                 }
                             }
                         )
@@ -251,20 +282,34 @@ fun AiSettingsDialog(
 
                         OutlinedTextField(
                             value = deepseekModel,
-                            onValueChange = { deepseekModel = (it ?: "").filter { c -> c != '\r' && c != '\n' } },
+                            onValueChange = { input ->
+                                try { deepseekModel = input } catch (_: Throwable) {}
+                            },
                             label = { Text("Model Name") },
                             placeholder = { Text("deepseek-flash") },
                             modifier = Modifier.fillMaxWidth(),
-                            singleLine = true
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Ascii,
+                                autoCorrect = false,
+                                imeAction = ImeAction.Next
+                            )
                         )
 
                         OutlinedTextField(
                             value = deepseekBaseUrl,
-                            onValueChange = { deepseekBaseUrl = (it ?: "").filter { c -> c != '\r' && c != '\n' } },
+                            onValueChange = { input ->
+                                try { deepseekBaseUrl = input } catch (_: Throwable) {}
+                            },
                             label = { Text("官方 API 端点") },
                             placeholder = { Text("https://api.deepseek.com/v1") },
                             modifier = Modifier.fillMaxWidth(),
-                            singleLine = true
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Uri,
+                                autoCorrect = false,
+                                imeAction = ImeAction.Done
+                            )
                         )
                     }
 
@@ -272,19 +317,44 @@ fun AiSettingsDialog(
                         OutlinedTextField(
                             value = geminiKey,
                             onValueChange = { input ->
-                                geminiKey = (input ?: "").filter { it != '\r' && it != '\n' }
+                                try {
+                                    geminiKey = input
+                                } catch (_: Throwable) {}
                             },
                             label = { Text("Google Gemini API Key") },
                             placeholder = { Text("AIzaSy...") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             visualTransformation = if (showGeminiKey) VisualTransformation.None else PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = if (showGeminiKey) KeyboardType.Ascii else KeyboardType.Password,
+                                autoCorrect = false,
+                                imeAction = ImeAction.Done
+                            ),
                             trailingIcon = {
-                                IconButton(onClick = { showGeminiKey = !showGeminiKey }) {
-                                    Icon(
-                                        imageVector = if (showGeminiKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                        contentDescription = "切换可见性"
-                                    )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    IconButton(
+                                        onClick = {
+                                            try {
+                                                val clip = clipboardManager.getText()?.text
+                                                if (!clip.isNullOrBlank()) {
+                                                    geminiKey = clip.trim().replace("\r", "").replace("\n", "")
+                                                }
+                                            } catch (_: Throwable) {}
+                                        }
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.ContentPaste,
+                                            contentDescription = "粘贴剪贴板",
+                                            tint = FortuneGold
+                                        )
+                                    }
+                                    IconButton(onClick = { showGeminiKey = !showGeminiKey }) {
+                                        Icon(
+                                            imageVector = if (showGeminiKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                            contentDescription = "切换可见性"
+                                        )
+                                    }
                                 }
                             }
                         )
@@ -321,11 +391,18 @@ fun AiSettingsDialog(
 
                         OutlinedTextField(
                             value = geminiModel,
-                            onValueChange = { geminiModel = (it ?: "").filter { c -> c != '\r' && c != '\n' } },
+                            onValueChange = { input ->
+                                try { geminiModel = input } catch (_: Throwable) {}
+                            },
                             label = { Text("Gemini Model") },
                             placeholder = { Text("gemini-3.8-flash") },
                             modifier = Modifier.fillMaxWidth(),
-                            singleLine = true
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Ascii,
+                                autoCorrect = false,
+                                imeAction = ImeAction.Done
+                            )
                         )
                     }
 
@@ -333,30 +410,62 @@ fun AiSettingsDialog(
                         OutlinedTextField(
                             value = openaiKey,
                             onValueChange = { input ->
-                                openaiKey = (input ?: "").filter { it != '\r' && it != '\n' }
+                                try {
+                                    openaiKey = input
+                                } catch (_: Throwable) {}
                             },
                             label = { Text("API Key") },
                             placeholder = { Text("sk-...") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             visualTransformation = if (showOpenAiKey) VisualTransformation.None else PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = if (showOpenAiKey) KeyboardType.Ascii else KeyboardType.Password,
+                                autoCorrect = false,
+                                imeAction = ImeAction.Done
+                            ),
                             trailingIcon = {
-                                IconButton(onClick = { showOpenAiKey = !showOpenAiKey }) {
-                                    Icon(
-                                        imageVector = if (showOpenAiKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                        contentDescription = "切换可见性"
-                                    )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    IconButton(
+                                        onClick = {
+                                            try {
+                                                val clip = clipboardManager.getText()?.text
+                                                if (!clip.isNullOrBlank()) {
+                                                    openaiKey = clip.trim().replace("\r", "").replace("\n", "")
+                                                }
+                                            } catch (_: Throwable) {}
+                                        }
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.ContentPaste,
+                                            contentDescription = "粘贴剪贴板",
+                                            tint = FortuneGold
+                                        )
+                                    }
+                                    IconButton(onClick = { showOpenAiKey = !showOpenAiKey }) {
+                                        Icon(
+                                            imageVector = if (showOpenAiKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                            contentDescription = "切换可见性"
+                                        )
+                                    }
                                 }
                             }
                         )
 
                         OutlinedTextField(
                             value = openaiBaseUrl,
-                            onValueChange = { openaiBaseUrl = (it ?: "").filter { c -> c != '\r' && c != '\n' } },
+                            onValueChange = { input ->
+                                try { openaiBaseUrl = input } catch (_: Throwable) {}
+                            },
                             label = { Text("Base URL") },
                             placeholder = { Text("https://api.openai.com/v1") },
                             modifier = Modifier.fillMaxWidth(),
-                            singleLine = true
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Uri,
+                                autoCorrect = false,
+                                imeAction = ImeAction.Next
+                            )
                         )
 
                         // Base URL Presets
@@ -373,11 +482,18 @@ fun AiSettingsDialog(
 
                         OutlinedTextField(
                             value = openaiModel,
-                            onValueChange = { openaiModel = (it ?: "").filter { c -> c != '\r' && c != '\n' } },
+                            onValueChange = { input ->
+                                try { openaiModel = input } catch (_: Throwable) {}
+                            },
                             label = { Text("Model Name") },
                             placeholder = { Text("gpt-4o-mini / deepseek-flash") },
                             modifier = Modifier.fillMaxWidth(),
-                            singleLine = true
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Ascii,
+                                autoCorrect = false,
+                                imeAction = ImeAction.Done
+                            )
                         )
                     }
                 }
@@ -387,16 +503,27 @@ fun AiSettingsDialog(
             Button(
                 onClick = {
                     try {
+                        val cleanDeepseekKey = (deepseekKey ?: "").trim().replace("\r", "").replace("\n", "")
+                        val cleanDeepseekUrl = (deepseekBaseUrl ?: "").trim().replace("\r", "").replace("\n", "").ifBlank { "https://api.deepseek.com/v1" }
+                        val cleanDeepseekModel = (deepseekModel ?: "").trim().replace("\r", "").replace("\n", "").ifBlank { "deepseek-flash" }
+
+                        val cleanGeminiKey = (geminiKey ?: "").trim().replace("\r", "").replace("\n", "")
+                        val cleanGeminiModel = (geminiModel ?: "").trim().replace("\r", "").replace("\n", "").ifBlank { "gemini-3.8-flash" }
+
+                        val cleanOpenaiKey = (openaiKey ?: "").trim().replace("\r", "").replace("\n", "")
+                        val cleanOpenaiUrl = (openaiBaseUrl ?: "").trim().replace("\r", "").replace("\n", "").ifBlank { "https://api.openai.com/v1" }
+                        val cleanOpenaiModel = (openaiModel ?: "").trim().replace("\r", "").replace("\n", "").ifBlank { "gpt-4o-mini" }
+
                         val updated = AiConfig(
                             provider = selectedProvider,
-                            deepseekApiKey = (deepseekKey ?: "").trim(),
-                            deepseekBaseUrl = (deepseekBaseUrl ?: "").trim().ifBlank { "https://api.deepseek.com/v1" },
-                            deepseekModel = (deepseekModel ?: "").trim().ifBlank { "deepseek-flash" },
-                            geminiApiKey = (geminiKey ?: "").trim(),
-                            geminiModel = (geminiModel ?: "").trim().ifBlank { "gemini-3.8-flash" },
-                            openaiApiKey = (openaiKey ?: "").trim(),
-                            openaiBaseUrl = (openaiBaseUrl ?: "").trim().ifBlank { "https://api.openai.com/v1" },
-                            openaiModel = (openaiModel ?: "").trim().ifBlank { "gpt-4o-mini" }
+                            deepseekApiKey = cleanDeepseekKey,
+                            deepseekBaseUrl = cleanDeepseekUrl,
+                            deepseekModel = cleanDeepseekModel,
+                            geminiApiKey = cleanGeminiKey,
+                            geminiModel = cleanGeminiModel,
+                            openaiApiKey = cleanOpenaiKey,
+                            openaiBaseUrl = cleanOpenaiUrl,
+                            openaiModel = cleanOpenaiModel
                         )
                         onSaveConfig(updated)
                         onDismiss()

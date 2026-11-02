@@ -65,6 +65,13 @@ class OfflineLotteryEngine(private val context: Context? = null) {
     }
 
     /**
+     * Retrieve offline historical draw records up to limit (default 50).
+     */
+    fun getHistoryDraws(lotteryType: LotteryType, limit: Int = 50): List<DrawItem> {
+        return getDrawsForType(lotteryType).take(limit)
+    }
+
+    /**
      * Compute full frequency, hot/cold, and omission statistics from historical draws.
      */
     fun computeStats(lotteryType: LotteryType): LotteryStats {
