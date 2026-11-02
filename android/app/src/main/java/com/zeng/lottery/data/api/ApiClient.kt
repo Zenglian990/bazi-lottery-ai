@@ -8,13 +8,20 @@ import java.util.concurrent.TimeUnit
 
 object ApiClient {
 
-    private const val DEFAULT_BASE_URL = "http://10.0.2.2:8000/"
+    const val PRODUCTION_CLOUD_URL = "https://bazi-lottery-79709693345.asia-east1.run.app/"
+    private const val DEFAULT_BASE_URL = PRODUCTION_CLOUD_URL
 
     @Volatile
     private var customBaseUrl: String = DEFAULT_BASE_URL
 
     fun setBaseUrl(url: String) {
-        val formatted = if (!url.endsWith("/")) "$url/" else url
+        val trimmed = url.trim()
+        val withScheme = if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
+            "https://$trimmed"
+        } else {
+            trimmed
+        }
+        val formatted = if (!withScheme.endsWith("/")) "$withScheme/" else withScheme
         customBaseUrl = formatted
     }
 

@@ -53,7 +53,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.SuggestionChipDefaults
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast
+import com.zeng.lottery.data.api.ApiClient
 import com.zeng.lottery.ui.components.AiDivinationSheet
 import com.zeng.lottery.ui.components.AiSettingsDialog
 import com.zeng.lottery.ui.screens.BirthInputScreen
@@ -64,12 +71,14 @@ import com.zeng.lottery.ui.screens.StatsScreen
 import com.zeng.lottery.ui.theme.FortuneGold
 import com.zeng.lottery.ui.theme.ImperialRed
 import com.zeng.lottery.ui.viewmodel.LotteryViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun LotteryApp(
     viewModel: LotteryViewModel = viewModel()
 ) {
+    val context = LocalContext.current
     val selectedLottery by viewModel.selectedLottery.collectAsState()
     val birthDateTime by viewModel.birthDateTime.collectAsState()
     val isLunar by viewModel.isLunar.collectAsState()
@@ -81,6 +90,14 @@ fun LotteryApp(
     val isLoading by viewModel.isLoading.collectAsState()
     val isOffline by viewModel.isOffline.collectAsState()
     val serverUrl by viewModel.serverUrl.collectAsState()
+    val toastMessage by viewModel.toastMessage.collectAsState()
+
+    LaunchedEffect(toastMessage) {
+        toastMessage?.let { msg ->
+            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+            viewModel.clearToastMessage()
+        }
+    }
 
     val aiDivinationText by viewModel.aiDivinationText.collectAsState()
     val isAiStreaming by viewModel.isAiStreaming.collectAsState()
@@ -291,13 +308,39 @@ fun LotteryApp(
                 )
             },
             text = {
-                Column {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
-                        text = "支持 Android 模拟器 (http://10.0.2.2:8000/)、局域网真机 IP 或 Cloud Run 域名。网络不可用时自动启动 100% 离线纯 Kotlin 八字与本地种子库兜底。",
+                        text = "默认连接谷歌云官方高可用生产集群。支持一键切换模拟器或自定义局域网IP。网络断开时自动启动 100% 离线纯 Kotlin 易道推演引擎兜底。",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(
+                        text = "快捷服务节点：",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = FortuneGold
+                    )
+
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        SuggestionChip(
+                            onClick = { inputUrl = ApiClient.PRODUCTION_CLOUD_URL },
+                            label = { Text("⚡ 谷歌云官方云端服务", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
+                            colors = if (inputUrl == ApiClient.PRODUCTION_CLOUD_URL) {
+                                SuggestionChipDefaults.suggestionChipColors(
+                                    containerColor = FortuneGold.copy(alpha = 0.25f),
+                                    labelColor = FortuneGold
+                                )
+                            } else {
+                                SuggestionChipDefaults.suggestionChipColors()
+                            }
+                        )
+                        SuggestionChip(
+                            onClick = { inputUrl = "http://10.0.2.2:8000/" },
+                            label = { Text("💻 本地模拟器 (10.0.2.2)", fontSize = 11.sp) }
+                        )
+                    }
+
                     OutlinedTextField(
                         value = inputUrl,
                         onValueChange = { inputUrl = it },

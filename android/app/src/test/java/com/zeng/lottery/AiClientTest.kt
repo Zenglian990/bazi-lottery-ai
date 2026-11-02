@@ -190,6 +190,17 @@ class AiClientTest {
         assertEquals("sk-test-openai-key-8888", loaded.openaiApiKey)
         assertEquals("https://api.openai.com/v1", loaded.openaiBaseUrl)
         assertEquals("gpt-4o-mini", loaded.openaiModel)
+
+        // Test individual API Key Save & Get
+        KeyStoreManager.saveApiKey(null, "custom_provider", "sk-custom-secret-12345")
+        val customKey = KeyStoreManager.getApiKey(null, "custom_provider")
+        assertEquals("sk-custom-secret-12345", customKey)
+
+        // Test defensive decryption of corrupted or empty payload (zero crash)
+        assertEquals("", KeyStoreManager.decrypt("corrupted_payload_without_colon"))
+        assertEquals("", KeyStoreManager.decrypt(""))
+        assertEquals("", KeyStoreManager.decrypt(":::invalid:::"))
+        assertEquals("", KeyStoreManager.maskApiKey(null))
     }
 
     @Test

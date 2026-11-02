@@ -3,28 +3,50 @@ package com.zeng.lottery.ui.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import android.content.Context
+import android.content.SharedPreferences
 import com.zeng.lottery.ai.AiConfig
 import com.zeng.lottery.ai.AiDivinationManager
 import com.zeng.lottery.ai.KeyStoreManager
 import com.zeng.lottery.data.api.ApiClient
 import com.zeng.lottery.data.local.BaziEngine
+import com.zeng.lottery.data.local.OfflineLotteryEngine
 import com.zeng.lottery.data.model.BaziDestiny
 import com.zeng.lottery.data.model.BaziRecommendationResponse
 import com.zeng.lottery.data.model.LotteryStats
 import com.zeng.lottery.data.model.LotteryType
 import com.zeng.lottery.data.repository.LotteryRepository
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import java.time.LocalDateTime
 
 class LotteryViewModel(application: Application) : AndroidViewModel(application) {
 
+    companion object {
+        private const val PREFS_NAME = "lottery_app_settings"
+        private const val KEY_SERVER_URL = "server_url"
+    }
+
+    private val prefs: SharedPreferences? = try {
+        application.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    } catch (e: Throwable) {
+        null
+    }
+
     private val repository = LotteryRepository(application.applicationContext)
+    private val offlineEngine = OfflineLotteryEngine(application.applicationContext)
     private val aiDivinationManager = AiDivinationManager()
+
     private var divinationJob: Job? = null
+    private var rerollJob: Job? = null
+    private var refreshJob: Job? = null
+    private var selectJob: Job? = null
+    private var destinyJob: Job? = null
 
     private val _selectedLottery = MutableStateFlow(LotteryType.SSQ)
     val selectedLottery: StateFlow<LotteryType> = _selectedLottery.asStateFlow()
@@ -58,6 +80,9 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
     private val _serverUrl = MutableStateFlow(ApiClient.getBaseUrl())
     val serverUrl: StateFlow<String> = _serverUrl.asStateFlow()
 
+    private val _toastMessage = MutableStateFlow<String?>(null)
+    val toastMessage: StateFlow<String?> = _toastMessage.asStateFlow()
+
     private val _aiConfig = MutableStateFlow(KeyStoreManager.loadAiConfig(application.applicationContext))
     val aiConfig: StateFlow<AiConfig> = _aiConfig.asStateFlow()
 
@@ -77,8 +102,23 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
     val showAiSettingsDialog: StateFlow<Boolean> = _showAiSettingsDialog.asStateFlow()
 
     init {
+        // Automatic migration away from legacy 10.0.2.2 emulator loopback to official Cloud Run
+        val savedUrl = prefs?.getString(KEY_SERVER_URL, null)
+        val initialUrl = if (savedUrl.isNullOrBlank() || savedUrl.contains("10.0.2.2")) {
+            ApiClient.PRODUCTION_CLOUD_URL
+        } else {
+            savedUrl
+        }
+        ApiClient.setBaseUrl(initialUrl)
+        prefs?.edit()?.putString(KEY_SERVER_URL, initialUrl)?.apply()
+        _serverUrl.value = ApiClient.getBaseUrl()
+
         // Initial compute
         refreshAll()
+    }
+
+    fun clearToastMessage() {
+        _toastMessage.value = null
     }
 
     fun setBirthDateTime(dt: LocalDateTime) {
@@ -98,14 +138,28 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
 
     fun selectLottery(type: LotteryType) {
         _selectedLottery.value = type
-        viewModelScope.launch {
+        selectJob?.cancel()
+        selectJob = viewModelScope.launch {
             _isLoading.value = true
             try {
-                _stats.value = repository.getStats(type)
-                val currentDestiny = _destiny.value ?: repository.getDestiny(_birthDateTime.value, _isMale.value)
-                _recommendation.value = repository.getRecommendations(
+                withTimeout(6000L) {
+                    _stats.value = repository.getStats(type)
+                    val currentDestiny = _destiny.value ?: repository.getDestiny(_birthDateTime.value, _isMale.value)
+                    _destiny.value = currentDestiny
+                    _recommendation.value = repository.getRecommendations(
+                        destiny = currentDestiny,
+                        lotteryType = type,
+                        strategy = _selectedStrategy.value
+                    )
+                }
+            } catch (e: Exception) {
+                val currentDestiny = _destiny.value ?: BaziEngine.analyzeDestiny(_birthDateTime.value, _isMale.value)
+                _destiny.value = currentDestiny
+                _stats.value = offlineEngine.computeStats(type)
+                _recommendation.value = offlineEngine.generateRecommendation(
                     destiny = currentDestiny,
                     lotteryType = type,
+                    count = 1,
                     strategy = _selectedStrategy.value
                 )
             } finally {
@@ -120,13 +174,37 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun reroll() {
-        viewModelScope.launch {
+        rerollJob?.cancel()
+        rerollJob = viewModelScope.launch {
             _isLoading.value = true
             try {
-                val currentDestiny = _destiny.value ?: repository.getDestiny(_birthDateTime.value, _isMale.value)
-                _recommendation.value = repository.getRecommendations(
+                withTimeout(6500L) {
+                    val currentDestiny = _destiny.value ?: repository.getDestiny(_birthDateTime.value, _isMale.value)
+                    _destiny.value = currentDestiny
+                    val rec = repository.getRecommendations(
+                        destiny = currentDestiny,
+                        lotteryType = _selectedLottery.value,
+                        strategy = _selectedStrategy.value
+                    )
+                    _recommendation.value = rec
+                }
+            } catch (e: TimeoutCancellationException) {
+                val currentDestiny = _destiny.value ?: BaziEngine.analyzeDestiny(_birthDateTime.value, _isMale.value)
+                _destiny.value = currentDestiny
+                _recommendation.value = offlineEngine.generateRecommendation(
                     destiny = currentDestiny,
                     lotteryType = _selectedLottery.value,
+                    count = 1,
+                    strategy = _selectedStrategy.value
+                )
+                _toastMessage.value = "云端响应较慢，已为您无缝切换至离线纯算引擎极速推演"
+            } catch (e: Exception) {
+                val currentDestiny = _destiny.value ?: BaziEngine.analyzeDestiny(_birthDateTime.value, _isMale.value)
+                _destiny.value = currentDestiny
+                _recommendation.value = offlineEngine.generateRecommendation(
+                    destiny = currentDestiny,
+                    lotteryType = _selectedLottery.value,
+                    count = 1,
                     strategy = _selectedStrategy.value
                 )
             } finally {
@@ -139,7 +217,11 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                _stats.value = repository.getStats(_selectedLottery.value)
+                withTimeout(4000L) {
+                    _stats.value = repository.getStats(_selectedLottery.value)
+                }
+            } catch (e: Exception) {
+                _stats.value = offlineEngine.computeStats(_selectedLottery.value)
             } finally {
                 _isLoading.value = false
             }
@@ -148,19 +230,38 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
 
     fun updateServerUrl(url: String) {
         ApiClient.setBaseUrl(url)
-        _serverUrl.value = ApiClient.getBaseUrl()
+        val current = ApiClient.getBaseUrl()
+        _serverUrl.value = current
+        try {
+            prefs?.edit()?.putString(KEY_SERVER_URL, current)?.apply()
+        } catch (e: Throwable) {
+            // Ignore
+        }
+        _toastMessage.value = "服务地址已更新: $current"
         refreshAll()
     }
 
     private fun refreshDestinyAndRecommend() {
-        viewModelScope.launch {
+        destinyJob?.cancel()
+        destinyJob = viewModelScope.launch {
             _isLoading.value = true
             try {
-                val d = repository.getDestiny(_birthDateTime.value, _isMale.value)
+                withTimeout(6500L) {
+                    val d = repository.getDestiny(_birthDateTime.value, _isMale.value)
+                    _destiny.value = d
+                    _recommendation.value = repository.getRecommendations(
+                        destiny = d,
+                        lotteryType = _selectedLottery.value,
+                        strategy = _selectedStrategy.value
+                    )
+                }
+            } catch (e: Exception) {
+                val d = BaziEngine.analyzeDestiny(_birthDateTime.value, _isMale.value)
                 _destiny.value = d
-                _recommendation.value = repository.getRecommendations(
+                _recommendation.value = offlineEngine.generateRecommendation(
                     destiny = d,
                     lotteryType = _selectedLottery.value,
+                    count = 1,
                     strategy = _selectedStrategy.value
                 )
             } finally {
@@ -170,18 +271,35 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun refreshAll() {
-        viewModelScope.launch {
+        refreshJob?.cancel()
+        refreshJob = viewModelScope.launch {
             _isLoading.value = true
             try {
-                repository.checkHealth()
-                val d = repository.getDestiny(_birthDateTime.value, _isMale.value)
+                withTimeout(8000L) {
+                    repository.checkHealth()
+                    val d = repository.getDestiny(_birthDateTime.value, _isMale.value)
+                    _destiny.value = d
+                    _stats.value = repository.getStats(_selectedLottery.value)
+                    _recommendation.value = repository.getRecommendations(
+                        destiny = d,
+                        lotteryType = _selectedLottery.value,
+                        strategy = _selectedStrategy.value
+                    )
+                }
+            } catch (e: Exception) {
+                val d = _destiny.value ?: BaziEngine.analyzeDestiny(_birthDateTime.value, _isMale.value)
                 _destiny.value = d
-                _stats.value = repository.getStats(_selectedLottery.value)
-                _recommendation.value = repository.getRecommendations(
-                    destiny = d,
-                    lotteryType = _selectedLottery.value,
-                    strategy = _selectedStrategy.value
-                )
+                if (_stats.value == null) {
+                    _stats.value = offlineEngine.computeStats(_selectedLottery.value)
+                }
+                if (_recommendation.value == null) {
+                    _recommendation.value = offlineEngine.generateRecommendation(
+                        destiny = d,
+                        lotteryType = _selectedLottery.value,
+                        count = 1,
+                        strategy = _selectedStrategy.value
+                    )
+                }
             } finally {
                 _isLoading.value = false
             }
@@ -208,8 +326,13 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun updateAiConfig(config: AiConfig) {
-        KeyStoreManager.saveAiConfig(getApplication<Application>().applicationContext, config)
-        _aiConfig.value = config
+        try {
+            KeyStoreManager.saveAiConfig(getApplication<Application>().applicationContext, config)
+            _aiConfig.value = config
+            _toastMessage.value = "AI 解盘配置已加密保存"
+        } catch (e: Throwable) {
+            _aiConfig.value = config
+        }
     }
 
     fun cancelDivination() {

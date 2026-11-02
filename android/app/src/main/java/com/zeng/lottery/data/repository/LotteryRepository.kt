@@ -18,6 +18,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
+import kotlinx.coroutines.withTimeout
+
 class LotteryRepository(
     private val context: Context,
     private val apiService: LotteryApiService = ApiClient.apiService,
@@ -28,9 +30,11 @@ class LotteryRepository(
 
     suspend fun checkHealth(): HealthResponse? {
         return try {
-            val res = apiService.checkHealth()
-            _isOffline.value = false
-            res
+            withTimeout(3500L) {
+                val res = apiService.checkHealth()
+                _isOffline.value = false
+                res
+            }
         } catch (e: Exception) {
             _isOffline.value = true
             null
@@ -48,9 +52,11 @@ class LotteryRepository(
                 calendarType = calendarType,
                 gender = if (isMale) "male" else "female"
             )
-            val remote = apiService.calculateDestiny(req)
-            _isOffline.value = false
-            remote
+            withTimeout(4000L) {
+                val remote = apiService.calculateDestiny(req)
+                _isOffline.value = false
+                remote
+            }
         } catch (e: Exception) {
             _isOffline.value = true
             BaziEngine.analyzeDestiny(dateTime, isMale)
@@ -59,9 +65,11 @@ class LotteryRepository(
 
     suspend fun getStats(lotteryType: LotteryType): LotteryStats {
         return try {
-            val remote = apiService.getStats(lotteryType.code)
-            _isOffline.value = false
-            remote
+            withTimeout(4000L) {
+                val remote = apiService.getStats(lotteryType.code)
+                _isOffline.value = false
+                remote
+            }
         } catch (e: Exception) {
             _isOffline.value = true
             offlineEngine.computeStats(lotteryType)
@@ -78,8 +86,13 @@ class LotteryRepository(
         wOmission: Float = 0.2f
     ): BaziRecommendationResponse {
         return try {
+            val dtStr = if (destiny.solarDatetime.isNotBlank()) {
+                destiny.solarDatetime.replace(" ", "T")
+            } else {
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"))
+            }
             val req = BaziRecommendationRequest(
-                birthDatetime = destiny.solarDatetime.replace(" ", "T"),
+                birthDatetime = dtStr,
                 calendarType = "solar",
                 lotteryType = lotteryType.code,
                 count = count,
@@ -88,9 +101,11 @@ class LotteryRepository(
                 wFreq = wFreq,
                 wOmission = wOmission
             )
-            val remote = apiService.getRecommendation(req)
-            _isOffline.value = false
-            remote
+            withTimeout(5000L) {
+                val remote = apiService.getRecommendation(req)
+                _isOffline.value = false
+                remote
+            }
         } catch (e: Exception) {
             _isOffline.value = true
             offlineEngine.generateRecommendation(destiny, lotteryType, count, strategy)

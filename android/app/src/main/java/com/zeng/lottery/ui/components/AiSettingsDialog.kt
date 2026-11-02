@@ -64,16 +64,16 @@ fun AiSettingsDialog(
     onSaveConfig: (AiConfig) -> Unit
 ) {
     var selectedProvider by remember { mutableStateOf(currentConfig.provider) }
-    var deepseekKey by remember { mutableStateOf(currentConfig.deepseekApiKey) }
-    var deepseekBaseUrl by remember { mutableStateOf(currentConfig.deepseekBaseUrl) }
-    var deepseekModel by remember { mutableStateOf(currentConfig.deepseekModel) }
+    var deepseekKey by remember { mutableStateOf(currentConfig.deepseekApiKey ?: "") }
+    var deepseekBaseUrl by remember { mutableStateOf(currentConfig.deepseekBaseUrl ?: "https://api.deepseek.com/v1") }
+    var deepseekModel by remember { mutableStateOf(currentConfig.deepseekModel ?: "deepseek-flash") }
 
-    var geminiKey by remember { mutableStateOf(currentConfig.geminiApiKey) }
-    var geminiModel by remember { mutableStateOf(currentConfig.geminiModel) }
+    var geminiKey by remember { mutableStateOf(currentConfig.geminiApiKey ?: "") }
+    var geminiModel by remember { mutableStateOf(currentConfig.geminiModel ?: "gemini-3.8-flash") }
 
-    var openaiKey by remember { mutableStateOf(currentConfig.openaiApiKey) }
-    var openaiBaseUrl by remember { mutableStateOf(currentConfig.openaiBaseUrl) }
-    var openaiModel by remember { mutableStateOf(currentConfig.openaiModel) }
+    var openaiKey by remember { mutableStateOf(currentConfig.openaiApiKey ?: "") }
+    var openaiBaseUrl by remember { mutableStateOf(currentConfig.openaiBaseUrl ?: "https://api.openai.com/v1") }
+    var openaiModel by remember { mutableStateOf(currentConfig.openaiModel ?: "gpt-4o-mini") }
 
     var showDeepseekKey by remember { mutableStateOf(false) }
     var showGeminiKey by remember { mutableStateOf(false) }
@@ -202,7 +202,9 @@ fun AiSettingsDialog(
                     AiProvider.DIRECT_DEEPSEEK -> {
                         OutlinedTextField(
                             value = deepseekKey,
-                            onValueChange = { deepseekKey = it },
+                            onValueChange = { input ->
+                                deepseekKey = (input ?: "").filter { it != '\r' && it != '\n' }
+                            },
                             label = { Text("DeepSeek API Key") },
                             placeholder = { Text("sk-...") },
                             modifier = Modifier.fillMaxWidth(),
@@ -269,7 +271,9 @@ fun AiSettingsDialog(
                     AiProvider.DIRECT_GEMINI -> {
                         OutlinedTextField(
                             value = geminiKey,
-                            onValueChange = { geminiKey = it },
+                            onValueChange = { input ->
+                                geminiKey = (input ?: "").filter { it != '\r' && it != '\n' }
+                            },
                             label = { Text("Google Gemini API Key") },
                             placeholder = { Text("AIzaSy...") },
                             modifier = Modifier.fillMaxWidth(),
@@ -317,7 +321,7 @@ fun AiSettingsDialog(
 
                         OutlinedTextField(
                             value = geminiModel,
-                            onValueChange = { geminiModel = it },
+                            onValueChange = { geminiModel = (it ?: "").filter { c -> c != '\r' && c != '\n' } },
                             label = { Text("Gemini Model") },
                             placeholder = { Text("gemini-3.8-flash") },
                             modifier = Modifier.fillMaxWidth(),
@@ -328,7 +332,9 @@ fun AiSettingsDialog(
                     AiProvider.DIRECT_OPENAI -> {
                         OutlinedTextField(
                             value = openaiKey,
-                            onValueChange = { openaiKey = it },
+                            onValueChange = { input ->
+                                openaiKey = (input ?: "").filter { it != '\r' && it != '\n' }
+                            },
                             label = { Text("API Key") },
                             placeholder = { Text("sk-...") },
                             modifier = Modifier.fillMaxWidth(),
@@ -346,7 +352,7 @@ fun AiSettingsDialog(
 
                         OutlinedTextField(
                             value = openaiBaseUrl,
-                            onValueChange = { openaiBaseUrl = it },
+                            onValueChange = { openaiBaseUrl = (it ?: "").filter { c -> c != '\r' && c != '\n' } },
                             label = { Text("Base URL") },
                             placeholder = { Text("https://api.openai.com/v1") },
                             modifier = Modifier.fillMaxWidth(),
@@ -367,7 +373,7 @@ fun AiSettingsDialog(
 
                         OutlinedTextField(
                             value = openaiModel,
-                            onValueChange = { openaiModel = it },
+                            onValueChange = { openaiModel = (it ?: "").filter { c -> c != '\r' && c != '\n' } },
                             label = { Text("Model Name") },
                             placeholder = { Text("gpt-4o-mini / deepseek-flash") },
                             modifier = Modifier.fillMaxWidth(),
@@ -380,19 +386,23 @@ fun AiSettingsDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    val updated = AiConfig(
-                        provider = selectedProvider,
-                        deepseekApiKey = deepseekKey.trim(),
-                        deepseekBaseUrl = deepseekBaseUrl.trim().ifBlank { "https://api.deepseek.com/v1" },
-                        deepseekModel = deepseekModel.trim().ifBlank { "deepseek-flash" },
-                        geminiApiKey = geminiKey.trim(),
-                        geminiModel = geminiModel.trim().ifBlank { "gemini-3.8-flash" },
-                        openaiApiKey = openaiKey.trim(),
-                        openaiBaseUrl = openaiBaseUrl.trim().ifBlank { "https://api.openai.com/v1" },
-                        openaiModel = openaiModel.trim().ifBlank { "gpt-4o-mini" }
-                    )
-                    onSaveConfig(updated)
-                    onDismiss()
+                    try {
+                        val updated = AiConfig(
+                            provider = selectedProvider,
+                            deepseekApiKey = (deepseekKey ?: "").trim(),
+                            deepseekBaseUrl = (deepseekBaseUrl ?: "").trim().ifBlank { "https://api.deepseek.com/v1" },
+                            deepseekModel = (deepseekModel ?: "").trim().ifBlank { "deepseek-flash" },
+                            geminiApiKey = (geminiKey ?: "").trim(),
+                            geminiModel = (geminiModel ?: "").trim().ifBlank { "gemini-3.8-flash" },
+                            openaiApiKey = (openaiKey ?: "").trim(),
+                            openaiBaseUrl = (openaiBaseUrl ?: "").trim().ifBlank { "https://api.openai.com/v1" },
+                            openaiModel = (openaiModel ?: "").trim().ifBlank { "gpt-4o-mini" }
+                        )
+                        onSaveConfig(updated)
+                        onDismiss()
+                    } catch (e: Throwable) {
+                        onDismiss()
+                    }
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = FortuneGold,
