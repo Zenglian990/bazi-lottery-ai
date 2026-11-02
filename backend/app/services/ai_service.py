@@ -369,7 +369,7 @@ async def generate_divination_text(request: BaziDivinationRequest) -> Dict[str, 
 
     if provider in ("deepseek", "auto") and deepseek_key:
         try:
-            target_model = model or settings.DEEPSEEK_MODEL or "deepseek-chat"
+            target_model = model or settings.DEEPSEEK_MODEL or "deepseek-flash"
             text = await _call_openai_api(request, deepseek_key, deepseek_base, target_model)
             compliant_text = _ensure_disclaimer_compliance(text)
             return {"text": compliant_text, "provider": "deepseek", "model": target_model}
@@ -378,7 +378,7 @@ async def generate_divination_text(request: BaziDivinationRequest) -> Dict[str, 
 
     if provider in ("gemini", "auto") and gemini_key:
         try:
-            target_model = model or settings.GEMINI_MODEL or "gemini-2.5-flash"
+            target_model = model or settings.GEMINI_MODEL or "gemini-3.8-flash"
             text = await _call_gemini_api(request, gemini_key, target_model)
             compliant_text = _ensure_disclaimer_compliance(text)
             return {"text": compliant_text, "provider": "gemini", "model": target_model}
@@ -424,7 +424,7 @@ async def stream_divination_chunks(request: BaziDivinationRequest) -> AsyncGener
     if provider in ("deepseek", "auto") and deepseek_key:
         clean_base = deepseek_base.rstrip("/")
         endpoint = f"{clean_base}/v1/chat/completions" if not clean_base.endswith("/v1") else f"{clean_base}/chat/completions"
-        target_model = request.model or settings.DEEPSEEK_MODEL or "deepseek-chat"
+        target_model = request.model or settings.DEEPSEEK_MODEL or "deepseek-flash"
         payload = {
             "model": target_model,
             "messages": [
@@ -467,7 +467,7 @@ async def stream_divination_chunks(request: BaziDivinationRequest) -> AsyncGener
 
     # Try streaming from Gemini if configured
     if provider in ("gemini", "auto") and gemini_key:
-        target_model = request.model or settings.GEMINI_MODEL or "gemini-2.5-flash"
+        target_model = request.model or settings.GEMINI_MODEL or "gemini-3.8-flash"
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{target_model}:streamGenerateContent?alt=sse&key={gemini_key}"
         system_text = build_system_prompt()
         user_text = build_user_prompt(request)

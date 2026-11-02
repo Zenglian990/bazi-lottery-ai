@@ -199,9 +199,14 @@ blissful-archimedes/
 如需启用云端大模型解盘，可配置以下环境变量（支持写在 `.env` 文件或容器环境中）：
 
 ```bash
-# 谷歌 Gemini 模型配置 (可选)
+# 国内顶级模型 DeepSeek 配置 (可选，推荐)
+export DEEPSEEK_API_KEY="your-deepseek-api-key"
+export DEEPSEEK_BASE_URL="https://api.deepseek.com/v1"
+export DEEPSEEK_MODEL="deepseek-flash" # 可选: deepseek-flash (极速/思考/1M) 或 deepseek-v4-pro (旗舰深度推理/1M)
+
+# 谷歌 Gemini 前沿模型配置 (可选)
 export GEMINI_API_KEY="your-gemini-api-key"
-export GEMINI_MODEL="gemini-1.5-flash"
+export GEMINI_MODEL="gemini-3.8-flash" # 可选: gemini-3.8-flash (最新前沿推荐) 或 gemini-2.5-flash
 
 # OpenAI 兼容接口配置 (可选)
 export OPENAI_API_KEY="your-openai-api-key"

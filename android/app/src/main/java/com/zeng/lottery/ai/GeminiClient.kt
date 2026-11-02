@@ -42,7 +42,7 @@ class GeminiClient(private val okHttpClient: OkHttpClient) {
     }
 
     fun streamDivination(prompt: String, apiKey: String, model: String): Flow<String> = callbackFlow {
-        val targetModel = model.ifBlank { "gemini-2.5-flash" }
+        val targetModel = model.ifBlank { "gemini-3.8-flash" }
         val url = "https://generativelanguage.googleapis.com/v1beta/models/$targetModel:streamGenerateContent?alt=sse&key=$apiKey"
 
         val jsonPayload = JsonObject().apply {

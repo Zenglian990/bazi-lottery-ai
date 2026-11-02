@@ -81,7 +81,7 @@ def test_ai_divination_deepseek_provider():
         "lottery_type": "ssq",
         "recommended_numbers": SAMPLE_SSQ_TICKET,
         "provider": "deepseek",
-        "model": "deepseek-chat",
+        "model": "deepseek-flash",
         "stream": False,
     }
     resp = client.post("/api/ai/divination", json=payload)

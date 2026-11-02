@@ -198,9 +198,9 @@ object KeyStoreManager {
             val providerStr = prefs.getString("provider", AiProvider.BACKEND_RELAY.name)
             val encDeepSeek = prefs.getString("deepseek_key", "") ?: ""
             val deepseekBaseUrl = prefs.getString("deepseek_base_url", "https://api.deepseek.com/v1") ?: "https://api.deepseek.com/v1"
-            val deepseekModel = prefs.getString("deepseek_model", "deepseek-chat") ?: "deepseek-chat"
+            val deepseekModel = prefs.getString("deepseek_model", "deepseek-flash") ?: "deepseek-flash"
             val encGemini = prefs.getString("gemini_key", "") ?: ""
-            val geminiModel = prefs.getString("gemini_model", "gemini-2.5-flash") ?: "gemini-2.5-flash"
+            val geminiModel = prefs.getString("gemini_model", "gemini-3.8-flash") ?: "gemini-3.8-flash"
             val encOpenAi = prefs.getString("openai_key", "") ?: ""
             val openaiBaseUrl = prefs.getString("openai_base_url", "https://api.openai.com/v1") ?: "https://api.openai.com/v1"
             val openaiModel = prefs.getString("openai_model", "gpt-4o-mini") ?: "gpt-4o-mini"
@@ -220,9 +220,9 @@ object KeyStoreManager {
             val providerStr = jvmTestPrefs["provider"] ?: AiProvider.BACKEND_RELAY.name
             val encDeepSeek = jvmTestPrefs["deepseek_key"] ?: ""
             val deepseekBaseUrl = jvmTestPrefs["deepseek_base_url"] ?: "https://api.deepseek.com/v1"
-            val deepseekModel = jvmTestPrefs["deepseek_model"] ?: "deepseek-chat"
+            val deepseekModel = jvmTestPrefs["deepseek_model"] ?: "deepseek-flash"
             val encGemini = jvmTestPrefs["gemini_key"] ?: ""
-            val geminiModel = jvmTestPrefs["gemini_model"] ?: "gemini-2.5-flash"
+            val geminiModel = jvmTestPrefs["gemini_model"] ?: "gemini-3.8-flash"
             val encOpenAi = jvmTestPrefs["openai_key"] ?: ""
             val openaiBaseUrl = jvmTestPrefs["openai_base_url"] ?: "https://api.openai.com/v1"
             val openaiModel = jvmTestPrefs["openai_model"] ?: "gpt-4o-mini"

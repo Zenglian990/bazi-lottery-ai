@@ -61,7 +61,7 @@ class AiDivinationManager(
                         userPrompt = userPrompt,
                         apiKey = config.deepseekApiKey,
                         baseUrl = config.deepseekBaseUrl.ifBlank { "https://api.deepseek.com/v1" },
-                        model = config.deepseekModel.ifBlank { "deepseek-chat" }
+                        model = config.deepseekModel.ifBlank { "deepseek-flash" }
                     ).catch {
                         emitAllFallback(lotteryType, primaryNumbers, secondaryNumbers, destiny)
                     }
@@ -75,7 +75,7 @@ class AiDivinationManager(
                     val prompt = "${AiPromptBuilder.buildSystemPrompt()}\n\n${
                         AiPromptBuilder.buildUserPrompt(lotteryType, primaryNumbers, secondaryNumbers, destiny, birthDateTime)
                     }"
-                    geminiClient.streamDivination(prompt, config.geminiApiKey, config.geminiModel)
+                    geminiClient.streamDivination(prompt, config.geminiApiKey, config.geminiModel.ifBlank { "gemini-3.8-flash" })
                         .catch {
                             emitAllFallback(lotteryType, primaryNumbers, secondaryNumbers, destiny)
                         }

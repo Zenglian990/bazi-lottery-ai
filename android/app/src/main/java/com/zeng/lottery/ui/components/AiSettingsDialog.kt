@@ -151,7 +151,7 @@ fun AiSettingsDialog(
                                 }
                                 AiProvider.DIRECT_DEEPSEEK -> {
                                     Text(
-                                        text = "国内最强纯中文推理，支持 V3 极速与 R1 深度推演",
+                                        text = "国内顶级中文推理，支持 deepseek-flash 极速与 deepseek-v4-pro 旗舰深度推理",
                                         style = MaterialTheme.typography.bodySmall,
                                         fontSize = 11.sp,
                                         color = FortuneGold.copy(alpha = 0.85f)
@@ -159,7 +159,7 @@ fun AiSettingsDialog(
                                 }
                                 AiProvider.DIRECT_GEMINI -> {
                                     Text(
-                                        text = "Google 前沿旗舰，支持 Gemini 2.5/3.8 Flash 极速推演",
+                                        text = "Google 前沿旗舰，支持 Gemini 3.8/2.5 Flash 极速推演",
                                         style = MaterialTheme.typography.bodySmall,
                                         fontSize = 11.sp,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -219,7 +219,7 @@ fun AiSettingsDialog(
                         )
 
                         Text(
-                            text = "选择模型规格：",
+                            text = "官方最新模型规格切换：",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -228,8 +228,8 @@ fun AiSettingsDialog(
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             val deepseekModels = listOf(
-                                Pair("deepseek-chat (V3 推荐)", "deepseek-chat"),
-                                Pair("deepseek-reasoner (R1 深度推理)", "deepseek-reasoner")
+                                Pair("deepseek-flash (极速/思考/1M)", "deepseek-flash"),
+                                Pair("deepseek-v4-pro (旗舰深度推理/1M)", "deepseek-v4-pro")
                             )
                             deepseekModels.forEach { (label, modelCode) ->
                                 SuggestionChip(
@@ -251,7 +251,7 @@ fun AiSettingsDialog(
                             value = deepseekModel,
                             onValueChange = { deepseekModel = it },
                             label = { Text("Model Name") },
-                            placeholder = { Text("deepseek-chat") },
+                            placeholder = { Text("deepseek-flash") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true
                         )
@@ -295,8 +295,8 @@ fun AiSettingsDialog(
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             val geminiModels = listOf(
-                                Pair("2.5 Flash (极速推荐)", "gemini-2.5-flash"),
-                                Pair("3.8 Flash (前沿推演)", "gemini-3.8-flash"),
+                                Pair("3.8 Flash (最新旗舰推荐)", "gemini-3.8-flash"),
+                                Pair("2.5 Flash (极速推演)", "gemini-2.5-flash"),
                                 Pair("2.5 Pro (深度逻辑)", "gemini-2.5-pro")
                             )
                             geminiModels.forEach { (label, modelCode) ->
@@ -319,7 +319,7 @@ fun AiSettingsDialog(
                             value = geminiModel,
                             onValueChange = { geminiModel = it },
                             label = { Text("Gemini Model") },
-                            placeholder = { Text("gemini-2.5-flash") },
+                            placeholder = { Text("gemini-3.8-flash") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true
                         )
@@ -369,7 +369,7 @@ fun AiSettingsDialog(
                             value = openaiModel,
                             onValueChange = { openaiModel = it },
                             label = { Text("Model Name") },
-                            placeholder = { Text("gpt-4o-mini / deepseek-chat") },
+                            placeholder = { Text("gpt-4o-mini / deepseek-flash") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true
                         )
@@ -384,9 +384,9 @@ fun AiSettingsDialog(
                         provider = selectedProvider,
                         deepseekApiKey = deepseekKey.trim(),
                         deepseekBaseUrl = deepseekBaseUrl.trim().ifBlank { "https://api.deepseek.com/v1" },
-                        deepseekModel = deepseekModel.trim().ifBlank { "deepseek-chat" },
+                        deepseekModel = deepseekModel.trim().ifBlank { "deepseek-flash" },
                         geminiApiKey = geminiKey.trim(),
-                        geminiModel = geminiModel.trim().ifBlank { "gemini-2.5-flash" },
+                        geminiModel = geminiModel.trim().ifBlank { "gemini-3.8-flash" },
                         openaiApiKey = openaiKey.trim(),
                         openaiBaseUrl = openaiBaseUrl.trim().ifBlank { "https://api.openai.com/v1" },
                         openaiModel = openaiModel.trim().ifBlank { "gpt-4o-mini" }
