@@ -54,29 +54,32 @@ fun LotteryBall(
     wuxingElement: String? = null,
     size: Dp = 44.dp,
     delayMs: Long = 0L,
+    animate: Boolean = true,
     modifier: Modifier = Modifier
 ) {
-    val scaleAnim = remember { Animatable(0.2f) }
-    val offsetYAnim = remember { Animatable(-40f) }
+    val scaleAnim = remember { Animatable(if (animate) 0.2f else 1f) }
+    val offsetYAnim = remember { Animatable(if (animate) -40f else 0f) }
 
-    LaunchedEffect(number, colorType) {
-        if (delayMs > 0) {
-            delay(delayMs)
+    if (animate) {
+        LaunchedEffect(number, colorType) {
+            if (delayMs > 0) {
+                delay(delayMs)
+            }
+            scaleAnim.animateTo(
+                targetValue = 1f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMedium
+                )
+            )
+            offsetYAnim.animateTo(
+                targetValue = 0f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessLow
+                )
+            )
         }
-        scaleAnim.animateTo(
-            targetValue = 1f,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessMedium
-            )
-        )
-        offsetYAnim.animateTo(
-            targetValue = 0f,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessLow
-            )
-        )
     }
 
     val (highlight, base, shadow) = when (colorType) {

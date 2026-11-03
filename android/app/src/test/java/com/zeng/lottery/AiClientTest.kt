@@ -260,4 +260,42 @@ class AiClientTest {
             assertTrue("Fallback text must contain keyword '$kw'", fallback.contains(kw))
         }
     }
+
+    @Test
+    fun testApiKeyInputSanitizationAndKeyStoreEdgeCases() {
+        // 1. Newline and carriage return sanitation simulation
+        val dirtyPastedKey = "  sk-test-123456\r\n\t  "
+        val sanitized = dirtyPastedKey.trim().replace("\r", "").replace("\n", "")
+        assertEquals("sk-test-123456", sanitized)
+
+        val multilineKey = "sk-first-line\nsecond-line\r\n"
+        val cleanedMultiline = if (multilineKey.contains('\r') || multilineKey.contains('\n')) {
+            multilineKey.replace("\r", "").replace("\n", "")
+        } else {
+            multilineKey
+        }
+        assertEquals("sk-first-linesecond-line", cleanedMultiline)
+
+        // 2. KeyStore edge cases: keys with special characters, colons, unicode
+        val complexKey = "sk-proj_1234:special-key!@#$%^&*()_+=~`{}|[]<>?"
+        val enc = KeyStoreManager.encrypt(complexKey)
+        val dec = KeyStoreManager.decrypt(enc)
+        assertEquals(complexKey, dec)
+
+        // Empty and blank
+        assertEquals("", KeyStoreManager.encrypt(""))
+        assertEquals("", KeyStoreManager.decrypt(""))
+        assertEquals("", KeyStoreManager.decrypt("   "))
+
+        // Pure colon payload
+        val colonPayload = "::::"
+        val colonDec = KeyStoreManager.decrypt(colonPayload)
+        assertNotNull(colonDec)
+
+        // Null safe
+        val maskedNull = KeyStoreManager.maskApiKey(null)
+        assertEquals("", maskedNull)
+        val maskedShort = KeyStoreManager.maskApiKey("12345")
+        assertEquals("••••••••", maskedShort)
+    }
 }

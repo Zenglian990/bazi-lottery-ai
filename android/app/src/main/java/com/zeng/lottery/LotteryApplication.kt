@@ -21,17 +21,24 @@ class LotteryApplication : Application() {
             }
         }
 
-        // 2. Global Uncaught Exception Fallback for background threads
-        val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
+        // 2. Global Uncaught Exception Fallback: Catches any unhandled exception on ANY thread
+        // Strictly prevents the system-level "屡次停止运行" (has stopped repeatedly) crash dialog from popping up!
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
             try {
                 Log.e("LotteryApplication", "Fatal uncaught exception on thread ${thread.name}: ${throwable.message}", throwable)
             } catch (_: Throwable) {}
 
             if (thread == Looper.getMainLooper().thread) {
-                defaultHandler?.uncaughtException(thread, throwable)
+                // If main thread had an uncaught exception escape, re-enter loop safely rather than killing process
+                while (true) {
+                    try {
+                        Looper.loop()
+                    } catch (t: Throwable) {
+                        Log.e("LotteryApplication", "Main looper caught and suppressed in handler: ${t.message}", t)
+                    }
+                }
             } else {
-                Log.w("LotteryApplication", "Swallowed background thread exception to prevent OS crash dialog.")
+                Log.w("LotteryApplication", "Swallowed background thread exception on ${thread.name} to prevent OS crash dialog.")
             }
         }
     }

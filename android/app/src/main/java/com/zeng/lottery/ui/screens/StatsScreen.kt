@@ -285,14 +285,16 @@ fun StatsScreen(
                                     verticalArrangement = Arrangement.Center
                                 ) {
                                     // Primary balls
-                                    draw.primaryNumbers.forEach { numStr ->
+                                    draw.primaryNumbers.forEach { rawStr ->
+                                        val numStr = if (lotteryType == LotteryType.SSQ || lotteryType == LotteryType.DLT) rawStr.padStart(2, '0') else rawStr
                                         val num = numStr.toIntOrNull() ?: 0
                                         val elem = BaziEngine.getHetuElementZh(num)
                                         LotteryBall(
                                             number = numStr,
                                             colorType = BallColorType.RED,
                                             wuxingElement = elem,
-                                            size = 36.dp
+                                            size = 36.dp,
+                                            animate = false
                                         )
                                     }
 
@@ -310,14 +312,16 @@ fun StatsScreen(
                                         Spacer(modifier = Modifier.width(6.dp))
 
                                         val secColor = if (lotteryType == LotteryType.QXC) BallColorType.GOLD else BallColorType.BLUE
-                                        secNumbers.forEach { numStr ->
+                                        secNumbers.forEach { rawStr ->
+                                            val numStr = if (lotteryType == LotteryType.SSQ || lotteryType == LotteryType.DLT) rawStr.padStart(2, '0') else rawStr
                                             val num = numStr.toIntOrNull() ?: 0
                                             val elem = BaziEngine.getHetuElementZh(num)
                                             LotteryBall(
                                                 number = numStr,
                                                 colorType = secColor,
                                                 wuxingElement = elem,
-                                                size = 36.dp
+                                                size = 36.dp,
+                                                animate = false
                                             )
                                         }
                                     }
@@ -478,11 +482,11 @@ private fun formatYuan(amount: Long): String {
     return when {
         amount >= 100_000_000L -> {
             val yi = amount / 100_000_000.0
-            String.format("%.2f 亿元", yi)
+            String.format(java.util.Locale.CHINA, "%.2f 亿元", yi)
         }
         amount >= 10_000L -> {
             val wan = amount / 10_000.0
-            String.format("%.2f 万元", wan)
+            String.format(java.util.Locale.CHINA, "%.2f 万元", wan)
         }
         else -> "$amount 元"
     }

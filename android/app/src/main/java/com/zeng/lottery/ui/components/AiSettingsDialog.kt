@@ -210,7 +210,12 @@ fun AiSettingsDialog(
                             value = deepseekKey,
                             onValueChange = { input ->
                                 try {
-                                    deepseekKey = input
+                                    val clean = if (input.contains('\r') || input.contains('\n')) {
+                                        input.replace("\r", "").replace("\n", "")
+                                    } else {
+                                        input
+                                    }
+                                    deepseekKey = clean
                                 } catch (_: Throwable) {}
                             },
                             label = { Text("DeepSeek API Key") },
@@ -219,7 +224,7 @@ fun AiSettingsDialog(
                             singleLine = true,
                             visualTransformation = if (showDeepseekKey) VisualTransformation.None else PasswordVisualTransformation(),
                             keyboardOptions = KeyboardOptions(
-                                keyboardType = if (showDeepseekKey) KeyboardType.Ascii else KeyboardType.Password,
+                                keyboardType = KeyboardType.Ascii,
                                 autoCorrect = false,
                                 imeAction = ImeAction.Done
                             ),
@@ -318,7 +323,12 @@ fun AiSettingsDialog(
                             value = geminiKey,
                             onValueChange = { input ->
                                 try {
-                                    geminiKey = input
+                                    val clean = if (input.contains('\r') || input.contains('\n')) {
+                                        input.replace("\r", "").replace("\n", "")
+                                    } else {
+                                        input
+                                    }
+                                    geminiKey = clean
                                 } catch (_: Throwable) {}
                             },
                             label = { Text("Google Gemini API Key") },
@@ -327,7 +337,7 @@ fun AiSettingsDialog(
                             singleLine = true,
                             visualTransformation = if (showGeminiKey) VisualTransformation.None else PasswordVisualTransformation(),
                             keyboardOptions = KeyboardOptions(
-                                keyboardType = if (showGeminiKey) KeyboardType.Ascii else KeyboardType.Password,
+                                keyboardType = KeyboardType.Ascii,
                                 autoCorrect = false,
                                 imeAction = ImeAction.Done
                             ),
@@ -411,7 +421,12 @@ fun AiSettingsDialog(
                             value = openaiKey,
                             onValueChange = { input ->
                                 try {
-                                    openaiKey = input
+                                    val clean = if (input.contains('\r') || input.contains('\n')) {
+                                        input.replace("\r", "").replace("\n", "")
+                                    } else {
+                                        input
+                                    }
+                                    openaiKey = clean
                                 } catch (_: Throwable) {}
                             },
                             label = { Text("API Key") },
@@ -420,7 +435,7 @@ fun AiSettingsDialog(
                             singleLine = true,
                             visualTransformation = if (showOpenAiKey) VisualTransformation.None else PasswordVisualTransformation(),
                             keyboardOptions = KeyboardOptions(
-                                keyboardType = if (showOpenAiKey) KeyboardType.Ascii else KeyboardType.Password,
+                                keyboardType = KeyboardType.Ascii,
                                 autoCorrect = false,
                                 imeAction = ImeAction.Done
                             ),
