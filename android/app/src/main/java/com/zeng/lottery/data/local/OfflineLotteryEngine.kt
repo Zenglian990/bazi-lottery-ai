@@ -253,13 +253,22 @@ class OfflineLotteryEngine(private val context: Context? = null) {
 
             val primaryXi = destiny.xiYongShen.firstOrNull() ?: "金"
             val rationale = "命中喜用神【$primaryXi】生扶磁场，融合近30期大数据频率与遗漏加权(A-Res抽样)"
+            val offlineEvidence = com.zeng.lottery.data.model.ClassicsEvidence(
+                book = "《周易》",
+                chapter = "大有卦第十四",
+                quote = "火在天上，大有。君子以遏恶扬善，顺天休命。",
+                vernacular = "日月丽乎中天，其道大光。顺天应人，行善修身，必蒙天佑。",
+                auspiciousNumbers = primaryBalls.take(3).mapNotNull { it.toIntOrNull() },
+                category = "hexagram"
+            )
 
             recommendations.add(
                 RecommendationItem(
                     primaryNumbers = primaryBalls,
                     secondaryNumbers = secondaryBalls,
                     wuxingDistribution = wuxingDist,
-                    scoreRationale = rationale
+                    scoreRationale = rationale,
+                    classicsEvidence = offlineEvidence
                 )
             )
         }

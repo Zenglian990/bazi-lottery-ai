@@ -103,6 +103,16 @@ data class BaziRecommendationRequest(
     val wOmission: Float = 0.2f
 )
 
+data class ClassicsEvidence(
+    val book: String = "",
+    val chapter: String = "",
+    val quote: String = "",
+    val vernacular: String = "",
+    @SerializedName("auspicious_numbers")
+    val auspiciousNumbers: List<Int> = emptyList(),
+    val category: String = "hexagram"
+)
+
 data class RecommendationItem(
     @SerializedName("primary_numbers")
     val primaryNumbers: List<String>,
@@ -111,7 +121,9 @@ data class RecommendationItem(
     @SerializedName("wuxing_distribution")
     val wuxingDistribution: Map<String, Int> = emptyMap(),
     @SerializedName("score_rationale")
-    val scoreRationale: String = ""
+    val scoreRationale: String = "",
+    @SerializedName("classics_evidence")
+    val classicsEvidence: ClassicsEvidence? = null
 )
 
 data class BaziRecommendationResponse(

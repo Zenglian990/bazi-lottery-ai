@@ -15,6 +15,7 @@ from backend.app.services.wuxing_engine import (
 from backend.app.services.lottery_rules import get_lottery_rule
 from backend.app.db.database import get_draws
 from backend.app.services.name_numerology import analyze_name_numerology
+from backend.app.services.yijing_rag_service import match_classics_evidence
 
 # Element normalization mapping between Chinese and English keys
 ZH_TO_EN_ELEMENT: Dict[str, str] = {
@@ -559,6 +560,12 @@ def recommend_lottery_tickets(
             today_harmony_text=today_harmony_text,
         )
 
+        evidence = match_classics_evidence(
+            primary_numbers=p_formatted,
+            favorable_elements=xi_yong_shen,
+            ticket_index=len(recommendations),
+        )
+
         recommendations.append({
             "bet_index": bet_idx,
             "primary_numbers": p_formatted,
@@ -566,6 +573,7 @@ def recommend_lottery_tickets(
             "formatted_ticket": formatted_ticket,
             "wuxing_distribution": wuxing_dist,
             "score_rationale": rationale,
+            "classics_evidence": evidence.model_dump() if hasattr(evidence, "model_dump") else evidence.dict(),
         })
 
     # Assemble unified copy_text for one-click copying

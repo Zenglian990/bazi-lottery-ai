@@ -262,6 +262,7 @@ def recommend_tickets(request: BaziRecommendRequest) -> BaziRecommendResponse:
                 formatted_ticket=r.get("formatted_ticket"),
                 wuxing_distribution=r["wuxing_distribution"],
                 score_rationale=r["score_rationale"],
+                classics_evidence=r.get("classics_evidence"),
             )
             for idx, r in enumerate(rec_data["recommendations"])
         ]

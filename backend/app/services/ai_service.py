@@ -14,6 +14,7 @@ import httpx
 from backend.app.core.config import settings
 from backend.app.models.ai import BaziDivinationRequest
 from backend.app.services.bazi_engine import calculate_four_pillars
+from backend.app.services.yijing_rag_service import match_classics_evidence, format_rag_context_for_prompt
 
 logger = logging.getLogger(__name__)
 
@@ -195,9 +196,13 @@ def generate_fallback_divination(request: BaziDivinationRequest) -> str:
         f"巧妙补足命局所需能量场，达致流通顺遂、趋吉避燥之圆融格局。"
     )
 
-    # Section 4: 【灵感吉言】
+    # Section 4: 【灵感吉言】 (结合典籍印证)
+    evidence = match_classics_evidence(primary, [str(x) for x in bazi['xi_yong_shen']], ticket_index=0)
+    ausp_str = ", ".join(str(n) for n in evidence.auspicious_numbers)
     p4 = (
         f"【灵感吉言】\n"
+        f"典籍印证：{evidence.book} · {evidence.chapter}：『{evidence.quote}』\n"
+        f"易理解析：{evidence.vernacular} 契合印证神数【{ausp_str}】。\n"
         f"乾道变化，各正性命。易理选号旨在契合身心气场、顺应天地造化。"
         f"吉方在东南与正北生旺之地，宜于良辰吉日心怀善念、顺其自然，迎福纳祥自有名应。"
     )
@@ -239,6 +244,13 @@ def build_user_prompt(request: BaziDivinationRequest) -> str:
     xi_yong_str = "、".join([str(x) for x in bazi["xi_yong_shen"]])
     sec_str = f"，后区/副区号码：{', '.join(secondary)}" if secondary else ""
 
+    evidence = match_classics_evidence(primary, [str(x) for x in bazi['xi_yong_shen']], ticket_index=0)
+    rag_context = format_rag_context_for_prompt(
+        [evidence],
+        day_master=bazi['day_master'],
+        favorable_elements=[str(x) for x in bazi['xi_yong_shen']]
+    )
+
     return (
         f"请为以下求测者与彩票号码进行易道深度解盘：\n"
         f"- 彩票类型：{lottery_name} ({request.lottery_type})\n"
@@ -248,7 +260,8 @@ def build_user_prompt(request: BaziDivinationRequest) -> str:
         f"- 日主天干：{bazi['day_master']}\n"
         f"- 命局强弱：{bazi['strength']}\n"
         f"- 喜用神：{xi_yong_str}\n\n"
-        f"请立即按照上述5个标准标题生成易道深度解盘卦辞。"
+        f"{rag_context}\n\n"
+        f"请立即按照上述5个标准标题生成易道深度解盘卦辞，务必在【数理玄机】或【灵感吉言】中引述上述典籍原文与易理解读。"
     )
 
 

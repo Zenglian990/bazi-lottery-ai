@@ -113,6 +113,16 @@ class BaziDestinyResponse(BaseModel):
         return self
 
 
+class ClassicsEvidenceModel(BaseModel):
+    """Ancient classic grounding evidence for a ticket recommendation."""
+    book: str = Field(..., description="典籍名称，如《周易》、《穷通宝鉴》、《奇门遁甲》")
+    chapter: str = Field(..., description="篇章，如'大有卦第十四'、'论秋月庚金'")
+    quote: str = Field(..., description="古籍原文引述")
+    vernacular: str = Field(..., description="白话译释与易理玄机")
+    auspicious_numbers: List[int] = Field(default_factory=list, description="印证神数")
+    category: Optional[str] = Field(default="hexagram", description="分类: hexagram, qimen, tiao_hou, meihua")
+
+
 class LotteryRecommendation(BaseModel):
     """A single lottery ticket recommendation."""
     bet_index: Optional[int] = Field(default=1, description="注号 (1, 2, 3...)")
@@ -121,6 +131,8 @@ class LotteryRecommendation(BaseModel):
     formatted_ticket: Optional[str] = Field(default=None, description="Formatted ticket string, e.g. '03 06 11 18 21 28 + 09'")
     wuxing_distribution: Dict[str, int] = Field(..., description="Wuxing element counts in chosen numbers")
     score_rationale: str = Field(..., description="Cultural and statistical selection rationale")
+    classics_evidence: Optional[ClassicsEvidenceModel] = Field(default=None, description="易理渊源与典籍印证")
+
 
 
 class BaziRecommendRequest(BaseModel):

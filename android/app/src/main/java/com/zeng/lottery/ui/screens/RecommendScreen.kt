@@ -46,6 +46,7 @@ import com.zeng.lottery.data.model.BaziRecommendationResponse
 import com.zeng.lottery.data.model.LotteryType
 import com.zeng.lottery.data.model.RecommendationItem
 import com.zeng.lottery.ui.components.BallColorType
+import com.zeng.lottery.ui.components.ClassicsEvidenceCard
 import com.zeng.lottery.ui.components.LotteryBall
 import com.zeng.lottery.ui.theme.FortuneGold
 import com.zeng.lottery.ui.theme.ImperialRed
@@ -319,6 +320,12 @@ fun RecommendScreen(
                             fontSize = 12.sp
                         )
                     }
+                }
+
+                // Ancient Classics Grounding Evidence
+                item.classicsEvidence?.let { evidence ->
+                    Spacer(modifier = Modifier.height(10.dp))
+                    ClassicsEvidenceCard(evidence = evidence)
                 }
             }
 
