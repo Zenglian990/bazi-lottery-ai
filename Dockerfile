@@ -5,8 +5,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app \
     PORT=8080 \
-    LOTTERY_DB_PATH=/app/backend/app/db/lottery.db \
-    GEMINI_API_KEY=AIzaSyC6mr-lAUWnlZq6Oi4oGRHsq1EtBChFyio
+    LOTTERY_DB_PATH=/app/backend/app/db/lottery.db
 
 WORKDIR /app
 

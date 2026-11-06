@@ -255,7 +255,8 @@ fun LotteryApp(
                         onUserNameChanged = { viewModel.setUserName(it) },
                         onLunarDateChanged = { viewModel.setLunarDate(it) },
                         onResetCurrentTime = { viewModel.resetToCurrentTime() },
-                        onGenderChanged = { viewModel.setGender(it) }
+                        onGenderChanged = { viewModel.setGender(it) },
+                        showTodayLiuRi = false
                     )
                 }
                 1 -> {

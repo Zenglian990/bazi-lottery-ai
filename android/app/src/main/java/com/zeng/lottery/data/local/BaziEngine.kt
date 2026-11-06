@@ -164,69 +164,26 @@ object BaziEngine {
      * Compute Four Pillars for a given local datetime.
      */
     fun calculateFourPillars(dt: LocalDateTime): FourPillars {
-        var year = dt.year
-        val month = dt.monthValue
-        val day = dt.dayOfMonth
+        val solar = com.nlf.calendar.Solar.fromYmdHms(
+            dt.year,
+            dt.monthValue,
+            dt.dayOfMonth,
+            dt.hour,
+            dt.minute,
+            dt.second
+        )
+        val lunar = solar.lunar
+        val eightChar = lunar.eightChar
+        eightChar.sect = 2
 
-        // Lichun adjustment: if before Feb 4, belongs to previous lunar/solar year
-        if (month == 1 || (month == 2 && day < 4)) {
-            year -= 1
-        }
-
-        // Year Pillar
-        val yearOffset = (year - 4)
-        val yearStemIndex = ((yearOffset % 10) + 10) % 10
-        val yearBranchIndex = ((yearOffset % 12) + 12) % 12
-        val yearStem = STEMS[yearStemIndex]
-        val yearBranch = BRANCHES[yearBranchIndex]
-
-        // Month Pillar (based on 24 solar terms boundaries)
-        val monthBranchIndex = when {
-            (month == 2 && day >= 4) || (month == 3 && day < 5) -> 2  // 寅 (Feb)
-            (month == 3 && day >= 5) || (month == 4 && day < 5) -> 3  // 卯 (Mar)
-            (month == 4 && day >= 5) || (month == 5 && day < 5) -> 4  // 辰 (Apr)
-            (month == 5 && day >= 5) || (month == 6 && day < 6) -> 5  // 巳 (May)
-            (month == 6 && day >= 6) || (month == 7 && day < 7) -> 6  // 午 (Jun)
-            (month == 7 && day >= 7) || (month == 8 && day < 7) -> 7  // 未 (Jul)
-            (month == 8 && day >= 7) || (month == 9 && day < 7) -> 8  // 申 (Aug)
-            (month == 9 && day >= 7) || (month == 10 && day < 8) -> 9 // 酉 (Sep)
-            (month == 10 && day >= 8) || (month == 11 && day < 7) -> 10 // 戌 (Oct)
-            (month == 11 && day >= 7) || (month == 12 && day < 7) -> 11 // 亥 (Nov)
-            (month == 12 && day >= 7) || (month == 1 && day < 6) -> 0  // 子 (Dec)
-            else -> 1 // 丑 (Jan)
-        }
-        val monthBranch = BRANCHES[monthBranchIndex]
-
-        // Five Tigers Dun Yuan (五虎遁):
-        // (yearStemIndex % 5) * 2 + 2 = stem of 寅
-        val yinStemIndex = ((yearStemIndex % 5) * 2 + 2) % 10
-        val monthOrderFromYin = (monthBranchIndex - 2 + 12) % 12
-        val monthStemIndex = (yinStemIndex + monthOrderFromYin) % 10
-        val monthStem = STEMS[monthStemIndex]
-
-        // Day Pillar:
-        // Anchored at reference date 1990-08-15 which is GengXu (庚戌, index 46 in 60 JiaZi)
-        val refDate = LocalDate.of(1990, 8, 15)
-        val targetDate = dt.toLocalDate()
-        val daysDiff = java.time.temporal.ChronoUnit.DAYS.between(refDate, targetDate)
-        val jiaziIndex = (((46 + daysDiff) % 60) + 60) % 60
-        val dayStemIndex = (jiaziIndex % 10).toInt()
-        val dayBranchIndex = (jiaziIndex % 12).toInt()
-        val dayStem = STEMS[dayStemIndex]
-        val dayBranch = BRANCHES[dayBranchIndex]
-
-        // Hour Pillar:
-        // Hour branch: 23-1: 子(0), 1-3: 丑(1), 3-5: 寅(2), 5-7: 卯(3), 7-9: 辰(4), 9-11: 巳(5),
-        // 11-13: 午(6), 13-15: 未(7), 15-17: 申(8), 17-19: 酉(9), 19-21: 戌(10), 21-23: 亥(11)
-        val hourVal = dt.hour
-        val hourBranchIndex = ((hourVal + 1) % 24) / 2
-        val hourBranch = BRANCHES[hourBranchIndex]
-
-        // Five Rats Dun Yuan (五鼠遁):
-        // start stem for 子 = (dayStemIndex % 5) * 2
-        val ziStemIndex = (dayStemIndex % 5) * 2
-        val hourStemIndex = (ziStemIndex + hourBranchIndex) % 10
-        val hourStem = STEMS[hourStemIndex]
+        val yearStem = eightChar.yearGan
+        val yearBranch = eightChar.yearZhi
+        val monthStem = eightChar.monthGan
+        val monthBranch = eightChar.monthZhi
+        val dayStem = eightChar.dayGan
+        val dayBranch = eightChar.dayZhi
+        val hourStem = eightChar.timeGan
+        val hourBranch = eightChar.timeZhi
 
         return FourPillars(
             year = Pillar(
@@ -334,11 +291,12 @@ object BaziEngine {
             listOfNotNull(control, wealth, drain).forEach { if (it !in jiShenZh) jiShenZh.add(it) }
         }
 
-        // Lacking elements (< 11.0 points)
-        val lackingZh = scores.filter { it.value < 11.0f }.keys.mapNotNull { ELEMENT_ZH[it] }
+        // Lacking elements (< 5.0 points, aligned with backend wuxing_engine.py)
+        val lackingZh = scores.filter { it.value < 5.0f }.keys.mapNotNull { ELEMENT_ZH[it] }
 
         val totalScore = scores.values.sum().coerceAtLeast(1f)
         val percentages = scores.mapValues { it.value / totalScore }
+        val strengthRatio = ((peerScore / totalScore) * 10000f).roundToInt() / 10000f
 
         return BaziDestiny(
             solarDatetime = dt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
@@ -354,6 +312,7 @@ object BaziEngine {
             wuxingPercentage = percentages,
             dayMaster = dayMaster,
             strength = strength,
+            strengthRatio = strengthRatio,
             lackingElements = lackingZh,
             xiYongShen = xiYongShenZh,
             jiShen = jiShenZh
@@ -398,52 +357,29 @@ object BaziEngine {
     val BASE_SOLAR_DATE: LocalDate = LocalDate.of(1930, 1, 30) // Lunar 1930-01-01
 
     fun getLeapMonth(year: Int): Int {
-        if (year !in 1930..2030) return 0
-        return LUNAR_INFO[year - 1930] and 0xF
+        if (year !in 1900..2100) return 0
+        return com.nlf.calendar.LunarYear.fromYear(year).leapMonth
     }
 
     fun getDaysInLunarMonth(year: Int, month: Int, isLeap: Boolean): Int {
-        if (year !in 1930..2030) return 30
-        val info = LUNAR_INFO[year - 1930]
-        val leapMonth = info and 0xF
-        return if (isLeap) {
-            if (leapMonth == month && (info and (1 shl 16)) != 0) 30 else 29
-        } else {
-            if (month in 1..12 && (info and (1 shl (16 - month))) != 0) 30 else 29
-        }
+        if (year !in 1900..2100) return 30
+        val mClamped = month.coerceIn(1, 12)
+        val actualM = if (isLeap && getLeapMonth(year) == mClamped) -mClamped else mClamped
+        return com.nlf.calendar.LunarMonth.fromYm(year, actualM)?.dayCount ?: 29
     }
 
     fun lunarToSolar(lunar: LunarDate): LocalDateTime {
         val ly = lunar.year.coerceIn(1930, 2030)
-        var offset = 0
-        for (y in 1930 until ly) {
-            val info = LUNAR_INFO[y - 1930]
-            val leapM = info and 0xF
-            for (m in 1..12) {
-                offset += if ((info and (1 shl (16 - m))) != 0) 30 else 29
-            }
-            if (leapM > 0) {
-                offset += if ((info and (1 shl 16)) != 0) 30 else 29
-            }
-        }
-        val info = LUNAR_INFO[ly - 1930]
-        val leapM = info and 0xF
         val targetM = lunar.month.coerceIn(1, 12)
-        for (m in 1 until targetM) {
-            offset += if ((info and (1 shl (16 - m))) != 0) 30 else 29
-        }
-        if (leapM in 1 until targetM) {
-            offset += if ((info and (1 shl 16)) != 0) 30 else 29
-        }
-        if (lunar.isLeap && leapM == targetM) {
-            offset += if ((info and (1 shl (16 - targetM))) != 0) 30 else 29
-        }
-        val maxDays = getDaysInLunarMonth(ly, targetM, lunar.isLeap)
+        val actualLeap = lunar.isLeap && getLeapMonth(ly) == targetM
+        val actualM = if (actualLeap) -targetM else targetM
+        val maxDays = getDaysInLunarMonth(ly, targetM, actualLeap)
         val clampedDay = lunar.day.coerceIn(1, maxDays)
-        offset += (clampedDay - 1)
-
-        val targetDate = BASE_SOLAR_DATE.plusDays(offset.toLong())
-        return targetDate.atTime(lunar.hour.coerceIn(0, 23), lunar.minute.coerceIn(0, 59))
+        val h = lunar.hour.coerceIn(0, 23)
+        val m = lunar.minute.coerceIn(0, 59)
+        val lObj = com.nlf.calendar.Lunar.fromYmdHms(ly, actualM, clampedDay, h, m, 0)
+        val sObj = lObj.solar
+        return LocalDateTime.of(sObj.year, sObj.month, sObj.day, sObj.hour, sObj.minute, sObj.second)
     }
 
     fun lunarToSolar(year: Int, month: Int, day: Int, isLeap: Boolean = false, hour: Int = 12, minute: Int = 0): LocalDateTime {
@@ -451,54 +387,26 @@ object BaziEngine {
     }
 
     fun solarToLunar(solarDt: LocalDateTime): LunarDate {
-        val solarDate = solarDt.toLocalDate()
-        var offset = java.time.temporal.ChronoUnit.DAYS.between(BASE_SOLAR_DATE, solarDate).toInt()
-        if (offset < 0) return LunarDate(1930, 1, false, 1, solarDt.hour, solarDt.minute)
-
-        var ly = 1930
-        for (y in 1930..2030) {
-            val info = LUNAR_INFO[y - 1930]
-            var yDays = 0
-            val leapM = info and 0xF
-            for (m in 1..12) {
-                yDays += if ((info and (1 shl (16 - m))) != 0) 30 else 29
-            }
-            if (leapM > 0) {
-                yDays += if ((info and (1 shl 16)) != 0) 30 else 29
-            }
-            if (offset < yDays) {
-                ly = y
-                break
-            }
-            offset -= yDays
-            ly = y + 1
-        }
-        if (ly > 2030) return LunarDate(2030, 12, false, 29, solarDt.hour, solarDt.minute)
-
-        val info = LUNAR_INFO[ly - 1930]
-        val leapM = info and 0xF
-        var lm = 1
-        var isLeap = false
-        for (m in 1..12) {
-            val mDays = if ((info and (1 shl (16 - m))) != 0) 30 else 29
-            if (offset < mDays) {
-                lm = m
-                isLeap = false
-                break
-            }
-            offset -= mDays
-            if (leapM > 0 && m == leapM) {
-                val lDays = if ((info and (1 shl 16)) != 0) 30 else 29
-                if (offset < lDays) {
-                    lm = m
-                    isLeap = true
-                    break
-                }
-                offset -= lDays
-            }
-        }
-        val ld = offset + 1
-        return LunarDate(ly, lm, isLeap, ld, solarDt.hour, solarDt.minute)
+        val sObj = com.nlf.calendar.Solar.fromYmdHms(
+            solarDt.year,
+            solarDt.monthValue,
+            solarDt.dayOfMonth,
+            solarDt.hour,
+            solarDt.minute,
+            solarDt.second
+        )
+        val lObj = sObj.lunar
+        val rawMonth = lObj.month
+        val isLeap = rawMonth < 0
+        val absMonth = kotlin.math.abs(rawMonth)
+        return LunarDate(
+            year = lObj.year,
+            month = absMonth,
+            isLeap = isLeap,
+            day = lObj.day,
+            hour = solarDt.hour,
+            minute = solarDt.minute
+        )
     }
 
     fun calculateFourPillarsFromLunar(lunar: LunarDate): FourPillars {

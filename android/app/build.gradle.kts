@@ -12,8 +12,8 @@ android {
         applicationId = "com.zeng.lottery"
         minSdk = 26
         targetSdk = 35
-        versionCode = 4
-        versionName = "1.3.1"
+        versionCode = 5
+        versionName = "1.3.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -78,6 +78,9 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     implementation("com.squareup.okhttp3:okhttp-sse:4.12.0")
     implementation("com.google.code.gson:gson:2.11.0")
+
+    // 6tail Lunar Astronomical Calendar Engine (100% parity with backend lunar_python)
+    implementation("cn.6tail:lunar:1.7.4")
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")

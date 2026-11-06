@@ -14,6 +14,27 @@ from backend.app.services.ai_service import (
 
 logger = logging.getLogger(__name__)
 
+import time
+from collections import defaultdict
+
+_AI_RATE_BUCKETS = defaultdict(list)
+_AI_RATE_LIMIT = 30
+_AI_RATE_WINDOW = 60.0
+
+def _check_ai_rate_limit(req: Request) -> None:
+    client_host = req.client.host if req.client else "unknown"
+    if client_host in ("testclient", "127.0.0.1", "localhost"):
+        return
+    now = time.monotonic()
+    bucket = [t for t in _AI_RATE_BUCKETS[client_host] if now - t < _AI_RATE_WINDOW]
+    if len(bucket) >= _AI_RATE_LIMIT:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="AI 解盘请求过于频繁，请稍候再试。",
+        )
+    bucket.append(now)
+    _AI_RATE_BUCKETS[client_host] = bucket
+
 router = APIRouter(prefix="/ai", tags=["ai"])
 
 
@@ -32,6 +53,7 @@ async def ai_divination(
     - Non-streaming JSON: stream=False
     - Server-Sent Events (SSE): stream=True
     """
+    _check_ai_rate_limit(req)
     if request.lottery_type not in settings.SUPPORTED_LOTTERIES:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

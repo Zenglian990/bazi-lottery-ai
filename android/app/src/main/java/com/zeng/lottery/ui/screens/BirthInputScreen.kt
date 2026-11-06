@@ -58,6 +58,7 @@ fun BirthInputScreen(
     onLunarDateChanged: (LunarDate) -> Unit,
     onResetCurrentTime: () -> Unit = {},
     onGenderChanged: (Boolean) -> Unit,
+    showTodayLiuRi: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
@@ -67,8 +68,10 @@ fun BirthInputScreen(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        // 1. Today's Real-time LiuRi & Celestial Fortune Card
-        TodayLiuRiCard(destiny = destiny)
+        // 1. Today's Real-time LiuRi & Celestial Fortune Card (shown on dedicated Bazi tab)
+        if (showTodayLiuRi) {
+            TodayLiuRiCard(destiny = destiny)
+        }
 
         // 2. User Birth Details & Four Pillars Card
         Card(

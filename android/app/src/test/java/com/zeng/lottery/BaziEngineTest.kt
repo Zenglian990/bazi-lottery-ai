@@ -2,7 +2,7 @@ package com.zeng.lottery
 
 import com.zeng.lottery.data.local.BaziEngine
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.LocalDateTime
@@ -11,7 +11,7 @@ class BaziEngineTest {
 
     @Test
     fun testFourPillarsCalculation_standardCase() {
-        // 1990-08-15 08:30:00 (庚午年 甲申月 庚戌日 庚辰时)
+        // 1990-08-15 08:30:00 -> Astronomical truth: 庚午年 甲申月 壬子日 甲辰时
         val dt = LocalDateTime.of(1990, 8, 15, 8, 30)
         val fourPillars = BaziEngine.calculateFourPillars(dt)
 
@@ -23,13 +23,43 @@ class BaziEngineTest {
         assertEquals("申", fourPillars.month.branch)
         assertEquals("甲申", fourPillars.month.fullText)
 
-        assertEquals("庚", fourPillars.day.stem)
-        assertEquals("戌", fourPillars.day.branch)
-        assertEquals("庚戌", fourPillars.day.fullText)
+        assertEquals("壬", fourPillars.day.stem)
+        assertEquals("子", fourPillars.day.branch)
+        assertEquals("壬子", fourPillars.day.fullText)
 
-        assertEquals("庚", fourPillars.hour.stem)
+        assertEquals("甲", fourPillars.hour.stem)
         assertEquals("辰", fourPillars.hour.branch)
-        assertEquals("庚辰", fourPillars.hour.fullText)
+        assertEquals("甲辰", fourPillars.hour.fullText)
+    }
+
+    @Test
+    fun testMultiDecadeAstronomicalParityWithLunarPython() {
+        // 1. 1983 Lunar 5-22 (Solar 1983-07-02 10:00) -> 癸亥 戊午 辛卯 癸巳
+        val dt1983 = LocalDateTime.of(1983, 7, 2, 10, 0)
+        val fp1983 = BaziEngine.calculateFourPillars(dt1983)
+        assertEquals("癸亥", fp1983.year.fullText)
+        assertEquals("戊午", fp1983.month.fullText)
+        assertEquals("辛卯", fp1983.day.fullText)
+        assertEquals("癸巳", fp1983.hour.fullText)
+
+        // 2. 2026-11-06 11:00 -> 丙午 戊戌 甲申 庚午
+        val dt2026 = LocalDateTime.of(2026, 11, 6, 11, 0)
+        val fp2026 = BaziEngine.calculateFourPillars(dt2026)
+        assertEquals("丙午", fp2026.year.fullText)
+        assertEquals("戊戌", fp2026.month.fullText)
+        assertEquals("甲申", fp2026.day.fullText)
+        assertEquals("庚午", fp2026.hour.fullText)
+
+        // 3. Exact LiChun Solar Term boundary on 2024-02-04 (LiChun at 16:27:09)
+        val beforeLiChun = BaziEngine.calculateFourPillars(LocalDateTime.of(2024, 2, 4, 10, 0))
+        assertEquals("癸卯", beforeLiChun.year.fullText)
+        assertEquals("乙丑", beforeLiChun.month.fullText)
+        assertEquals("戊戌", beforeLiChun.day.fullText)
+
+        val afterLiChun = BaziEngine.calculateFourPillars(LocalDateTime.of(2024, 2, 4, 17, 0))
+        assertEquals("甲辰", afterLiChun.year.fullText)
+        assertEquals("丙寅", afterLiChun.month.fullText)
+        assertEquals("戊戌", afterLiChun.day.fullText)
     }
 
     @Test
@@ -41,7 +71,9 @@ class BaziEngineTest {
         // Positional matrix total is 110.0
         assertTrue("Total Wuxing score should be approximately 110.0, was $totalScore", totalScore in 105f..115f)
 
-        assertEquals("庚", destiny.dayMaster)
+        assertEquals("壬", destiny.dayMaster)
+        assertNotNull("strengthRatio must be populated", destiny.strengthRatio)
+        assertTrue("strengthRatio must be in 0..1", destiny.strengthRatio!! in 0.01f..0.99f)
         assertTrue(destiny.strength == "身强" || destiny.strength == "身弱")
         assertTrue("Xi Yong Shen should not be empty", destiny.xiYongShen.isNotEmpty())
         assertTrue("Ji Shen should not be empty", destiny.jiShen.isNotEmpty())
@@ -98,17 +130,17 @@ class BaziEngineTest {
         val fp = BaziEngine.calculateFourPillarsFromLunar(lunarDate)
         assertEquals("庚午", fp.year.fullText)
         assertEquals("甲申", fp.month.fullText)
-        assertEquals("庚戌", fp.day.fullText)
-        assertEquals("庚辰", fp.hour.fullText)
+        assertEquals("壬子", fp.day.fullText)
+        assertEquals("甲辰", fp.hour.fullText)
     }
 
     @Test
     fun testLunarMonth29DayClamping() {
-        // In 1990, month 1 has 29 days (small month)
+        // In 1990, month 1 has 29 days (small month) in 6tail astronomical table
         val daysInMonth1 = BaziEngine.getDaysInLunarMonth(1990, 1, false)
         assertEquals(29, daysInMonth1)
 
-        // Day 30 passed into lunarToSolar should clamp gracefully to 29
+        // Day 30 passed into lunarToSolar for a 29-day month should clamp gracefully to 29
         val solarClamped = BaziEngine.lunarToSolar(1990, 1, 30, false)
         val solar29 = BaziEngine.lunarToSolar(1990, 1, 29, false)
         assertEquals(solar29, solarClamped)

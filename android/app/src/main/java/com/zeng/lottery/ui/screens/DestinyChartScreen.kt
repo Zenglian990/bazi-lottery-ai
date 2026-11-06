@@ -47,7 +47,36 @@ fun DestinyChartScreen(
     userName: String = "缘主",
     modifier: Modifier = Modifier
 ) {
-    if (destiny == null) return
+    if (destiny == null) {
+        Card(
+            modifier = modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f)
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "正在推演【$userName】生辰八字命盘...",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = FortuneGold
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "可前往「生辰排盘」标签页调整您的农历生辰与时辰",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        return
+    }
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -139,7 +168,7 @@ fun DestinyChartScreen(
 
                 // Day Master Strength Meter
                 val isStrong = destiny.strength == "身强"
-                val strengthRatio = if (isStrong) 0.68f else 0.42f
+                val strengthRatio = (destiny.strengthRatio ?: if (isStrong) 0.68f else 0.42f).coerceIn(0.05f, 0.98f)
                 Column {
                     Row(
                         modifier = Modifier.fillMaxWidth(),

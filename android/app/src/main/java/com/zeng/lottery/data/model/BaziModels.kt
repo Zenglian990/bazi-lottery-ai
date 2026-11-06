@@ -73,6 +73,8 @@ data class BaziDestiny(
     @SerializedName("day_master")
     val dayMaster: String = "",
     val strength: String = "",
+    @SerializedName("strength_ratio")
+    val strengthRatio: Float? = null,
     @SerializedName("lacking_elements")
     val lackingElements: List<String> = emptyList(),
     @SerializedName("xi_yong_shen")

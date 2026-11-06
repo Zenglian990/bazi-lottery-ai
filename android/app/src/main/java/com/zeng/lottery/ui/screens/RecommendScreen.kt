@@ -431,6 +431,16 @@ fun RecommendScreen(
                     color = Color.Black
                 )
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "公益彩票 · 理性购彩 · 量力而行 · 未满18周岁禁止购彩",
+                style = MaterialTheme.typography.labelSmall,
+                fontSize = 10.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }

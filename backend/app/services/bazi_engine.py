@@ -131,18 +131,13 @@ def calculate_four_pillars(
             base_dt = base_dt.replace(hour=shichen_parsed[0], minute=shichen_parsed[1], second=0, microsecond=0)
             sect = shichen_parsed[2]
 
-    # True Solar Time adjustment
-    dt = adjust_true_solar_time(base_dt, longitude)
-
-    # Solar / Lunar ephemeris resolution
+    # Solar / Lunar ephemeris resolution with accurate True Solar Time adjustment
     cal_type = "lunar" if (lunar_year is not None and lunar_month is not None and lunar_day is not None) else (calendar_type or "solar").lower()
     if cal_type == "lunar":
-        y = lunar_year if lunar_year is not None else dt.year
-        m = lunar_month if lunar_month is not None else dt.month
-        d = lunar_day if lunar_day is not None else dt.day
-        h = dt.hour
-        mi = dt.minute
-        s = dt.second
+        y = lunar_year if lunar_year is not None else base_dt.year
+        m = min(max(lunar_month if lunar_month is not None else base_dt.month, 1), 12)
+        d = lunar_day if lunar_day is not None else base_dt.day
+        raw_h, raw_mi, raw_s = base_dt.hour, base_dt.minute, base_dt.second
 
         # Check leap month existence and 29-day boundary protection
         actual_m = -m if (is_leap_month and LunarMonth.fromYm(y, -m) is not None) else m
@@ -150,12 +145,24 @@ def calculate_four_pillars(
         max_d = lm.getDayCount() if lm else 30
         actual_d = min(max(d, 1), max_d)
 
-        lunar = Lunar.fromYmdHms(y, actual_m, actual_d, h, mi, s)
-        solar = lunar.getSolar()
-        solar_dt_str = f"{solar.getYear()}-{solar.getMonth():02d}-{solar.getDay():02d} {solar.getHour():02d}:{solar.getMinute():02d}:{solar.getSecond():02d}"
+        raw_lunar = Lunar.fromYmdHms(y, actual_m, actual_d, raw_h, raw_mi, raw_s)
+        raw_solar = raw_lunar.getSolar()
+        raw_solar_dt = datetime(
+            raw_solar.getYear(), raw_solar.getMonth(), raw_solar.getDay(),
+            raw_solar.getHour(), raw_solar.getMinute(), raw_solar.getSecond()
+        )
+        # Apply True Solar Time adjustment after Lunar -> Solar conversion so midnight crossings roll date accurately
+        adj_solar_dt = adjust_true_solar_time(raw_solar_dt, longitude)
+        solar = Solar.fromYmdHms(
+            adj_solar_dt.year, adj_solar_dt.month, adj_solar_dt.day,
+            adj_solar_dt.hour, adj_solar_dt.minute, adj_solar_dt.second
+        )
+        lunar = solar.getLunar()
+        solar_dt_str = adj_solar_dt.strftime("%Y-%m-%d %H:%M:%S")
         sc_suffix = f" {shichen_to_use}" if shichen_to_use else f" {lunar.getTimeZhi()}时"
-        lunar_dt_str = f"{lunar.getYear()}年 ({lunar.getYearInGanZhi()}{lunar.getYearShengXiao()}年) 农历{lunar.getMonthInChinese()}月{lunar.getDayInChinese()}{sc_suffix}"
+        lunar_dt_str = f"{raw_lunar.getYear()}年 ({raw_lunar.getYearInGanZhi()}{raw_lunar.getYearShengXiao()}年) 农历{raw_lunar.getMonthInChinese()}月{lunar.getDayInChinese()}{sc_suffix}"
     else:
+        dt = adjust_true_solar_time(base_dt, longitude)
         solar = Solar.fromYmdHms(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
         lunar = solar.getLunar()
         solar_dt_str = dt.strftime("%Y-%m-%d %H:%M:%S")
