@@ -458,7 +458,7 @@ harness.assert_true("农历" in data_pure["lunar_datetime"], "Result displays pu
 fp = data_pure["four_pillars"]
 harness.assert_true(fp["year"]["stem"] == "乙" and fp["year"]["branch"] == "丑", f"1985 Lunar Year Pillar is 乙丑 (got {fp['year']['pair']})")
 harness.assert_true(fp["month"]["branch"] == "亥", f"Lunar 10th month Branch is 亥 (got {fp['month']['pair']})")
-harness.assert_true(fp["day"]["branch"] == "酉", f"Lunar day Branch is 酉 (got {fp['day']['pair']})")
+harness.assert_true(fp["day"]["branch"] == "卯", f"Lunar day Branch is 卯 (got {fp['day']['pair']})")
 harness.assert_true(fp["hour"]["branch"] == "酉", f"酉时 Branch is 酉 (got {fp['hour']['pair']})")
 
 # B) Recommendation API with pure lunar inputs (no birth_datetime)

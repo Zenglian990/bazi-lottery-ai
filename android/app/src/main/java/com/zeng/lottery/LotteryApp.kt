@@ -280,7 +280,7 @@ fun LotteryApp(
                     )
                 }
                 3 -> {
-                    // 4. 生辰排盘 Screen
+                    // 4. 生辰排盘 Screen (Dedicated Birth Configuration & Four Pillars)
                     BirthInputScreen(
                         lunarDate = lunarDate,
                         isMale = isMale,
@@ -290,11 +290,6 @@ fun LotteryApp(
                         onLunarDateChanged = { viewModel.setLunarDate(it) },
                         onResetCurrentTime = { viewModel.resetToCurrentTime() },
                         onGenderChanged = { viewModel.setGender(it) }
-                    )
-
-                    DestinyChartScreen(
-                        destiny = destiny,
-                        userName = userName
                     )
                 }
             }

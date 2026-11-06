@@ -217,7 +217,8 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
                         lotteryType = type,
                         count = _betCount.value,
                         strategy = _selectedStrategy.value,
-                        userName = effectiveUserName
+                        userName = effectiveUserName,
+                        lunarDate = _lunarDate.value
                     )
                 }
             } catch (e: kotlinx.coroutines.CancellationException) {
@@ -256,7 +257,8 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
                         lotteryType = _selectedLottery.value,
                         count = _betCount.value,
                         strategy = _selectedStrategy.value,
-                        userName = effectiveUserName
+                        userName = effectiveUserName,
+                        lunarDate = _lunarDate.value
                     )
                     _recommendation.value = rec
                     if (repository.isOffline.value) {
@@ -338,7 +340,8 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
                         lotteryType = _selectedLottery.value,
                         count = _betCount.value,
                         strategy = _selectedStrategy.value,
-                        userName = effectiveUserName
+                        userName = effectiveUserName,
+                        lunarDate = _lunarDate.value
                     )
                 }
             } catch (e: kotlinx.coroutines.CancellationException) {
@@ -367,7 +370,8 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
                     lotteryType = _selectedLottery.value,
                     count = _betCount.value,
                     strategy = _selectedStrategy.value,
-                    userName = effectiveUserName
+                    userName = effectiveUserName,
+                    lunarDate = _lunarDate.value
                 )
             } catch (e: Exception) {
                 // Keep already primed local state

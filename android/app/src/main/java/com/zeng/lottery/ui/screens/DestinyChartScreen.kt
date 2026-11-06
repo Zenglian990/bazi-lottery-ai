@@ -274,7 +274,13 @@ private fun ChartPillarBadge(
     element: String,
     isDayMaster: Boolean = false
 ) {
-    val elemZh = BaziEngine.ELEMENT_ZH[element.lowercase()] ?: element
+    val cleanElem = when {
+        element.contains("fire") || element.contains("water") || element.contains("wood") || element.contains("metal") || element.contains("earth") -> {
+            element.replace("metal", "金").replace("wood", "木").replace("water", "水").replace("fire", "火").replace("earth", "土")
+        }
+        else -> element
+    }
+    val elemZh = BaziEngine.ELEMENT_ZH[cleanElem.lowercase()] ?: cleanElem
     val elemColor = getElementColor(elemZh)
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(

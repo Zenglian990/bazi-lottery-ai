@@ -167,9 +167,10 @@ fun BirthInputScreen(
                         )
                         Spacer(modifier = Modifier.width(3.dp))
                         Text(
-                            text = "农历 ${lunarDate.ganzhiYear}年 ${lunarDate.monthZh}${lunarDate.dayZh}",
+                            text = lunarDate.displayButtonDate,
                             style = MaterialTheme.typography.labelSmall,
-                            fontSize = 11.sp,
+                            fontSize = 10.sp,
+                            maxLines = 1,
                             fontWeight = FontWeight.SemiBold
                         )
                     }
@@ -188,9 +189,10 @@ fun BirthInputScreen(
                         )
                         Spacer(modifier = Modifier.width(2.dp))
                         Text(
-                            text = lunarDate.shichenZh,
+                            text = "${lunarDate.shichenZh} (${BaziEngine.getShichenShortRange(lunarDate.hour)})",
                             style = MaterialTheme.typography.labelSmall,
-                            fontSize = 11.sp,
+                            fontSize = 10.sp,
+                            maxLines = 1,
                             fontWeight = FontWeight.SemiBold
                         )
                     }
@@ -306,6 +308,12 @@ private fun PillarBadge(
     element: String,
     isDayMaster: Boolean = false
 ) {
+    val displayElem = when {
+        element.contains("fire") || element.contains("water") || element.contains("wood") || element.contains("metal") || element.contains("earth") -> {
+            element.replace("metal", "金").replace("wood", "木").replace("water", "水").replace("fire", "火").replace("earth", "土")
+        }
+        else -> element
+    }
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = label,
@@ -319,5 +327,15 @@ private fun PillarBadge(
             fontWeight = FontWeight.ExtraBold,
             color = if (isDayMaster) FortuneGold else MaterialTheme.colorScheme.onSurface
         )
+        if (displayElem.isNotBlank()) {
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = displayElem,
+                style = MaterialTheme.typography.labelSmall,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (isDayMaster) FortuneGold else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }

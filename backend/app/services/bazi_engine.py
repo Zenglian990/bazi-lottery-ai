@@ -153,12 +153,14 @@ def calculate_four_pillars(
         lunar = Lunar.fromYmdHms(y, actual_m, actual_d, h, mi, s)
         solar = lunar.getSolar()
         solar_dt_str = f"{solar.getYear()}-{solar.getMonth():02d}-{solar.getDay():02d} {solar.getHour():02d}:{solar.getMinute():02d}:{solar.getSecond():02d}"
-        lunar_dt_str = lunar.toString()
+        sc_suffix = f" {shichen_to_use}" if shichen_to_use else f" {lunar.getTimeZhi()}时"
+        lunar_dt_str = f"{lunar.getYear()}年 ({lunar.getYearInGanZhi()}{lunar.getYearShengXiao()}年) 农历{lunar.getMonthInChinese()}月{lunar.getDayInChinese()}{sc_suffix}"
     else:
         solar = Solar.fromYmdHms(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
         lunar = solar.getLunar()
         solar_dt_str = dt.strftime("%Y-%m-%d %H:%M:%S")
-        lunar_dt_str = lunar.toString()
+        sc_suffix = f" {shichen_to_use}" if shichen_to_use else f" {lunar.getTimeZhi()}时"
+        lunar_dt_str = f"{lunar.getYear()}年 ({lunar.getYearInGanZhi()}{lunar.getYearShengXiao()}年) 农历{lunar.getMonthInChinese()}月{lunar.getDayInChinese()}{sc_suffix}"
 
     eight_char = lunar.getEightChar()
     eight_char.setSect(sect)

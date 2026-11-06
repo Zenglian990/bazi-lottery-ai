@@ -12,10 +12,13 @@ data class LunarDate(
 ) {
     val isLeapMonth: Boolean get() = isLeap
     val ganzhiYear: String get() = com.zeng.lottery.data.local.BaziEngine.getYearGanZhi(year)
+    val zodiac: String get() = com.zeng.lottery.data.local.BaziEngine.getZodiac(year)
     val monthZh: String get() = (if (isLeap) "闰" else "") + com.zeng.lottery.data.local.BaziEngine.LUNAR_MONTH_NAMES.getOrElse(month - 1) { "${month}月" }
     val dayZh: String get() = com.zeng.lottery.data.local.BaziEngine.LUNAR_DAY_NAMES.getOrElse(day - 1) { "${day}日" }
     val shichenZh: String get() = com.zeng.lottery.data.local.BaziEngine.getShichenName(hour)
-    val displayChinese: String get() = "农历 ${ganzhiYear}年 $monthZh$dayZh $shichenZh"
+    val displayButtonDate: String get() = "${year}年 (${ganzhiYear}${zodiac}年) 农历$monthZh$dayZh"
+    val displayFullText: String get() = "${year}年 (${ganzhiYear}${zodiac}年) 农历$monthZh$dayZh $shichenZh"
+    val displayChinese: String get() = displayFullText
 }
 
 data class Pillar(
@@ -98,7 +101,7 @@ val BaziDestiny.displayLackingElements: List<String>
 
 data class BaziDestinyRequest(
     @SerializedName("birth_datetime")
-    val birthDatetime: String,
+    val birthDatetime: String? = null,
     @SerializedName("calendar_type")
     val calendarType: String = "lunar",
     val gender: String = "male",
@@ -107,12 +110,20 @@ data class BaziDestinyRequest(
     val userName: String? = null,
     val shichen: String? = null,
     @SerializedName("is_leap_month")
-    val isLeapMonth: Boolean = false
+    val isLeapMonth: Boolean = false,
+    @SerializedName("lunar_year")
+    val lunarYear: Int? = null,
+    @SerializedName("lunar_month")
+    val lunarMonth: Int? = null,
+    @SerializedName("lunar_day")
+    val lunarDay: Int? = null,
+    @SerializedName("lunar_hour")
+    val lunarHour: String? = null
 )
 
 data class BaziRecommendationRequest(
     @SerializedName("birth_datetime")
-    val birthDatetime: String,
+    val birthDatetime: String? = null,
     @SerializedName("calendar_type")
     val calendarType: String = "lunar",
     @SerializedName("lottery_type")
@@ -127,7 +138,17 @@ data class BaziRecommendationRequest(
     val wOmission: Float = 0.2f,
     @SerializedName("user_name")
     val userName: String? = null,
-    val shichen: String? = null
+    val shichen: String? = null,
+    @SerializedName("is_leap_month")
+    val isLeapMonth: Boolean = false,
+    @SerializedName("lunar_year")
+    val lunarYear: Int? = null,
+    @SerializedName("lunar_month")
+    val lunarMonth: Int? = null,
+    @SerializedName("lunar_day")
+    val lunarDay: Int? = null,
+    @SerializedName("lunar_hour")
+    val lunarHour: String? = null
 )
 
 data class ClassicsEvidence(

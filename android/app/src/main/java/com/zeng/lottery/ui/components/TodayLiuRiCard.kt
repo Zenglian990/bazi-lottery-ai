@@ -45,7 +45,8 @@ fun TodayLiuRiCard(
 
     val todayLunar = remember(now) { BaziEngine.solarToLunar(now) }
     val lunarDateStr = remember(todayLunar, todayPillars) {
-        "农历 ${todayPillars.year.fullText}年 ${todayLunar.monthZh}${todayLunar.dayZh} (${todayPillars.day.fullText}日)"
+        val zodiac = BaziEngine.getZodiac(now.year)
+        "${now.year}年 (${todayPillars.year.fullText}${zodiac}年) 农历${todayLunar.monthZh}${todayLunar.dayZh} (${todayPillars.day.fullText}日)"
     }
     val timeStr = remember(now) {
         now.format(DateTimeFormatter.ofPattern("HH:mm", Locale.CHINESE))
@@ -156,6 +157,12 @@ private fun LiuRiBadge(
     elem: String,
     isHighlight: Boolean = false
 ) {
+    val displayElem = when {
+        elem.contains("fire") || elem.contains("water") || elem.contains("wood") || elem.contains("metal") || elem.contains("earth") -> {
+            elem.replace("metal", "金").replace("wood", "木").replace("water", "水").replace("fire", "火").replace("earth", "土")
+        }
+        else -> elem
+    }
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = label,
@@ -169,9 +176,9 @@ private fun LiuRiBadge(
             fontWeight = FontWeight.ExtraBold,
             color = if (isHighlight) ImperialRed else MaterialTheme.colorScheme.onSurface
         )
-        if (elem.isNotBlank()) {
+        if (displayElem.isNotBlank()) {
             Text(
-                text = elem,
+                text = displayElem,
                 style = MaterialTheme.typography.labelSmall,
                 fontSize = 10.sp,
                 color = FortuneGold

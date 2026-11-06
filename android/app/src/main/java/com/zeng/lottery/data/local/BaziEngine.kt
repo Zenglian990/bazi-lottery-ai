@@ -19,6 +19,49 @@ object BaziEngine {
 
     val STEMS = listOf("甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸")
     val BRANCHES = listOf("子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥")
+    val ZODIAC = listOf("鼠", "牛", "虎", "兔", "龙", "蛇", "马", "羊", "猴", "鸡", "狗", "猪")
+
+    fun getZodiac(year: Int): String {
+        val offset = year - 4
+        val idx = ((offset % 12) + 12) % 12
+        return ZODIAC[idx]
+    }
+
+    fun getShichenShortRange(hour: Int): String {
+        return when (hour) {
+            23, 0 -> "23-01"
+            1, 2 -> "01-03"
+            3, 4 -> "03-05"
+            5, 6 -> "05-07"
+            7, 8 -> "07-09"
+            9, 10 -> "09-11"
+            11, 12 -> "11-13"
+            13, 14 -> "13-15"
+            15, 16 -> "15-17"
+            17, 18 -> "17-19"
+            19, 20 -> "19-21"
+            21, 22 -> "21-23"
+            else -> "09-11"
+        }
+    }
+
+    fun getShichenRange(hour: Int): String {
+        return when (hour) {
+            23, 0 -> "23:00-01:00"
+            1, 2 -> "01:00-03:00"
+            3, 4 -> "03:00-05:00"
+            5, 6 -> "05:00-07:00"
+            7, 8 -> "07:00-09:00"
+            9, 10 -> "09:00-11:00"
+            11, 12 -> "11:00-13:00"
+            13, 14 -> "13:00-15:00"
+            15, 16 -> "15:00-17:00"
+            17, 18 -> "17:00-19:00"
+            19, 20 -> "19:00-21:00"
+            21, 22 -> "21:00-23:00"
+            else -> "09:00-11:00"
+        }
+    }
 
     val STEM_ELEMENTS = mapOf(
         "甲" to "wood", "乙" to "wood",
@@ -189,25 +232,25 @@ object BaziEngine {
             year = Pillar(
                 stem = yearStem,
                 branch = yearBranch,
-                element = (STEM_ELEMENTS[yearStem] ?: "") + (BRANCH_ELEMENTS[yearBranch] ?: ""),
+                element = "${ELEMENT_ZH[STEM_ELEMENTS[yearStem]] ?: "金"}${ELEMENT_ZH[BRANCH_ELEMENTS[yearBranch]] ?: "金"}",
                 hideStems = BRANCH_HIDDEN_STEMS[yearBranch]?.map { it.first } ?: emptyList()
             ),
             month = Pillar(
                 stem = monthStem,
                 branch = monthBranch,
-                element = (STEM_ELEMENTS[monthStem] ?: "") + (BRANCH_ELEMENTS[monthBranch] ?: ""),
+                element = "${ELEMENT_ZH[STEM_ELEMENTS[monthStem]] ?: "金"}${ELEMENT_ZH[BRANCH_ELEMENTS[monthBranch]] ?: "金"}",
                 hideStems = BRANCH_HIDDEN_STEMS[monthBranch]?.map { it.first } ?: emptyList()
             ),
             day = Pillar(
                 stem = dayStem,
                 branch = dayBranch,
-                element = (STEM_ELEMENTS[dayStem] ?: "") + (BRANCH_ELEMENTS[dayBranch] ?: ""),
+                element = "${ELEMENT_ZH[STEM_ELEMENTS[dayStem]] ?: "金"}${ELEMENT_ZH[BRANCH_ELEMENTS[dayBranch]] ?: "金"}",
                 hideStems = BRANCH_HIDDEN_STEMS[dayBranch]?.map { it.first } ?: emptyList()
             ),
             hour = Pillar(
                 stem = hourStem,
                 branch = hourBranch,
-                element = (STEM_ELEMENTS[hourStem] ?: "") + (BRANCH_ELEMENTS[hourBranch] ?: ""),
+                element = "${ELEMENT_ZH[STEM_ELEMENTS[hourStem]] ?: "金"}${ELEMENT_ZH[BRANCH_ELEMENTS[hourBranch]] ?: "金"}",
                 hideStems = BRANCH_HIDDEN_STEMS[hourBranch]?.map { it.first } ?: emptyList()
             )
         )
@@ -466,9 +509,10 @@ object BaziEngine {
     fun analyzeDestinyFromLunar(lunar: LunarDate, isMale: Boolean = true, userName: String = "缘主"): BaziDestiny {
         val solarDt = lunarToSolar(lunar)
         val destiny = analyzeDestiny(solarDt, isMale)
+        val formattedLunarText = "${lunar.year}年 (${lunar.ganzhiYear}${getZodiac(lunar.year)}年) 农历${lunar.monthZh}${lunar.dayZh} ${lunar.shichenZh}"
         return destiny.copy(
             solarDatetime = solarDt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
-            lunarDatetime = lunar.displayChinese,
+            lunarDatetime = formattedLunarText,
             userName = userName
         )
     }

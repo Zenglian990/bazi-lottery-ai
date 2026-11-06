@@ -80,12 +80,18 @@ class LotteryRepository(
                 gender = if (isMale) "male" else "female",
                 userName = userName,
                 shichen = lunarDate.shichenZh,
-                isLeapMonth = lunarDate.isLeap
+                isLeapMonth = lunarDate.isLeap,
+                lunarYear = lunarDate.year,
+                lunarMonth = lunarDate.month,
+                lunarDay = lunarDate.day,
+                lunarHour = lunarDate.shichenZh
             )
             withTimeout(4000L) {
                 val remote = apiService.calculateDestiny(req)
                 _isOffline.value = false
-                remote
+                // Ensure lunarDatetime in remote response preserves standard formatted string
+                val finalLunarText = "${lunarDate.year}年 (${lunarDate.ganzhiYear}${lunarDate.zodiac}年) 农历${lunarDate.monthZh}${lunarDate.dayZh} ${lunarDate.shichenZh}"
+                remote.copy(lunarDatetime = finalLunarText, userName = userName)
             }
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
@@ -135,6 +141,7 @@ class LotteryRepository(
         count: Int = 1,
         strategy: String = "balanced",
         userName: String = "缘主",
+        lunarDate: com.zeng.lottery.data.model.LunarDate? = null,
         wBazi: Float = 0.5f,
         wFreq: Float = 0.3f,
         wOmission: Float = 0.2f
@@ -147,11 +154,17 @@ class LotteryRepository(
             }
             val req = BaziRecommendationRequest(
                 birthDatetime = dtStr,
-                calendarType = "lunar",
+                calendarType = "solar",
                 lotteryType = lotteryType.code,
                 count = count,
                 strategy = strategy,
                 userName = userName,
+                shichen = destiny.shichen,
+                lunarYear = lunarDate?.year,
+                lunarMonth = lunarDate?.month,
+                lunarDay = lunarDate?.day,
+                isLeapMonth = lunarDate?.isLeap ?: false,
+                lunarHour = lunarDate?.shichenZh ?: destiny.shichen,
                 wBazi = wBazi,
                 wFreq = wFreq,
                 wOmission = wOmission

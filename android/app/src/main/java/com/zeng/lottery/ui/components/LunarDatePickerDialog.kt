@@ -87,11 +87,26 @@ fun LunarDatePickerDialog(
     }
 
     val currentGanzhiYear = BaziEngine.getYearGanZhi(selectedYear)
+    val currentZodiac = BaziEngine.getZodiac(selectedYear)
     val monthName = (if (isLeap) "闰" else "") + BaziEngine.LUNAR_MONTH_NAMES.getOrElse(selectedMonth - 1) { "${selectedMonth}月" }
     val dayName = BaziEngine.LUNAR_DAY_NAMES.getOrElse(selectedDay - 1) { "${selectedDay}日" }
     val shichenName = BaziEngine.getShichenName(selectedHour)
 
-    val previewText = "农历 ${currentGanzhiYear}年 $monthName$dayName $shichenName"
+    val previewText = "${selectedYear}年 (${currentGanzhiYear}${currentZodiac}年) 农历$monthName$dayName $shichenName"
+    val tempSolar = try {
+        BaziEngine.lunarToSolar(
+            LunarDate(
+                year = selectedYear,
+                month = selectedMonth,
+                isLeap = isLeap,
+                day = selectedDay,
+                hour = selectedHour,
+                minute = selectedMinute
+            )
+        )
+    } catch (e: Exception) {
+        null
+    }
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
@@ -128,7 +143,7 @@ fun LunarDatePickerDialog(
                             textAlign = TextAlign.Center
                         )
                         Text(
-                            text = "对应公历年份：${selectedYear}年",
+                            text = if (tempSolar != null) "对应公历：${tempSolar.year}年${tempSolar.monthValue}月${tempSolar.dayOfMonth}日" else "对应公历年份：${selectedYear}年",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -164,7 +179,7 @@ fun LunarDatePickerDialog(
                             shape = RoundedCornerShape(10.dp)
                         ) {
                             Text(
-                                text = "${selectedYear}年 (${currentGanzhiYear})",
+                                text = "${selectedYear}年 (${currentGanzhiYear}${currentZodiac}年)",
                                 fontWeight = FontWeight.Bold,
                                 color = ImperialRed
                             )
@@ -179,8 +194,9 @@ fun LunarDatePickerDialog(
                         ) {
                             for (y in 1930..2030) {
                                 val gz = BaziEngine.getYearGanZhi(y)
+                                val zd = BaziEngine.getZodiac(y)
                                 DropdownMenuItem(
-                                    text = { Text("${y}年 ($gz)") },
+                                    text = { Text("${y}年 ($gz${zd}年)") },
                                     onClick = {
                                         selectedYear = y
                                         yearDropdownExpanded = false
