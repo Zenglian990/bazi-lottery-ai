@@ -198,7 +198,8 @@ class OfflineLotteryEngine(private val context: Context? = null) {
         destiny: BaziDestiny,
         lotteryType: LotteryType,
         count: Int = 1,
-        strategy: String = "balanced"
+        strategy: String = "balanced",
+        userName: String? = null
     ): BaziRecommendationResponse {
         val stats = computeStats(lotteryType)
         val (wBazi, wFreq, wOmission) = when (strategy.lowercase()) {
@@ -210,9 +211,14 @@ class OfflineLotteryEngine(private val context: Context? = null) {
         val primaryStats = stats.stats["primary"] ?: emptyMap()
         val secondaryStats = stats.stats["secondary"] ?: emptyMap()
 
+        val effectiveName = if (userName.isNullOrBlank()) (destiny.userName ?: "缘主") else userName.trim()
+        val seenTickets = mutableSetOf<Pair<List<String>, List<String>>>()
         val recommendations = mutableListOf<RecommendationItem>()
+        val maxAttempts = maxOf(count * 50, 200)
+        var attempts = 0
 
-        for (i in 0 until count) {
+        while (recommendations.size < count && attempts < maxAttempts) {
+            attempts++
             // Sample primary balls
             val primaryBalls = sampleBalls(
                 range = lotteryType.primaryRange,
@@ -243,6 +249,12 @@ class OfflineLotteryEngine(private val context: Context? = null) {
                 emptyList()
             }
 
+            val ticketKey = Pair(primaryBalls, secondaryBalls)
+            if (ticketKey in seenTickets) {
+                continue
+            }
+            seenTickets.add(ticketKey)
+
             // Wuxing distribution of selected numbers
             val wuxingDist = mutableMapOf<String, Int>()
             (primaryBalls + secondaryBalls).forEach { numStr ->
@@ -252,20 +264,25 @@ class OfflineLotteryEngine(private val context: Context? = null) {
             }
 
             val primaryXi = destiny.xiYongShen.firstOrNull() ?: "金"
-            val rationale = "命中喜用神【$primaryXi】生扶磁场，融合近30期大数据频率与遗漏加权(A-Res抽样)"
-            val offlineEvidence = com.zeng.lottery.data.model.ClassicsEvidence(
-                book = "《周易》",
-                chapter = "大有卦第十四",
-                quote = "火在天上，大有。君子以遏恶扬善，顺天休命。",
-                vernacular = "日月丽乎中天，其道大光。顺天应人，行善修身，必蒙天佑。",
-                auspiciousNumbers = primaryBalls.take(3).mapNotNull { it.toIntOrNull() },
-                category = "hexagram"
+            val rationale = "缘主【$effectiveName】命中喜用神【$primaryXi】生扶磁场，融合近30期大数据频率与遗漏加权(A-Res抽样)"
+            val betIdx = recommendations.size + 1
+            val hexagram = AUSPICIOUS_HEXAGRAMS[recommendations.size % AUSPICIOUS_HEXAGRAMS.size]
+            val offlineEvidence = hexagram.copy(
+                auspiciousNumbers = primaryBalls.take(3).mapNotNull { it.toIntOrNull() }
             )
+
+            val formattedTicket = if (secondaryBalls.isNotEmpty()) {
+                "${primaryBalls.joinToString(" ")} + ${secondaryBalls.joinToString(" ")}"
+            } else {
+                primaryBalls.joinToString(" ")
+            }
 
             recommendations.add(
                 RecommendationItem(
+                    betIndex = betIdx,
                     primaryNumbers = primaryBalls,
                     secondaryNumbers = secondaryBalls,
+                    formattedTicket = formattedTicket,
                     wuxingDistribution = wuxingDist,
                     scoreRationale = rationale,
                     classicsEvidence = offlineEvidence
@@ -273,11 +290,105 @@ class OfflineLotteryEngine(private val context: Context? = null) {
             )
         }
 
+        // Assemble unified copyText for offline response
+        val lines = mutableListOf<String>()
+        lines.add("【曾练彩票助手 - ${effectiveName}专属吉祥票】")
+        lines.add("彩种类型：${lotteryType.displayName} (${recommendations.size}注机选)")
+        lines.add("缘主姓名：$effectiveName")
+        if (destiny.lunarDatetime.isNotBlank()) {
+            lines.add("生辰命盘：${destiny.lunarDatetime}")
+        }
+        lines.add("推演策略：$strategy")
+        lines.add("--------------------------------------")
+        recommendations.forEach { rec ->
+            lines.add(String.format("第%02d注: %s", rec.betIndex, rec.formattedTicket ?: rec.primaryNumbers.joinToString(" ")))
+        }
+        lines.add("--------------------------------------")
+        lines.add("祝您财星高照，吉祥如意！(彩票纯属概率游戏，请理性购彩)")
+        val copyText = lines.joinToString("\n")
+
         return BaziRecommendationResponse(
             lotteryType = lotteryType.code,
             strategy = strategy,
             recommendations = recommendations,
-            baziSummary = destiny
+            baziSummary = destiny,
+            copyText = copyText,
+            userName = effectiveName
+        )
+    }
+
+    companion object {
+        val AUSPICIOUS_HEXAGRAMS = listOf(
+            com.zeng.lottery.data.model.ClassicsEvidence(
+                book = "《周易》",
+                chapter = "大有卦第十四",
+                quote = "火在天上，大有。君子以遏恶扬善，顺天休命。",
+                vernacular = "火在天上，日照当空，盛大富有。顺应天命，行善修身，诸事吉祥。",
+                category = "hexagram"
+            ),
+            com.zeng.lottery.data.model.ClassicsEvidence(
+                book = "《周易》",
+                chapter = "乾卦第一",
+                quote = "天行健，君子以自强不息。见龙在田，利见大人。",
+                vernacular = "刚健中正，自强不息。吉光初现，运势升华，机缘相聚。",
+                category = "hexagram"
+            ),
+            com.zeng.lottery.data.model.ClassicsEvidence(
+                book = "《周易》",
+                chapter = "泰卦第十一",
+                quote = "天地交而万物通也，上下交而其志同也。小往大来，吉亨。",
+                vernacular = "阴阳调和，通达和顺。泰然自得，阴去阳生，财福并进。",
+                category = "hexagram"
+            ),
+            com.zeng.lottery.data.model.ClassicsEvidence(
+                book = "《周易》",
+                chapter = "谦卦第十五",
+                quote = "地中有山，谦。君子以裒多益寡，称物平施。天道亏盈而益谦。",
+                vernacular = "内蕴雄厚而外守谦逊。天道佑谦，心怀宽平，吉无不利。",
+                category = "hexagram"
+            ),
+            com.zeng.lottery.data.model.ClassicsEvidence(
+                book = "《周易》",
+                chapter = "同人卦第十三",
+                quote = "同人于野，亨。利涉大川，利君子贞。",
+                vernacular = "广结同心，志同道合。携手并进，通达顺遂，万事吉祥。",
+                category = "hexagram"
+            ),
+            com.zeng.lottery.data.model.ClassicsEvidence(
+                book = "《周易》",
+                chapter = "升卦第四十六",
+                quote = "地中生木，升。君子以顺德，积小以高大。",
+                vernacular = "积小成大，步步高升。如木生土中，稳健滋长，前程万里。",
+                category = "hexagram"
+            ),
+            com.zeng.lottery.data.model.ClassicsEvidence(
+                book = "《周易》",
+                chapter = "复卦第二十四",
+                quote = "雷在地中，复。先王以至日闭关，商旅不行，后不省方。",
+                vernacular = "一阳初复，生机再萌。蓄力待发，循环往复，终至大吉。",
+                category = "hexagram"
+            ),
+            com.zeng.lottery.data.model.ClassicsEvidence(
+                book = "《周易》",
+                chapter = "益卦第四十二",
+                quote = "风雷，益。君子以见善则迁，有过则改。利有攸往，利涉大川。",
+                vernacular = "风雷激荡，生机蓬勃。增益助化，顺天应时，必获大利。",
+                category = "hexagram"
+            ),
+            com.zeng.lottery.data.model.ClassicsEvidence(
+                book = "《周易》",
+                chapter = "鼎卦第五十",
+                quote = "木上有火，鼎。君子以正位凝命。鼎元吉，亨。",
+                vernacular = "去旧生新，鼎足而立。定基立业，调和五味，元亨吉祥。",
+                category = "hexagram"
+            ),
+            com.zeng.lottery.data.model.ClassicsEvidence(
+                book = "《周易》",
+                chapter = "丰卦第五十五",
+                quote = "雷电皆至，丰。君子以折狱致刑。丰亨，王假之，勿忧，宜日中。",
+                vernacular = "如日中天，盛大丰满。明察秋毫，吉运沛然，富贵亨通。",
+                category = "hexagram"
+            )
         )
     }
 

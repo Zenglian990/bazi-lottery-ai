@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta
 import re
 from typing import Dict, Any, Optional, Tuple, Union
-from lunar_python import Solar, Lunar
+from lunar_python import Solar, Lunar, LunarMonth
 
 from backend.app.services.wuxing_engine import (
     analyze_wuxing_energy,
@@ -101,34 +101,64 @@ def calculate_four_pillars(
     longitude: Optional[float] = 120.0,
     sect: int = 2,
     shichen: Optional[str] = None,
+    lunar_year: Optional[int] = None,
+    lunar_month: Optional[int] = None,
+    lunar_day: Optional[int] = None,
+    is_leap_month: bool = False,
+    lunar_hour: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Calculate Four Pillars (Year, Month, Day, Hour) and astronomical ephemeris.
-    Supports 12 Shichen names with early/late Zi hour handling.
+    Supports pure lunar inputs, 12 Shichen names with early/late Zi hour handling,
+    and 29-day month boundary clamping.
     """
-    if isinstance(birth_datetime, datetime):
+    shichen_to_use = lunar_hour or shichen
+    shichen_parsed = parse_shichen(shichen_to_use)
+
+    if lunar_year is not None and lunar_month is not None and lunar_day is not None:
+        h, m = (shichen_parsed[0], shichen_parsed[1]) if shichen_parsed else (12, 0)
+        base_dt = datetime(lunar_year, min(max(lunar_month, 1), 12), min(max(lunar_day, 1), 28), h, m, 0)
+        if shichen_parsed:
+            sect = shichen_parsed[2]
+    elif isinstance(birth_datetime, datetime):
         base_dt = birth_datetime
+        if shichen_parsed:
+            base_dt = base_dt.replace(hour=shichen_parsed[0], minute=shichen_parsed[1], second=0, microsecond=0)
+            sect = shichen_parsed[2]
     else:
         base_dt = parse_datetime_str(birth_datetime)
-
-    # Apply Shichen override if specified
-    shichen_parsed = parse_shichen(shichen)
-    if shichen_parsed:
-        h, m, s_sect = shichen_parsed
-        base_dt = base_dt.replace(hour=h, minute=m, second=0, microsecond=0)
-        sect = s_sect
+        if shichen_parsed:
+            base_dt = base_dt.replace(hour=shichen_parsed[0], minute=shichen_parsed[1], second=0, microsecond=0)
+            sect = shichen_parsed[2]
 
     # True Solar Time adjustment
     dt = adjust_true_solar_time(base_dt, longitude)
 
     # Solar / Lunar ephemeris resolution
-    if calendar_type.lower() == "lunar":
-        # Parse as lunar calendar
-        lunar = Lunar.fromYmdHms(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
+    cal_type = "lunar" if (lunar_year is not None and lunar_month is not None and lunar_day is not None) else (calendar_type or "solar").lower()
+    if cal_type == "lunar":
+        y = lunar_year if lunar_year is not None else dt.year
+        m = lunar_month if lunar_month is not None else dt.month
+        d = lunar_day if lunar_day is not None else dt.day
+        h = dt.hour
+        mi = dt.minute
+        s = dt.second
+
+        # Check leap month existence and 29-day boundary protection
+        actual_m = -m if (is_leap_month and LunarMonth.fromYm(y, -m) is not None) else m
+        lm = LunarMonth.fromYm(y, actual_m)
+        max_d = lm.getDayCount() if lm else 30
+        actual_d = min(max(d, 1), max_d)
+
+        lunar = Lunar.fromYmdHms(y, actual_m, actual_d, h, mi, s)
         solar = lunar.getSolar()
+        solar_dt_str = f"{solar.getYear()}-{solar.getMonth():02d}-{solar.getDay():02d} {solar.getHour():02d}:{solar.getMinute():02d}:{solar.getSecond():02d}"
+        lunar_dt_str = lunar.toString()
     else:
         solar = Solar.fromYmdHms(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
         lunar = solar.getLunar()
+        solar_dt_str = dt.strftime("%Y-%m-%d %H:%M:%S")
+        lunar_dt_str = lunar.toString()
 
     eight_char = lunar.getEightChar()
     eight_char.setSect(sect)
@@ -176,9 +206,6 @@ def calculate_four_pillars(
         hour_stem=time_gan,
         hour_branch=time_zhi,
     )
-
-    solar_dt_str = dt.strftime("%Y-%m-%d %H:%M:%S")
-    lunar_dt_str = lunar.toString()
 
     return {
         "solar_datetime": solar_dt_str,

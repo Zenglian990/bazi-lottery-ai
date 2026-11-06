@@ -51,7 +51,6 @@ import com.zeng.lottery.ui.components.LotteryBall
 import com.zeng.lottery.ui.theme.FortuneGold
 import com.zeng.lottery.ui.theme.ImperialRed
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -60,7 +59,7 @@ fun RecommendScreen(
     recommendationResponse: BaziRecommendationResponse?,
     selectedStrategy: String,
     betCount: Int = 5,
-    userName: String = "曾先生",
+    userName: String = "缘主",
     isLoading: Boolean,
     onStrategySelected: (String) -> Unit,
     onBetCountSelected: (Int) -> Unit = {},
@@ -198,7 +197,7 @@ fun RecommendScreen(
 
                                     OutlinedButton(
                                         onClick = {
-                                            val text = formatSingleBet(lotteryType, item, index)
+                                            val text = item.formattedTicket?.takeIf { it.isNotBlank() } ?: formatSingleBet(lotteryType, item, index)
                                             clipboardManager.setText(AnnotatedString(text))
                                             Toast.makeText(context, "已复制单注: $text", Toast.LENGTH_SHORT).show()
                                         },
@@ -220,7 +219,10 @@ fun RecommendScreen(
 
                                 Spacer(modifier = Modifier.height(8.dp))
 
-                                // 3D Balls Row
+                                // 3D Balls Row with responsive sizing for >=6 balls
+                                val totalBalls = primaryBalls.size + secondaryBalls.size
+                                val ballSize = if (totalBalls >= 6) 36.dp else 44.dp
+
                                 FlowRow(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.Center,
@@ -233,6 +235,7 @@ fun RecommendScreen(
                                             number = numStr,
                                             colorType = BallColorType.RED,
                                             wuxingElement = elem,
+                                            size = ballSize,
                                             delayMs = (pIdx * 30L)
                                         )
                                     }
@@ -241,7 +244,7 @@ fun RecommendScreen(
                                         Spacer(modifier = Modifier.width(6.dp))
                                         Box(
                                             modifier = Modifier
-                                                .height(36.dp)
+                                                .height(ballSize)
                                                 .width(1.5.dp)
                                                 .align(Alignment.CenterVertically)
                                                 .background(Color.Gray.copy(alpha = 0.35f))
@@ -256,6 +259,7 @@ fun RecommendScreen(
                                                 number = numStr,
                                                 colorType = secColor,
                                                 wuxingElement = elem,
+                                                size = ballSize,
                                                 delayMs = ((primaryBalls.size + sIdx) * 30L)
                                             )
                                         }
@@ -335,7 +339,8 @@ fun RecommendScreen(
             if (recommendations.isNotEmpty()) {
                 OutlinedButton(
                     onClick = {
-                        val fullTicketText = buildFullTicketString(lotteryType, recommendations, userName)
+                        val fullTicketText = recommendationResponse?.copyText?.takeIf { it.isNotBlank() }
+                            ?: buildFullTicketString(lotteryType, recommendations, userName)
                         clipboardManager.setText(AnnotatedString(fullTicketText))
                         Toast.makeText(context, "已复制全部 ${recommendations.size} 注彩票号码至剪贴板", Toast.LENGTH_SHORT).show()
                     },
@@ -446,12 +451,16 @@ private fun buildFullTicketString(
     items: List<RecommendationItem>,
     userName: String
 ): String {
+    val effectiveName = if (userName.isBlank()) "缘主" else userName.trim()
+    val now = LocalDateTime.now()
+    val todayPillars = BaziEngine.calculateFourPillars(now)
+    val todayLunar = BaziEngine.solarToLunar(now)
+
     val sb = StringBuilder()
-    sb.appendLine("【曾练彩票助手 · 生辰八字祥瑞票】")
-    sb.appendLine("缘主: $userName")
+    sb.appendLine("【曾练彩票助手 - ${effectiveName}专属吉祥票】")
+    sb.appendLine("缘主: $effectiveName")
     sb.appendLine("彩种: ${lotteryType.title} (${items.size}注 · ¥${items.size * 2})")
-    val nowStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-    sb.appendLine("推算时间: $nowStr")
+    sb.appendLine("择吉干支: 农历${todayPillars.year.fullText}年 ${todayLunar.monthZh}${todayLunar.dayZh} (${todayPillars.day.fullText}日 ${todayPillars.hour.fullText}时)")
     sb.appendLine("--------------------------------")
     items.forEachIndexed { idx, item ->
         val label = if (idx < 26) ('A' + idx).toString() else "${idx + 1}"
@@ -460,6 +469,6 @@ private fun buildFullTicketString(
         sb.appendLine("[$label] $pri$sec")
     }
     sb.appendLine("--------------------------------")
-    sb.appendLine("祝君中奖，理性购彩！")
+    sb.appendLine("祝缘主【$effectiveName】福星高照，吉祥如意，理性投注！")
     return sb.toString()
 }

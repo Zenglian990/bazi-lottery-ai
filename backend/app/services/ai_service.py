@@ -150,10 +150,13 @@ def generate_fallback_divination(request: BaziDivinationRequest) -> str:
 
     sec_desc = f"，后区/蓝球【{', '.join(secondary)}】" if secondary else ""
 
+    user_name = getattr(request, "user_name", None) or "缘主"
+    user_name = user_name.strip() if user_name.strip() else "缘主"
+
     # Section 1: 【命盘乾坤】
     p1 = (
         f"【命盘乾坤】\n"
-        f"求测者日主天干为【{day_master}】，生逢生旺之令，命局气象显定为【{strength}】。"
+        f"缘主【{user_name}】日主天干为【{day_master}】，生逢生旺之令，命局气象显定为【{strength}】。"
         f"四柱八字神气内敛，气机升腾；喜用神当立【{xi_yong_str}】以平衡中和、调顺阴阳，"
         f"助益命局生化不息、运势畅达。"
     )
@@ -203,7 +206,7 @@ def generate_fallback_divination(request: BaziDivinationRequest) -> str:
         f"【灵感吉言】\n"
         f"典籍印证：{evidence.book} · {evidence.chapter}：『{evidence.quote}』\n"
         f"易理解析：{evidence.vernacular} 契合印证神数【{ausp_str}】。\n"
-        f"乾道变化，各正性命。易理选号旨在契合身心气场、顺应天地造化。"
+        f"乾道变化，各正性命。愿缘主【{user_name}】怀敬畏以待灵机，抱诚敬以迎吉祥。"
         f"吉方在东南与正北生旺之地，宜于良辰吉日心怀善念、顺其自然，迎福纳祥自有名应。"
     )
 
@@ -251,8 +254,12 @@ def build_user_prompt(request: BaziDivinationRequest) -> str:
         favorable_elements=[str(x) for x in bazi['xi_yong_shen']]
     )
 
+    user_name = getattr(request, "user_name", None) or "缘主"
+    user_name = user_name.strip() if user_name.strip() else "缘主"
+
     return (
-        f"请为以下求测者与彩票号码进行易道深度解盘：\n"
+        f"请为缘主【{user_name}】与彩票号码进行易道深度解盘：\n"
+        f"- 缘主姓名：{user_name}\n"
         f"- 彩票类型：{lottery_name} ({request.lottery_type})\n"
         f"- 推荐号码：主区号码：{', '.join(primary)}{sec_str}\n"
         f"- 出生时间：{request.birth_datetime or '未提供（按标准命局分析）'}\n"
@@ -261,7 +268,7 @@ def build_user_prompt(request: BaziDivinationRequest) -> str:
         f"- 命局强弱：{bazi['strength']}\n"
         f"- 喜用神：{xi_yong_str}\n\n"
         f"{rag_context}\n\n"
-        f"请立即按照上述5个标准标题生成易道深度解盘卦辞，务必在【数理玄机】或【灵感吉言】中引述上述典籍原文与易理解读。"
+        f"请立即按照上述5个标准标题生成易道深度解盘卦辞，务必尊称求测者为缘主【{user_name}】，并在【数理玄机】或【灵感吉言】中引述上述典籍原文与易理解读。"
     )
 
 

@@ -62,12 +62,17 @@ class WuxingPercentageModel(BaseModel):
 
 class BaziDestinyRequest(BaseModel):
     """Request model for Bazi destiny analysis."""
-    birth_datetime: str = Field(..., description="Birth datetime in ISO 8601 or YYYY-MM-DD HH:MM:SS format")
-    calendar_type: Optional[str] = Field(default="solar", description="'solar' (公历) or 'lunar' (农历)")
+    birth_datetime: Optional[str] = Field(default=None, description="Birth datetime in ISO 8601 or YYYY-MM-DD HH:MM:SS format")
+    calendar_type: Optional[str] = Field(default="lunar", description="'lunar' (农历) or 'solar' (公历)")
+    lunar_year: Optional[int] = Field(default=None, description="农历年 (如 1990)")
+    lunar_month: Optional[int] = Field(default=None, description="农历月 (1-12)")
+    lunar_day: Optional[int] = Field(default=None, description="农历日 (1-30)")
+    is_leap_month: bool = Field(default=False, description="是否农历闰月")
+    lunar_hour: Optional[str] = Field(default=None, description="出生时辰 (如 辰时/甲子)")
     gender: Optional[str] = Field(default="male", description="'male' or 'female'")
     longitude: Optional[float] = Field(default=120.0, description="Birth location longitude (for True Solar Time)")
     sect: Optional[int] = Field(default=2, description="1: Sect 1 早子时换日派, 2: Sect 2 晚子时派")
-    user_name: Optional[str] = Field(default=None, description="缘主姓名 (结合五格剖象与笔画数理)")
+    user_name: Optional[str] = Field(default="缘主", description="缘主姓名 (结合五格剖象与笔画数理)")
     shichen: Optional[str] = Field(default=None, description="出生时辰 (如: 早子时, 晚子时, 丑时...)")
 
 
@@ -90,7 +95,7 @@ class BaziDestinyResponse(BaseModel):
     lacking_elements_zh: Optional[List[str]] = Field(default=None, description="Lacking elements in Chinese")
     xi_yong_shen_zh: Optional[List[str]] = Field(default=None, description="Favorable elements in Chinese")
     ji_shen_zh: Optional[List[str]] = Field(default=None, description="Unfavorable elements in Chinese")
-    user_name: Optional[str] = Field(default=None, description="缘主姓名")
+    user_name: Optional[str] = Field(default="缘主", description="缘主姓名")
     shichen: Optional[str] = Field(default=None, description="出生时辰")
     name_numerology: Optional[Dict[str, Any]] = Field(default=None, description="姓名五格数理分析")
 
@@ -138,7 +143,12 @@ class LotteryRecommendation(BaseModel):
 class BaziRecommendRequest(BaseModel):
     """Request model for Bazi lottery recommendation."""
     birth_datetime: Optional[str] = Field(default=None, description="Birth datetime string (optional)")
-    calendar_type: Optional[str] = Field(default="solar", description="'solar' or 'lunar'")
+    calendar_type: Optional[str] = Field(default="lunar", description="'lunar' or 'solar'")
+    lunar_year: Optional[int] = Field(default=None, description="农历年 (如 1990)")
+    lunar_month: Optional[int] = Field(default=None, description="农历月 (1-12)")
+    lunar_day: Optional[int] = Field(default=None, description="农历日 (1-30)")
+    is_leap_month: bool = Field(default=False, description="是否农历闰月")
+    lunar_hour: Optional[str] = Field(default=None, description="出生时辰 (如 辰时/甲子)")
     gender: Optional[str] = Field(default="male", description="'male' or 'female'")
     longitude: Optional[float] = Field(default=120.0, description="Birth location longitude")
     sect: Optional[int] = Field(default=2, description="Sect 1 or Sect 2 for Zi hour")
@@ -149,7 +159,7 @@ class BaziRecommendRequest(BaseModel):
     w_freq: Optional[float] = Field(default=None, description="Weight for historical frequency")
     w_omission: Optional[float] = Field(default=None, description="Weight for omission value")
     deterministic: Optional[bool] = Field(default=False, description="Deterministic top-ranked selection if True")
-    user_name: Optional[str] = Field(default=None, description="缘主姓名")
+    user_name: Optional[str] = Field(default="缘主", description="缘主姓名")
     shichen: Optional[str] = Field(default=None, description="出生时辰 (如: 早子时, 丑时...)")
 
 
@@ -160,18 +170,23 @@ class BaziRecommendResponse(BaseModel):
     recommendations: List[LotteryRecommendation] = Field(..., description="List of generated tickets")
     bazi_summary: Optional[Dict[str, Any]] = Field(default=None, description="Summary of user's Bazi destiny")
     copy_text: Optional[str] = Field(default=None, description="Unified plain text representation for copying all bets")
-    user_name: Optional[str] = Field(default=None, description="缘主姓名")
+    user_name: Optional[str] = Field(default="缘主", description="缘主姓名")
     today_liuri: Optional[Dict[str, Any]] = Field(default=None, description="今日流日干支与气运")
 
 
 class TodayFortuneRequest(BaseModel):
     """Request model for Today's Fortune & LiuRi analysis."""
     birth_datetime: Optional[str] = Field(default=None, description="User's birth datetime for natal resonance")
-    calendar_type: Optional[str] = Field(default="solar", description="'solar' or 'lunar'")
+    calendar_type: Optional[str] = Field(default="lunar", description="'lunar' or 'solar'")
+    lunar_year: Optional[int] = Field(default=None, description="农历年")
+    lunar_month: Optional[int] = Field(default=None, description="农历月")
+    lunar_day: Optional[int] = Field(default=None, description="农历日")
+    is_leap_month: bool = Field(default=False, description="是否农历闰月")
+    lunar_hour: Optional[str] = Field(default=None, description="出生时辰")
     gender: Optional[str] = Field(default="male", description="'male' or 'female'")
     longitude: Optional[float] = Field(default=120.0, description="Location longitude")
     sect: Optional[int] = Field(default=2, description="Sect 1 or 2")
-    user_name: Optional[str] = Field(default=None, description="缘主姓名")
+    user_name: Optional[str] = Field(default="缘主", description="缘主姓名")
     shichen: Optional[str] = Field(default=None, description="出生时辰")
 
 

@@ -16,12 +16,9 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Update
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -29,13 +26,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TimePicker
-import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,37 +34,33 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.zeng.lottery.data.local.BaziEngine
 import com.zeng.lottery.data.model.BaziDestiny
+import com.zeng.lottery.data.model.LunarDate
+import com.zeng.lottery.ui.components.LunarDatePickerDialog
 import com.zeng.lottery.ui.components.ShichenPickerDialog
 import com.zeng.lottery.ui.components.TodayLiuRiCard
 import com.zeng.lottery.ui.theme.FortuneGold
 import com.zeng.lottery.ui.theme.ImperialRed
-import java.time.Instant
 import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BirthInputScreen(
-    selectedDateTime: LocalDateTime,
-    isLunar: Boolean,
+    lunarDate: LunarDate,
     isMale: Boolean,
     destiny: BaziDestiny?,
-    userName: String = "曾先生",
+    userName: String = "缘主",
     onUserNameChanged: (String) -> Unit = {},
-    onDateTimeChanged: (LocalDateTime) -> Unit,
-    onLunarChanged: (Boolean) -> Unit,
+    onLunarDateChanged: (LunarDate) -> Unit,
+    onResetCurrentTime: () -> Unit = {},
     onGenderChanged: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
-    var showTimePicker by remember { mutableStateOf(false) }
     var showShichenPicker by remember { mutableStateOf(false) }
 
     Column(
@@ -92,7 +79,7 @@ fun BirthInputScreen(
             )
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                // Header Row
+                // Header Row: Pure Lunar Title without Gregorian Toggle
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -104,24 +91,12 @@ fun BirthInputScreen(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-
-                    // Solar / Lunar Switch
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = if (isLunar) "农历" else "公历",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Switch(
-                            checked = isLunar,
-                            onCheckedChange = onLunarChanged,
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = FortuneGold,
-                                checkedTrackColor = FortuneGold.copy(alpha = 0.4f)
-                            )
-                        )
-                    }
+                    Text(
+                        text = "农历干支体系",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = FortuneGold,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -136,6 +111,7 @@ fun BirthInputScreen(
                         value = userName,
                         onValueChange = onUserNameChanged,
                         label = { Text("缘主姓名", style = MaterialTheme.typography.labelSmall) },
+                        placeholder = { Text("未填写时缺省为'缘主'", style = MaterialTheme.typography.labelSmall) },
                         modifier = Modifier.weight(1.1f),
                         singleLine = true,
                         leadingIcon = {
@@ -149,7 +125,7 @@ fun BirthInputScreen(
                     )
 
                     OutlinedButton(
-                        onClick = { onDateTimeChanged(LocalDateTime.now()) },
+                        onClick = onResetCurrentTime,
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier.height(54.dp),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = FortuneGold)
@@ -162,7 +138,7 @@ fun BirthInputScreen(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "设为当前时间",
+                            text = "设为当前农历",
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Bold
                         )
@@ -171,27 +147,27 @@ fun BirthInputScreen(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Date / Time / Shichen / Gender Selector Buttons
+                // Pure Lunar Date / Shichen / Gender Selector Buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Date picker trigger button
+                    // Pure Lunar Date picker trigger button
                     OutlinedButton(
                         onClick = { showDatePicker = true },
-                        modifier = Modifier.weight(1.1f),
+                        modifier = Modifier.weight(1.4f),
                         shape = RoundedCornerShape(10.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.CalendarMonth,
-                            contentDescription = "选择日期",
+                            contentDescription = "选择农历日期",
                             modifier = Modifier.size(14.dp),
                             tint = FortuneGold
                         )
-                        Spacer(modifier = Modifier.width(2.dp))
+                        Spacer(modifier = Modifier.width(3.dp))
                         Text(
-                            text = selectedDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                            text = "农历 ${lunarDate.ganzhiYear}年 ${lunarDate.monthZh}${lunarDate.dayZh}",
                             style = MaterialTheme.typography.labelSmall,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold
@@ -211,38 +187,8 @@ fun BirthInputScreen(
                             tint = FortuneGold
                         )
                         Spacer(modifier = Modifier.width(2.dp))
-                        val shichenName = when (selectedDateTime.hour) {
-                            0 -> "早子时"
-                            1, 2 -> "丑时"
-                            3, 4 -> "寅时"
-                            5, 6 -> "卯时"
-                            7, 8 -> "辰时"
-                            9, 10 -> "巳时"
-                            11, 12 -> "午时"
-                            13, 14 -> "未时"
-                            15, 16 -> "申时"
-                            17, 18 -> "酉时"
-                            19, 20 -> "戌时"
-                            21, 22 -> "亥时"
-                            23 -> "晚子时"
-                            else -> "时辰"
-                        }
                         Text(
-                            text = shichenName,
-                            style = MaterialTheme.typography.labelSmall,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-
-                    // Precise Time picker trigger button
-                    OutlinedButton(
-                        onClick = { showTimePicker = true },
-                        modifier = Modifier.weight(0.8f),
-                        shape = RoundedCornerShape(10.dp)
-                    ) {
-                        Text(
-                            text = selectedDateTime.format(DateTimeFormatter.ofPattern("HH:mm")),
+                            text = lunarDate.shichenZh,
                             style = MaterialTheme.typography.labelSmall,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold
@@ -292,80 +238,65 @@ fun BirthInputScreen(
         }
     }
 
-    // Material 3 DatePickerDialog
+    // Lunar Date Picker Dialog
     if (showDatePicker) {
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = selectedDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        )
-        DatePickerDialog(
+        LunarDatePickerDialog(
+            currentDate = lunarDate,
             onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        datePickerState.selectedDateMillis?.let { millis ->
-                            val newLocalDate = Instant.ofEpochMilli(millis)
-                                .atZone(ZoneId.systemDefault())
-                                .toLocalDate()
-                            onDateTimeChanged(LocalDateTime.of(newLocalDate, selectedDateTime.toLocalTime()))
-                        }
-                        showDatePicker = false
-                    }
-                ) {
-                    Text("确定", color = FortuneGold, fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) {
-                    Text("取消")
-                }
+            onDateSelected = { newLunar ->
+                onLunarDateChanged(newLunar)
+                showDatePicker = false
             }
-        ) {
-            DatePicker(state = datePickerState)
-        }
+        )
     }
 
     // 12 Shichen Picker Dialog
     if (showShichenPicker) {
         ShichenPickerDialog(
-            currentHour = selectedDateTime.hour,
+            currentHour = lunarDate.hour,
             onDismissRequest = { showShichenPicker = false },
             onShichenSelected = { hour, minute ->
-                val newLocalTime = LocalTime.of(hour, minute)
-                onDateTimeChanged(LocalDateTime.of(selectedDateTime.toLocalDate(), newLocalTime))
+                onLunarDateChanged(lunarDate.copy(hour = hour, minute = minute))
+                showShichenPicker = false
             }
         )
     }
+}
 
-    // Material 3 TimePickerDialog
-    if (showTimePicker) {
-        val timePickerState = rememberTimePickerState(
-            initialHour = selectedDateTime.hour,
-            initialMinute = selectedDateTime.minute,
-            is24Hour = true
-        )
-        AlertDialog(
-            onDismissRequest = { showTimePicker = false },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        val newLocalTime = LocalTime.of(timePickerState.hour, timePickerState.minute)
-                        onDateTimeChanged(LocalDateTime.of(selectedDateTime.toLocalDate(), newLocalTime))
-                        showTimePicker = false
-                    }
-                ) {
-                    Text("确定", color = FortuneGold, fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showTimePicker = false }) {
-                    Text("取消")
-                }
-            },
-            text = {
-                TimePicker(state = timePickerState)
-            }
-        )
-    }
+/**
+ * Backward compatibility overload for existing callers passing LocalDateTime
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BirthInputScreen(
+    selectedDateTime: LocalDateTime,
+    isLunar: Boolean = true,
+    isMale: Boolean,
+    destiny: BaziDestiny?,
+    userName: String = "缘主",
+    onUserNameChanged: (String) -> Unit = {},
+    onDateTimeChanged: (LocalDateTime) -> Unit,
+    onLunarChanged: (Boolean) -> Unit = {},
+    onGenderChanged: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val lunar = remember(selectedDateTime) { BaziEngine.solarToLunar(selectedDateTime) }
+    BirthInputScreen(
+        lunarDate = lunar,
+        isMale = isMale,
+        destiny = destiny,
+        userName = userName,
+        onUserNameChanged = onUserNameChanged,
+        onLunarDateChanged = { newLunar ->
+            val solar = BaziEngine.lunarToSolar(newLunar)
+            onDateTimeChanged(solar)
+        },
+        onResetCurrentTime = {
+            onDateTimeChanged(LocalDateTime.now())
+        },
+        onGenderChanged = onGenderChanged,
+        modifier = modifier
+    )
 }
 
 @Composable

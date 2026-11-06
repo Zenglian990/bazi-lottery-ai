@@ -67,6 +67,34 @@ class LotteryRepository(
         }
     }
 
+    suspend fun getDestinyFromLunar(
+        lunarDate: com.zeng.lottery.data.model.LunarDate,
+        isMale: Boolean = true,
+        userName: String = "缘主"
+    ): BaziDestiny {
+        return try {
+            val solarDt = BaziEngine.lunarToSolar(lunarDate)
+            val req = BaziDestinyRequest(
+                birthDatetime = solarDt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")),
+                calendarType = "lunar",
+                gender = if (isMale) "male" else "female",
+                userName = userName,
+                shichen = lunarDate.shichenZh,
+                isLeapMonth = lunarDate.isLeap
+            )
+            withTimeout(4000L) {
+                val remote = apiService.calculateDestiny(req)
+                _isOffline.value = false
+                remote
+            }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            _isOffline.value = true
+            BaziEngine.analyzeDestinyFromLunar(lunarDate, isMale, userName)
+        }
+    }
+
     suspend fun getStats(lotteryType: LotteryType): LotteryStats {
         return try {
             withTimeout(4000L) {
@@ -106,6 +134,7 @@ class LotteryRepository(
         lotteryType: LotteryType,
         count: Int = 1,
         strategy: String = "balanced",
+        userName: String = "缘主",
         wBazi: Float = 0.5f,
         wFreq: Float = 0.3f,
         wOmission: Float = 0.2f
@@ -118,10 +147,11 @@ class LotteryRepository(
             }
             val req = BaziRecommendationRequest(
                 birthDatetime = dtStr,
-                calendarType = "solar",
+                calendarType = "lunar",
                 lotteryType = lotteryType.code,
                 count = count,
                 strategy = strategy,
+                userName = userName,
                 wBazi = wBazi,
                 wFreq = wFreq,
                 wOmission = wOmission
@@ -135,7 +165,7 @@ class LotteryRepository(
             throw e
         } catch (e: Exception) {
             _isOffline.value = true
-            offlineEngine.generateRecommendation(destiny, lotteryType, count, strategy)
+            offlineEngine.generateRecommendation(destiny, lotteryType, count, strategy, userName)
         }
     }
 
@@ -147,12 +177,17 @@ class LotteryRepository(
         return BaziEngine.analyzeDestiny(dateTime, isMale)
     }
 
+    fun getOfflineDestinyFromLunar(lunarDate: com.zeng.lottery.data.model.LunarDate, isMale: Boolean = true, userName: String = "缘主"): BaziDestiny {
+        return BaziEngine.analyzeDestinyFromLunar(lunarDate, isMale, userName)
+    }
+
     fun getOfflineRecommendations(
         destiny: BaziDestiny,
         lotteryType: LotteryType,
         count: Int = 5,
-        strategy: String = "balanced"
+        strategy: String = "balanced",
+        userName: String = "缘主"
     ): BaziRecommendationResponse {
-        return offlineEngine.generateRecommendation(destiny, lotteryType, count, strategy)
+        return offlineEngine.generateRecommendation(destiny, lotteryType, count, strategy, userName)
     }
 }

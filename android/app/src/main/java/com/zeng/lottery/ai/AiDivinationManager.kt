@@ -45,7 +45,8 @@ class AiDivinationManager(
         secondaryNumbers: List<String>,
         destiny: BaziDestiny?,
         birthDateTime: LocalDateTime?,
-        configOverride: AiConfig? = null
+        configOverride: AiConfig? = null,
+        userName: String = "缘主"
     ): Flow<String> {
         val config = configOverride ?: KeyStoreManager.loadAiConfig(context)
 
@@ -54,7 +55,7 @@ class AiDivinationManager(
                 if (config.deepseekApiKey.isNotBlank()) {
                     val systemPrompt = AiPromptBuilder.buildSystemPrompt()
                     val userPrompt = AiPromptBuilder.buildUserPrompt(
-                        lotteryType, primaryNumbers, secondaryNumbers, destiny, birthDateTime
+                        lotteryType, primaryNumbers, secondaryNumbers, destiny, birthDateTime, userName
                     )
                     openAiClient.streamDivination(
                         systemPrompt = systemPrompt,
@@ -63,24 +64,24 @@ class AiDivinationManager(
                         baseUrl = config.deepseekBaseUrl.ifBlank { "https://api.deepseek.com/v1" },
                         model = config.deepseekModel.ifBlank { "deepseek-flash" }
                     ).catch {
-                        emitAllFallback(lotteryType, primaryNumbers, secondaryNumbers, destiny)
+                        emitAllFallback(lotteryType, primaryNumbers, secondaryNumbers, destiny, userName)
                     }
                 } else {
-                    emitFallbackFlow(lotteryType, primaryNumbers, secondaryNumbers, destiny)
+                    emitFallbackFlow(lotteryType, primaryNumbers, secondaryNumbers, destiny, userName)
                 }
             }
 
             AiProvider.DIRECT_GEMINI -> {
                 if (config.geminiApiKey.isNotBlank()) {
                     val prompt = "${AiPromptBuilder.buildSystemPrompt()}\n\n${
-                        AiPromptBuilder.buildUserPrompt(lotteryType, primaryNumbers, secondaryNumbers, destiny, birthDateTime)
+                        AiPromptBuilder.buildUserPrompt(lotteryType, primaryNumbers, secondaryNumbers, destiny, birthDateTime, userName)
                     }"
                     geminiClient.streamDivination(prompt, config.geminiApiKey, config.geminiModel.ifBlank { "gemini-3.8-flash" })
                         .catch {
-                            emitAllFallback(lotteryType, primaryNumbers, secondaryNumbers, destiny)
+                            emitAllFallback(lotteryType, primaryNumbers, secondaryNumbers, destiny, userName)
                         }
                 } else {
-                    emitFallbackFlow(lotteryType, primaryNumbers, secondaryNumbers, destiny)
+                    emitFallbackFlow(lotteryType, primaryNumbers, secondaryNumbers, destiny, userName)
                 }
             }
 
@@ -88,7 +89,7 @@ class AiDivinationManager(
                 if (config.openaiApiKey.isNotBlank()) {
                     val systemPrompt = AiPromptBuilder.buildSystemPrompt()
                     val userPrompt = AiPromptBuilder.buildUserPrompt(
-                        lotteryType, primaryNumbers, secondaryNumbers, destiny, birthDateTime
+                        lotteryType, primaryNumbers, secondaryNumbers, destiny, birthDateTime, userName
                     )
                     openAiClient.streamDivination(
                         systemPrompt,
@@ -97,10 +98,10 @@ class AiDivinationManager(
                         config.openaiBaseUrl,
                         config.openaiModel
                     ).catch {
-                        emitAllFallback(lotteryType, primaryNumbers, secondaryNumbers, destiny)
+                        emitAllFallback(lotteryType, primaryNumbers, secondaryNumbers, destiny, userName)
                     }
                 } else {
-                    emitFallbackFlow(lotteryType, primaryNumbers, secondaryNumbers, destiny)
+                    emitFallbackFlow(lotteryType, primaryNumbers, secondaryNumbers, destiny, userName)
                 }
             }
 
@@ -115,9 +116,10 @@ class AiDivinationManager(
                     dayMaster = destiny?.dayMaster,
                     strength = destiny?.strength,
                     xiYongShen = destiny?.xiYongShen,
-                    birthDateTime = dtStr
+                    birthDateTime = dtStr,
+                    userName = userName
                 ).catch {
-                    emitAllFallback(lotteryType, primaryNumbers, secondaryNumbers, destiny)
+                    emitAllFallback(lotteryType, primaryNumbers, secondaryNumbers, destiny, userName)
                 }
             }
         }
@@ -127,10 +129,11 @@ class AiDivinationManager(
         lotteryType: LotteryType,
         primaryNumbers: List<String>,
         secondaryNumbers: List<String>,
-        destiny: BaziDestiny?
+        destiny: BaziDestiny?,
+        userName: String = "缘主"
     ) {
         val fallbackText = AiPromptBuilder.generateLocalFallback(
-            lotteryType, primaryNumbers, secondaryNumbers, destiny
+            lotteryType, primaryNumbers, secondaryNumbers, destiny, userName
         )
         // Emit in natural typewriter segments
         val segments = fallbackText.split(Regex("(?<=[，。；！\n])"))
@@ -146,8 +149,9 @@ class AiDivinationManager(
         lotteryType: LotteryType,
         primaryNumbers: List<String>,
         secondaryNumbers: List<String>,
-        destiny: BaziDestiny?
+        destiny: BaziDestiny?,
+        userName: String = "缘主"
     ): Flow<String> = flow {
-        emitAllFallback(lotteryType, primaryNumbers, secondaryNumbers, destiny)
+        emitAllFallback(lotteryType, primaryNumbers, secondaryNumbers, destiny, userName)
     }
 }

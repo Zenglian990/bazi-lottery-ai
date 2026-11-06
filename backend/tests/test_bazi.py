@@ -168,3 +168,43 @@ class TestBaziDestinyApi:
         resp = api_client.post("/api/bazi/destiny", json={"birth_datetime": "invalid-date"})
         # Should return 200 with fallback or 400
         assert resp.status_code in (200, 400)
+
+    def test_pure_lunar_calculation(self):
+        """Pure lunar input (1984-05-08 辰时)."""
+        res = calculate_four_pillars(
+            lunar_year=1984,
+            lunar_month=5,
+            lunar_day=8,
+            calendar_type="lunar",
+            shichen="辰时",
+        )
+        assert res["lunar_datetime"] is not None
+        assert res["four_pillars"]["year"]["pair"] == "甲子"
+        assert res["four_pillars"]["hour"]["pair"].endswith("辰")
+        assert "solar_datetime" in res
+
+    def test_pure_lunar_29_day_boundary_protection(self):
+        """2030 month 12 only has 29 days; passing 30 clamps safely without exception."""
+        res = calculate_four_pillars(
+            lunar_year=2030,
+            lunar_month=12,
+            lunar_day=30,
+            calendar_type="lunar",
+        )
+        assert res is not None
+        assert "four_pillars" in res
+
+    def test_destiny_endpoint_pure_lunar_default_name(self, api_client):
+        """POST /api/bazi/destiny with pure lunar parameters and default user_name '缘主'."""
+        payload = {
+            "lunar_year": 1990,
+            "lunar_month": 5,
+            "lunar_day": 15,
+            "calendar_type": "lunar",
+            "shichen": "午时",
+        }
+        resp = api_client.post("/api/bazi/destiny", json=payload)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["user_name"] == "缘主"
+        assert "four_pillars" in data

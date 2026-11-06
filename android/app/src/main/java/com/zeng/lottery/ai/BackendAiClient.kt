@@ -42,7 +42,8 @@ class BackendAiClient(private val okHttpClient: OkHttpClient) {
         dayMaster: String?,
         strength: String?,
         xiYongShen: List<String>?,
-        birthDateTime: String?
+        birthDateTime: String?,
+        userName: String? = "缘主"
     ): Flow<String> = callbackFlow {
         val cleanBase = baseUrl.trimEnd('/')
         val endpoint = "$cleanBase/api/ai/divination"
@@ -50,6 +51,7 @@ class BackendAiClient(private val okHttpClient: OkHttpClient) {
         val jsonPayload = JsonObject().apply {
             addProperty("lottery_type", lotteryType)
             addProperty("stream", true)
+            addProperty("user_name", if (userName.isNullOrBlank()) "缘主" else userName.trim())
             if (!birthDateTime.isNullOrBlank()) {
                 addProperty("birth_datetime", birthDateTime)
             }

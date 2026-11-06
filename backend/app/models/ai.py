@@ -18,6 +18,7 @@ class BaziDivinationRequest(BaseModel):
     bazi_summary: Optional[Dict[str, Any]] = Field(default=None, description="Day master, strength, xi_yong_shen, etc.")
     stream: Optional[bool] = Field(default=False, description="Whether to return SSE stream (defaults to False for REST JSON)")
     provider: Optional[str] = Field(default=None, description="'auto', 'deepseek', 'gemini', 'openai', or 'fallback'")
+    user_name: Optional[str] = Field(default="缘主", description="缘主姓名")
     user_api_key: Optional[str] = Field(default=None, description="Client-provided API key override")
     user_base_url: Optional[str] = Field(default=None, description="Client-provided base URL override")
     model: Optional[str] = Field(default=None, description="Model override")

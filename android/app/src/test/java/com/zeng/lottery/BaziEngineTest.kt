@@ -75,4 +75,54 @@ class BaziEngineTest {
         assertEquals("earth", BaziEngine.getHetuElement(10))
         assertEquals("土", BaziEngine.getHetuElementZh(30))
     }
+
+    @Test
+    fun testLunarToSolarAndBackRoundtrip() {
+        // 1990 Lunar 6-25 corresponds to 1990-08-15
+        val solar = BaziEngine.lunarToSolar(1990, 6, 25, false, 8, 30)
+        assertEquals(1990, solar.year)
+        assertEquals(8, solar.monthValue)
+        assertEquals(15, solar.dayOfMonth)
+
+        val lunar = BaziEngine.solarToLunar(solar)
+        assertEquals(1990, lunar.year)
+        assertEquals(6, lunar.month)
+        assertEquals(25, lunar.day)
+        assertEquals("庚午", lunar.ganzhiYear)
+        assertEquals("辰时", lunar.shichenZh)
+    }
+
+    @Test
+    fun testCalculateFourPillarsFromLunar() {
+        val lunarDate = com.zeng.lottery.data.model.LunarDate(year = 1990, month = 6, isLeap = false, day = 25, hour = 8, minute = 30)
+        val fp = BaziEngine.calculateFourPillarsFromLunar(lunarDate)
+        assertEquals("庚午", fp.year.fullText)
+        assertEquals("甲申", fp.month.fullText)
+        assertEquals("庚戌", fp.day.fullText)
+        assertEquals("庚辰", fp.hour.fullText)
+    }
+
+    @Test
+    fun testLunarMonth29DayClamping() {
+        // In 1990, month 1 has 29 days (small month)
+        val daysInMonth1 = BaziEngine.getDaysInLunarMonth(1990, 1, false)
+        assertEquals(29, daysInMonth1)
+
+        // Day 30 passed into lunarToSolar should clamp gracefully to 29
+        val solarClamped = BaziEngine.lunarToSolar(1990, 1, 30, false)
+        val solar29 = BaziEngine.lunarToSolar(1990, 1, 29, false)
+        assertEquals(solar29, solarClamped)
+    }
+
+    @Test
+    fun testLeapMonthHandling() {
+        // 1990 has leap month 5
+        val leapMonth1990 = BaziEngine.getLeapMonth(1990)
+        assertEquals(5, leapMonth1990)
+
+        // Solar date for normal month 5 vs leap month 5 should differ
+        val solarNormal = BaziEngine.lunarToSolar(1990, 5, 1, false)
+        val solarLeap = BaziEngine.lunarToSolar(1990, 5, 1, true)
+        assertTrue(solarLeap.isAfter(solarNormal))
+    }
 }

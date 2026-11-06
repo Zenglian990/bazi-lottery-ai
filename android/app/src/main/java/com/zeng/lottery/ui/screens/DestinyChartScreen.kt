@@ -44,7 +44,7 @@ import com.zeng.lottery.ui.theme.ImperialRed
 @Composable
 fun DestinyChartScreen(
     destiny: BaziDestiny?,
-    userName: String = "曾先生",
+    userName: String = "缘主",
     modifier: Modifier = Modifier
 ) {
     if (destiny == null) return
@@ -53,7 +53,7 @@ fun DestinyChartScreen(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        // User Name & Destiny Header Card
+        // User Name & Destiny Header Card with Four Pillars
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
@@ -61,24 +61,53 @@ fun DestinyChartScreen(
                 containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f)
             )
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "【$userName】命理五行气运盘",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = FortuneGold
-                )
-                Text(
-                    text = "八字原局",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "【$userName】专属命盘格局",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = FortuneGold
+                    )
+                    Text(
+                        text = "八字原局",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                if (destiny.lunarDatetime.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = destiny.lunarDatetime,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Four Pillars Badges Row
+                val fp = destiny.fourPillars
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        .padding(vertical = 10.dp, horizontal = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceAround
+                ) {
+                    ChartPillarBadge(label = "年柱", value = fp.year.fullText, element = fp.year.element)
+                    ChartPillarBadge(label = "月柱", value = fp.month.fullText, element = fp.month.element)
+                    ChartPillarBadge(label = "日柱 (元神)", value = fp.day.fullText, element = fp.day.element, isDayMaster = true)
+                    ChartPillarBadge(label = "时柱", value = fp.hour.fullText, element = fp.hour.element)
+                }
             }
         }
 
@@ -237,3 +266,36 @@ private fun getElementColor(elem: String): Color {
         else -> FortuneGold
     }
 }
+
+@Composable
+private fun ChartPillarBadge(
+    label: String,
+    value: String,
+    element: String,
+    isDayMaster: Boolean = false
+) {
+    val elemZh = BaziEngine.ELEMENT_ZH[element.lowercase()] ?: element
+    val elemColor = getElementColor(elemZh)
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = if (isDayMaster) FortuneGold else MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(2.dp))
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.ExtraBold,
+            color = if (isDayMaster) FortuneGold else MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.height(2.dp))
+        Text(
+            text = elemZh,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold,
+            color = elemColor
+        )
+    }
+}
+

@@ -43,8 +43,9 @@ fun TodayLiuRiCard(
     val now = remember { LocalDateTime.now() }
     val todayPillars = remember(now) { BaziEngine.calculateFourPillars(now) }
 
-    val solarDateStr = remember(now) {
-        now.format(DateTimeFormatter.ofPattern("yyyy年MM月dd日 EEEE", Locale.CHINESE))
+    val todayLunar = remember(now) { BaziEngine.solarToLunar(now) }
+    val lunarDateStr = remember(todayLunar, todayPillars) {
+        "农历 ${todayPillars.year.fullText}年 ${todayLunar.monthZh}${todayLunar.dayZh} (${todayPillars.day.fullText}日)"
     }
     val timeStr = remember(now) {
         now.format(DateTimeFormatter.ofPattern("HH:mm", Locale.CHINESE))
@@ -109,9 +110,10 @@ fun TodayLiuRiCard(
 
             Spacer(modifier = Modifier.height(6.dp))
             Text(
-                text = "公历: $solarDateStr",
+                text = lunarDateStr,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                fontWeight = FontWeight.Medium,
+                color = FortuneGold
             )
 
             Spacer(modifier = Modifier.height(10.dp))

@@ -17,6 +17,7 @@ import com.zeng.lottery.data.model.DrawItem
 import com.zeng.lottery.data.model.LotteryStats
 import com.zeng.lottery.data.model.LotteryType
 import com.zeng.lottery.data.repository.LotteryRepository
+import com.zeng.lottery.data.model.LunarDate
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -49,8 +50,10 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
     private var selectJob: Job? = null
     private var destinyJob: Job? = null
 
-    private val _userName = MutableStateFlow(prefs?.getString("user_name", "曾先生") ?: "曾先生")
+    private val _userName = MutableStateFlow(prefs?.getString("user_name", "缘主") ?: "缘主")
     val userName: StateFlow<String> = _userName.asStateFlow()
+    val effectiveUserName: String
+        get() = if (_userName.value.isBlank()) "缘主" else _userName.value.trim()
 
     private val _betCount = MutableStateFlow(5)
     val betCount: StateFlow<Int> = _betCount.asStateFlow()
@@ -58,10 +61,13 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
     private val _selectedLottery = MutableStateFlow(LotteryType.SSQ)
     val selectedLottery: StateFlow<LotteryType> = _selectedLottery.asStateFlow()
 
+    private val _lunarDate = MutableStateFlow(LunarDate(1990, 6, false, 24, 8, 30))
+    val lunarDate: StateFlow<LunarDate> = _lunarDate.asStateFlow()
+
     private val _birthDateTime = MutableStateFlow(LocalDateTime.of(1990, 8, 15, 8, 30))
     val birthDateTime: StateFlow<LocalDateTime> = _birthDateTime.asStateFlow()
 
-    private val _isLunar = MutableStateFlow(false)
+    private val _isLunar = MutableStateFlow(true)
     val isLunar: StateFlow<Boolean> = _isLunar.asStateFlow()
 
     private val _isMale = MutableStateFlow(true)
@@ -124,7 +130,7 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
         _serverUrl.value = ApiClient.getBaseUrl()
 
         // Eagerly prime UI within 5ms from offline engine to prevent any 0-draw or blank card states
-        val initialDestiny = repository.getOfflineDestiny(_birthDateTime.value, _isMale.value)
+        val initialDestiny = repository.getOfflineDestinyFromLunar(_lunarDate.value, _isMale.value, effectiveUserName)
         _destiny.value = initialDestiny
         _stats.value = repository.getOfflineStats(_selectedLottery.value)
         _historyDraws.value = repository.getOfflineHistoryDraws(_selectedLottery.value, 50)
@@ -132,7 +138,8 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
             destiny = initialDestiny,
             lotteryType = _selectedLottery.value,
             count = _betCount.value,
-            strategy = _selectedStrategy.value
+            strategy = _selectedStrategy.value,
+            userName = effectiveUserName
         )
 
         // Then non-blocking cloud sync in background
@@ -140,9 +147,8 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun setUserName(name: String) {
-        val trimmed = name.trim().ifEmpty { "曾先生" }
-        _userName.value = trimmed
-        prefs?.edit()?.putString("user_name", trimmed)?.apply()
+        _userName.value = name
+        prefs?.edit()?.putString("user_name", name)?.apply()
     }
 
     fun setBetCount(count: Int) {
@@ -155,8 +161,20 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
         _toastMessage.value = null
     }
 
+    fun setLunarDate(date: LunarDate) {
+        _lunarDate.value = date
+        _birthDateTime.value = BaziEngine.lunarToSolar(date)
+        refreshDestinyAndRecommend()
+    }
+
+    fun resetToCurrentTime() {
+        val now = LocalDateTime.now()
+        setLunarDate(BaziEngine.solarToLunar(now))
+    }
+
     fun setBirthDateTime(dt: LocalDateTime) {
         _birthDateTime.value = dt
+        _lunarDate.value = BaziEngine.solarToLunar(dt)
         refreshDestinyAndRecommend()
     }
 
@@ -173,14 +191,15 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
     fun selectLottery(type: LotteryType) {
         _selectedLottery.value = type
         // Immediately show offline stats, history & recommendations for instant responsiveness
-        val currentDestiny = _destiny.value ?: repository.getOfflineDestiny(_birthDateTime.value, _isMale.value)
+        val currentDestiny = _destiny.value ?: repository.getOfflineDestinyFromLunar(_lunarDate.value, _isMale.value, effectiveUserName)
         _stats.value = repository.getOfflineStats(type)
         _historyDraws.value = repository.getOfflineHistoryDraws(type, 50)
         _recommendation.value = repository.getOfflineRecommendations(
             destiny = currentDestiny,
             lotteryType = type,
             count = _betCount.value,
-            strategy = _selectedStrategy.value
+            strategy = _selectedStrategy.value,
+            userName = effectiveUserName
         )
 
         selectJob?.cancel()
@@ -197,7 +216,8 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
                         destiny = currentDestiny,
                         lotteryType = type,
                         count = _betCount.value,
-                        strategy = _selectedStrategy.value
+                        strategy = _selectedStrategy.value,
+                        userName = effectiveUserName
                     )
                 }
             } catch (e: kotlinx.coroutines.CancellationException) {
@@ -217,12 +237,13 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
 
     fun reroll() {
         // Immediate local reroll
-        val currentDestiny = _destiny.value ?: repository.getOfflineDestiny(_birthDateTime.value, _isMale.value)
+        val currentDestiny = _destiny.value ?: repository.getOfflineDestinyFromLunar(_lunarDate.value, _isMale.value, effectiveUserName)
         _recommendation.value = repository.getOfflineRecommendations(
             destiny = currentDestiny,
             lotteryType = _selectedLottery.value,
             count = _betCount.value,
-            strategy = _selectedStrategy.value
+            strategy = _selectedStrategy.value,
+            userName = effectiveUserName
         )
 
         rerollJob?.cancel()
@@ -234,7 +255,8 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
                         destiny = currentDestiny,
                         lotteryType = _selectedLottery.value,
                         count = _betCount.value,
-                        strategy = _selectedStrategy.value
+                        strategy = _selectedStrategy.value,
+                        userName = effectiveUserName
                     )
                     _recommendation.value = rec
                     if (repository.isOffline.value) {
@@ -294,13 +316,14 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
     }
 
     private fun refreshDestinyAndRecommend() {
-        val d = repository.getOfflineDestiny(_birthDateTime.value, _isMale.value)
+        val d = repository.getOfflineDestinyFromLunar(_lunarDate.value, _isMale.value, effectiveUserName)
         _destiny.value = d
         _recommendation.value = repository.getOfflineRecommendations(
             destiny = d,
             lotteryType = _selectedLottery.value,
             count = _betCount.value,
-            strategy = _selectedStrategy.value
+            strategy = _selectedStrategy.value,
+            userName = effectiveUserName
         )
 
         destinyJob?.cancel()
@@ -308,13 +331,14 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
             _isLoading.value = true
             try {
                 withTimeout(6500L) {
-                    val remoteD = repository.getDestiny(_birthDateTime.value, _isMale.value)
+                    val remoteD = repository.getDestinyFromLunar(_lunarDate.value, _isMale.value, effectiveUserName)
                     _destiny.value = remoteD
                     _recommendation.value = repository.getRecommendations(
                         destiny = remoteD,
                         lotteryType = _selectedLottery.value,
                         count = _betCount.value,
-                        strategy = _selectedStrategy.value
+                        strategy = _selectedStrategy.value,
+                        userName = effectiveUserName
                     )
                 }
             } catch (e: kotlinx.coroutines.CancellationException) {
@@ -331,7 +355,7 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             try {
                 repository.checkHealth()
-                val d = repository.getDestiny(_birthDateTime.value, _isMale.value)
+                val d = repository.getDestinyFromLunar(_lunarDate.value, _isMale.value, effectiveUserName)
                 _destiny.value = d
                 _stats.value = repository.getStats(_selectedLottery.value)
                 val remoteHist = repository.getHistoryDraws(_selectedLottery.value, 50)
@@ -342,7 +366,8 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
                     destiny = d,
                     lotteryType = _selectedLottery.value,
                     count = _betCount.value,
-                    strategy = _selectedStrategy.value
+                    strategy = _selectedStrategy.value,
+                    userName = effectiveUserName
                 )
             } catch (e: Exception) {
                 // Keep already primed local state
@@ -357,7 +382,7 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
             try {
                 withTimeout(8000L) {
                     repository.checkHealth()
-                    val d = repository.getDestiny(_birthDateTime.value, _isMale.value)
+                    val d = repository.getDestinyFromLunar(_lunarDate.value, _isMale.value, effectiveUserName)
                     _destiny.value = d
                     _stats.value = repository.getStats(_selectedLottery.value)
                     val remoteHist = repository.getHistoryDraws(_selectedLottery.value, 50)
@@ -368,13 +393,14 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
                         destiny = d,
                         lotteryType = _selectedLottery.value,
                         count = _betCount.value,
-                        strategy = _selectedStrategy.value
+                        strategy = _selectedStrategy.value,
+                        userName = effectiveUserName
                     )
                 }
             } catch (e: kotlinx.coroutines.CancellationException) {
                 return@launch
             } catch (e: Exception) {
-                val d = _destiny.value ?: repository.getOfflineDestiny(_birthDateTime.value, _isMale.value)
+                val d = _destiny.value ?: repository.getOfflineDestinyFromLunar(_lunarDate.value, _isMale.value, effectiveUserName)
                 _destiny.value = d
                 if (_stats.value == null) {
                     _stats.value = repository.getOfflineStats(_selectedLottery.value)
@@ -387,7 +413,8 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
                         destiny = d,
                         lotteryType = _selectedLottery.value,
                         count = _betCount.value,
-                        strategy = _selectedStrategy.value
+                        strategy = _selectedStrategy.value,
+                        userName = effectiveUserName
                     )
                 }
             } finally {
@@ -444,6 +471,7 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
         val dt = _birthDateTime.value
         val currentLottery = _selectedLottery.value
         val config = _aiConfig.value
+        val effectiveName = effectiveUserName
 
         divinationJob = viewModelScope.launch {
             try {
@@ -454,6 +482,7 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
                     secondaryNumbers = secondary,
                     destiny = currentDestiny,
                     birthDateTime = dt,
+                    userName = effectiveName,
                     configOverride = config
                 ).collect { delta ->
                     _aiDivinationText.value += delta

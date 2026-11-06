@@ -59,6 +59,8 @@ enum class LotteryType(
         secondaryAllowDuplicate = false
     );
 
+    val displayName: String get() = title
+
     companion object {
         fun fromCode(code: String): LotteryType {
             return entries.firstOrNull { it.code.equals(code, ignoreCase = true) } ?: SSQ

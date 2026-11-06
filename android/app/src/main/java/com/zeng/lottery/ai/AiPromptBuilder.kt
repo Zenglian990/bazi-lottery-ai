@@ -50,8 +50,10 @@ object AiPromptBuilder {
         primaryNumbers: List<String>,
         secondaryNumbers: List<String>,
         destiny: BaziDestiny?,
-        birthDateTime: LocalDateTime?
+        birthDateTime: LocalDateTime?,
+        userName: String = "缘主"
     ): String {
+        val effectiveName = if (userName.isBlank()) "缘主" else userName.trim()
         val dtStr = birthDateTime?.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) ?: "1990-08-15 08:30"
         val dayMaster = destiny?.dayMaster ?: "庚"
         val strength = destiny?.strength ?: "身强"
@@ -65,16 +67,16 @@ object AiPromptBuilder {
         } else ""
 
         return """
-            请为以下求测者与彩票号码进行易道深度解盘：
+            请为缘主【$effectiveName】与彩票号码进行易道深度解盘：
+            - 缘主姓名：$effectiveName
             - 彩票类型：${lotteryType.title} (${lotteryType.code})
             - 推荐号码：主区号码：${primaryNumbers.joinToString(", ")}$secStr
-            - 出生时间：$dtStr
-            - 四柱八字：$pillars
+            - 农历命盘：$pillars
             - 日主天干：$dayMaster
             - 命局强弱：$strength
             - 喜用神：$xiYong
 
-            请立即按照上述5个标准标题生成易道深度解盘卦辞。
+            请立即按照上述5个标准标题生成易道深度解盘卦辞，务必尊称求测者为缘主【$effectiveName】。
         """.trimIndent()
     }
 
@@ -82,8 +84,10 @@ object AiPromptBuilder {
         lotteryType: LotteryType,
         primaryNumbers: List<String>,
         secondaryNumbers: List<String>,
-        destiny: BaziDestiny?
+        destiny: BaziDestiny?,
+        userName: String = "缘主"
     ): String {
+        val effectiveName = if (userName.isBlank()) "缘主" else userName.trim()
         val dayMaster = destiny?.dayMaster ?: "庚"
         val strength = destiny?.strength ?: "身强"
         val xiYong = destiny?.xiYongShen?.joinToString("、") ?: "水、木"
@@ -103,7 +107,7 @@ object AiPromptBuilder {
 
         val p1 = """
             【命盘乾坤】
-            求测者日主天干为【$dayMaster】，生逢生旺之令，命局气象显定为【$strength】。四柱八字神气内敛，气机升腾；喜用神当立【$xiYong】以平衡中和、调顺阴阳，助益命局生化不息、运势畅达。
+            缘主【$effectiveName】日主天干为【$dayMaster】，生逢生旺之令，命局气象显定为【$strength】。四柱八字神气内敛，气机升腾；喜用神当立【$xiYong】以平衡中和、调顺阴阳，助益命局生化不息、运势畅达。
         """.trimIndent()
 
         val p2 = """
@@ -118,7 +122,8 @@ object AiPromptBuilder {
 
         val p4 = """
             【灵感吉言】
-            乾道变化，各正性命。易理选号旨在契合身心气场、顺应天地造化。吉方在东南与正北生旺之地，宜于良辰吉日心怀善念、顺其自然，迎福纳祥自有名应。
+            典籍印证：《周易》·大有卦第十四：『火在天上，大有。君子以遏恶扬善，顺天休命。』
+            易理解析：日月丽乎中天，其道大光。愿缘主【$effectiveName】怀敬畏以待灵机，抱诚敬以迎吉祥，顺天应人，迎福纳祥！
         """.trimIndent()
 
         val p5 = MANDATORY_DISCLAIMER_SECTION

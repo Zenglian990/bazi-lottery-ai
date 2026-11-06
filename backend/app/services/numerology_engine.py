@@ -337,7 +337,8 @@ def generate_score_rationale(
         "cold_reversal": "大遗漏极冷翻转",
     }.get(strategy.lower(), "综合三元混合")
 
-    prefix = f"缘主【{user_name}】" if user_name else ""
+    effective_name = user_name.strip() if (user_name and user_name.strip()) else "缘主"
+    prefix = f"缘主【{effective_name}】"
     harmony_clause = f"，{today_harmony_text}" if today_harmony_text else ""
 
     return f"{prefix}命中喜用神{tails_text}契合度 {match_pct}%{harmony_clause}，结合{strategy_desc}模型(八字:{w_bazi:.2f}, 频次:{w_freq:.2f}, 遗漏:{w_omission:.2f})加权生成"
@@ -577,9 +578,10 @@ def recommend_lottery_tickets(
         })
 
     # Assemble unified copy_text for one-click copying
-    lines = [f"【曾练彩票助手 - {rule.chinese_name} {len(recommendations)}注机选推荐】"]
-    if user_name:
-        lines.append(f"缘主姓名：{user_name}")
+    effective_name = user_name.strip() if (user_name and user_name.strip()) else "缘主"
+    lines = [f"【曾练彩票助手 - {effective_name}专属吉祥票】"]
+    lines.append(f"彩种类型：{rule.chinese_name} ({len(recommendations)}注机选)")
+    lines.append(f"缘主姓名：{effective_name}")
     lines.append(f"今日流日：{ganzhi_year}年 {ganzhi_month}月 {ganzhi_day}日 {ganzhi_hour}")
     lines.append(f"推演策略：{strategy or 'balanced'}")
     lines.append("-" * 38)
@@ -594,7 +596,7 @@ def recommend_lottery_tickets(
         "strategy": strategy or "balanced",
         "recommendations": recommendations,
         "copy_text": copy_text,
-        "user_name": user_name,
+        "user_name": effective_name,
         "today_liuri": today_liuri_info,
         "bazi_summary": {
             "day_master": bazi_analysis.get("day_master", ""),

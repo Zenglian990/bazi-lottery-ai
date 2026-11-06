@@ -221,4 +221,34 @@ class ViewModelTest {
         assertEquals(1, parsedFromClient.stats["primary"]?.size)
         assertEquals(18, parsedFromClient.stats["primary"]?.get("01")?.frequency)
     }
+
+    @Test
+    fun testMultiBetTicketDeduplicationAndHexagramRotation() {
+        val dt = LocalDateTime.of(1990, 8, 15, 8, 30)
+        val destiny = BaziEngine.analyzeDestiny(dt, isMale = true)
+        val engine = OfflineLotteryEngine(context = null)
+
+        val rec10 = engine.generateRecommendation(
+            destiny = destiny,
+            lotteryType = LotteryType.SSQ,
+            count = 10,
+            strategy = "命理吉数优先",
+            userName = "缘主"
+        )
+        assertEquals(10, rec10.recommendations.size)
+
+        // Verify all 10 tickets are distinct (no duplicate tickets)
+        val ticketSignatures = rec10.recommendations.map {
+            it.primaryNumbers.joinToString(",") + "|" + it.secondaryNumbers.joinToString(",")
+        }.toSet()
+        assertEquals("All 10 generated bets must be distinct", 10, ticketSignatures.size)
+
+        // Verify hexagram rotation: 10 bets should have varying hexagrams, not all identical
+        val hexagrams = rec10.recommendations.mapNotNull { it.classicsEvidence?.chapter }.toSet()
+        assertTrue("Hexagrams across 10 bets should rotate (expected > 1 distinct hexagrams, found ${hexagrams.size})", hexagrams.size > 1)
+
+        // Verify copyText contains 缘主
+        assertNotNull(rec10.copyText)
+        assertTrue("copyText must contain 缘主", rec10.copyText!!.contains("缘主"))
+    }
 }

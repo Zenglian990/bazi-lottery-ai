@@ -80,6 +80,7 @@ fun LotteryApp(
 ) {
     val context = LocalContext.current
     val selectedLottery by viewModel.selectedLottery.collectAsState()
+    val lunarDate by viewModel.lunarDate.collectAsState()
     val birthDateTime by viewModel.birthDateTime.collectAsState()
     val isLunar by viewModel.isLunar.collectAsState()
     val isMale by viewModel.isMale.collectAsState()
@@ -247,34 +248,21 @@ fun LotteryApp(
                     )
 
                     BirthInputScreen(
-                        selectedDateTime = birthDateTime,
-                        isLunar = isLunar,
+                        lunarDate = lunarDate,
                         isMale = isMale,
                         destiny = destiny,
                         userName = userName,
                         onUserNameChanged = { viewModel.setUserName(it) },
-                        onDateTimeChanged = { viewModel.setBirthDateTime(it) },
-                        onLunarChanged = { viewModel.setLunar(it) },
+                        onLunarDateChanged = { viewModel.setLunarDate(it) },
+                        onResetCurrentTime = { viewModel.resetToCurrentTime() },
                         onGenderChanged = { viewModel.setGender(it) }
                     )
                 }
                 1 -> {
-                    // 2. 命盘 Screen (Wuxing Radar + Day Master Strength)
+                    // 2. 命盘 Screen (Wuxing Radar + Day Master Strength + Four Pillars Badges)
                     DestinyChartScreen(
                         destiny = destiny,
                         userName = userName
-                    )
-
-                    BirthInputScreen(
-                        selectedDateTime = birthDateTime,
-                        isLunar = isLunar,
-                        isMale = isMale,
-                        destiny = destiny,
-                        userName = userName,
-                        onUserNameChanged = { viewModel.setUserName(it) },
-                        onDateTimeChanged = { viewModel.setBirthDateTime(it) },
-                        onLunarChanged = { viewModel.setLunar(it) },
-                        onGenderChanged = { viewModel.setGender(it) }
                     )
                 }
                 2 -> {
@@ -294,14 +282,13 @@ fun LotteryApp(
                 3 -> {
                     // 4. 生辰排盘 Screen
                     BirthInputScreen(
-                        selectedDateTime = birthDateTime,
-                        isLunar = isLunar,
+                        lunarDate = lunarDate,
                         isMale = isMale,
                         destiny = destiny,
                         userName = userName,
                         onUserNameChanged = { viewModel.setUserName(it) },
-                        onDateTimeChanged = { viewModel.setBirthDateTime(it) },
-                        onLunarChanged = { viewModel.setLunar(it) },
+                        onLunarDateChanged = { viewModel.setLunarDate(it) },
+                        onResetCurrentTime = { viewModel.resetToCurrentTime() },
                         onGenderChanged = { viewModel.setGender(it) }
                     )
 

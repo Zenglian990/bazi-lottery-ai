@@ -30,11 +30,16 @@ router = APIRouter(prefix="/bazi", tags=["bazi"])
 
 def compute_today_fortune_data(
     birth_datetime: Optional[str] = None,
-    calendar_type: Optional[str] = "solar",
+    calendar_type: Optional[str] = "lunar",
     longitude: Optional[float] = 120.0,
     sect: Optional[int] = 2,
     user_name: Optional[str] = None,
     shichen: Optional[str] = None,
+    lunar_year: Optional[int] = None,
+    lunar_month: Optional[int] = None,
+    lunar_day: Optional[int] = None,
+    is_leap_month: bool = False,
+    lunar_hour: Optional[str] = None,
 ) -> TodayFortuneResponse:
     """Compute today's real-time LiuRi, Huangli directions, and natal chart resonance."""
     now = datetime.now()
@@ -59,14 +64,19 @@ def compute_today_fortune_data(
     chong_sha = lunar_now.getDayChongDesc()
 
     resonance = None
-    if birth_datetime:
+    if birth_datetime or (lunar_year and lunar_month and lunar_day):
         try:
             user_bazi = calculate_four_pillars(
                 birth_datetime=birth_datetime,
-                calendar_type=calendar_type or "solar",
+                calendar_type=calendar_type or "lunar",
                 longitude=longitude or 120.0,
                 sect=sect or 2,
                 shichen=shichen,
+                lunar_year=lunar_year,
+                lunar_month=lunar_month,
+                lunar_day=lunar_day,
+                is_leap_month=is_leap_month,
+                lunar_hour=lunar_hour,
             )
             user_xi_norm = [ZH_TO_EN_ELEMENT.get(e, e) for e in user_bazi["xi_yong_shen"]]
             today_elems = {stem_elem, branch_elem}
@@ -154,6 +164,11 @@ def post_today_fortune(request: Optional[TodayFortuneRequest] = None) -> TodayFo
         sect=req.sect,
         user_name=req.user_name,
         shichen=req.shichen,
+        lunar_year=req.lunar_year,
+        lunar_month=req.lunar_month,
+        lunar_day=req.lunar_day,
+        is_leap_month=req.is_leap_month,
+        lunar_hour=req.lunar_hour,
     )
 
 
@@ -166,10 +181,15 @@ def analyze_destiny(request: BaziDestinyRequest) -> BaziDestinyResponse:
     try:
         raw_bazi = calculate_four_pillars(
             birth_datetime=request.birth_datetime,
-            calendar_type=request.calendar_type or "solar",
+            calendar_type=request.calendar_type or "lunar",
             longitude=request.longitude if request.longitude is not None else 120.0,
             sect=request.sect if request.sect is not None else 2,
             shichen=request.shichen,
+            lunar_year=request.lunar_year,
+            lunar_month=request.lunar_month,
+            lunar_day=request.lunar_day,
+            is_leap_month=request.is_leap_month,
+            lunar_hour=request.lunar_hour,
         )
 
         four_pillars = FourPillarsModel(
@@ -181,9 +201,8 @@ def analyze_destiny(request: BaziDestinyRequest) -> BaziDestinyResponse:
 
         wuxing_scores = WuxingScoresModel(**raw_bazi["wuxing_scores"])
 
-        name_num = None
-        if request.user_name:
-            name_num = analyze_name_numerology(request.user_name)
+        effective_name = request.user_name.strip() if (request.user_name and request.user_name.strip()) else "缘主"
+        name_num = analyze_name_numerology(effective_name)
 
         return BaziDestinyResponse(
             solar_datetime=raw_bazi["solar_datetime"],
@@ -203,7 +222,7 @@ def analyze_destiny(request: BaziDestinyRequest) -> BaziDestinyResponse:
             lacking_elements_zh=raw_bazi.get("lacking_elements_zh"),
             xi_yong_shen_zh=raw_bazi.get("xi_yong_shen_zh"),
             ji_shen_zh=raw_bazi.get("ji_shen_zh"),
-            user_name=request.user_name,
+            user_name=effective_name,
             shichen=request.shichen or raw_bazi.get("shichen"),
             name_numerology=name_num,
         )
@@ -234,11 +253,18 @@ def recommend_tickets(request: BaziRecommendRequest) -> BaziRecommendResponse:
         # Calculate Bazi destiny or use current time if not provided
         bazi_analysis = calculate_four_pillars(
             birth_datetime=request.birth_datetime or datetime.now(),
-            calendar_type=request.calendar_type or "solar",
+            calendar_type=request.calendar_type or "lunar",
             longitude=request.longitude if request.longitude is not None else 120.0,
             sect=request.sect if request.sect is not None else 2,
             shichen=request.shichen,
+            lunar_year=request.lunar_year,
+            lunar_month=request.lunar_month,
+            lunar_day=request.lunar_day,
+            is_leap_month=request.is_leap_month,
+            lunar_hour=request.lunar_hour,
         )
+
+        effective_name = request.user_name.strip() if (request.user_name and request.user_name.strip()) else "缘主"
 
         # Generate recommendations via A-Res sampling
         rec_data = recommend_lottery_tickets(
@@ -250,7 +276,7 @@ def recommend_tickets(request: BaziRecommendRequest) -> BaziRecommendResponse:
             w_freq=request.w_freq,
             w_omission=request.w_omission,
             deterministic=bool(request.deterministic),
-            user_name=request.user_name,
+            user_name=effective_name,
             shichen=request.shichen,
         )
 
