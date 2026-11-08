@@ -18,6 +18,18 @@ HEADERS_500 = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
 }
 
+def _parse_money(val: Any) -> int:
+    """Safely parse sales or pool money string which may be '_', '--', None, or comma-formatted."""
+    if val is None:
+        return 0
+    s = str(val).replace(",", "").strip()
+    if not s or s in ("_", "--", "-", "null", "None"):
+        return 0
+    try:
+        return int(float(s))
+    except (ValueError, TypeError):
+        return 0
+
 def fetch_ssq_live(count: int = 100) -> List[Dict[str, Any]]:
     """Fetch recent SSQ draws from official China Welfare Lottery API."""
     url = f"http://www.cwl.gov.cn/cwl_admin/front/cwlkj/search/kjxx/findDrawNotice?name=ssq&issueCount={count}"
@@ -29,8 +41,8 @@ def fetch_ssq_live(count: int = 100) -> List[Dict[str, Any]]:
     for item in raw:
         reds = sorted([f"{int(x):02d}" for x in item["red"].split(",")])
         blue = [f"{int(item['blue']):02d}"]
-        sales = int(float(item.get("sales", 0) or 0))
-        pool = int(float(item.get("poolmoney", 0) or 0))
+        sales = _parse_money(item.get("sales"))
+        pool = _parse_money(item.get("poolmoney"))
         records.append({
             "issue": str(item["code"]),
             "draw_date": item.get("date", "")[:10],
@@ -51,8 +63,8 @@ def fetch_fc3d_live(count: int = 100) -> List[Dict[str, Any]]:
     records = []
     for item in raw:
         digits = [str(int(x)) for x in item["red"].split(",")]
-        sales = int(float(item.get("sales", 0) or 0))
-        pool = int(float(item.get("poolmoney", 0) or 0))
+        sales = _parse_money(item.get("sales"))
+        pool = _parse_money(item.get("poolmoney"))
         records.append({
             "issue": str(item["code"]),
             "draw_date": item.get("date", "")[:10],

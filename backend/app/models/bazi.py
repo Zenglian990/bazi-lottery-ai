@@ -98,6 +98,9 @@ class BaziDestinyResponse(BaseModel):
     user_name: Optional[str] = Field(default="缘主", description="缘主姓名")
     shichen: Optional[str] = Field(default=None, description="出生时辰")
     name_numerology: Optional[Dict[str, Any]] = Field(default=None, description="姓名五格数理分析")
+    gender: Optional[str] = Field(default="male", description="性别: 'male'(乾造) 或 'female'(坤造)")
+    dayun_forward: Optional[bool] = Field(default=True, description="大运顺逆 (阳男阴女顺行，阴男阳女逆行)")
+    dayun_list: Optional[List[str]] = Field(default_factory=list, description="前8步起运干支")
 
     @model_validator(mode="after")
     def populate_alias_and_chinese(self) -> "BaziDestinyResponse":

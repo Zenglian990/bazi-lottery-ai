@@ -10,6 +10,44 @@ import re
 from typing import AsyncGenerator, Dict, List, Optional, Any, Tuple
 
 import httpx
+import ipaddress
+from urllib.parse import urlparse
+
+def _validate_safe_url(url: Optional[str]) -> Optional[str]:
+    """Validate user_base_url against SSRF (reject private, link-local, loopback, or cloud metadata IPs)."""
+    if not url:
+        return None
+    url = url.strip()
+    parsed = urlparse(url)
+    if parsed.scheme.lower() not in ("https", "http"):
+        raise ValueError(f"Invalid protocol scheme in base_url: '{parsed.scheme}'. Only https/http allowed.")
+    hostname = (parsed.hostname or "").lower()
+    if not hostname:
+        raise ValueError("Invalid URL: missing host")
+
+    blocked_hosts = {
+        "metadata.google.internal",
+        "metadata",
+        "localhost",
+        "127.0.0.1",
+        "0.0.0.0",
+        "::1",
+    }
+    if hostname in blocked_hosts or hostname.endswith(".internal") or hostname.endswith(".local"):
+        raise ValueError(f"Access to host '{hostname}' is forbidden for security (SSRF prevention).")
+
+    try:
+        ip_obj = ipaddress.ip_address(hostname)
+        if ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local or ip_obj.is_reserved or ip_obj.is_multicast:
+            raise ValueError(f"Access to private or link-local IP '{hostname}' is forbidden.")
+        if str(ip_obj) == "169.254.169.254":
+            raise ValueError("Access to cloud metadata service is strictly forbidden.")
+    except ValueError as ve:
+        if "forbidden" in str(ve).lower():
+            raise
+
+    return url
+
 
 from backend.app.core.config import settings
 from backend.app.models.ai import BaziDivinationRequest
@@ -383,10 +421,18 @@ async def generate_divination_text(request: BaziDivinationRequest) -> Dict[str, 
         if provider == "deepseek"
         else (settings.DEEPSEEK_API_KEY or (request.user_api_key if "deepseek" in (model or "").lower() else ""))
     )
-    deepseek_base = request.user_base_url or settings.DEEPSEEK_BASE_URL or "https://api.deepseek.com/v1"
+    safe_base = None
+    if request.user_base_url:
+        try:
+            safe_base = _validate_safe_url(request.user_base_url)
+        except Exception as e:
+            logger.warning(f"Rejected unsafe user_base_url '{request.user_base_url}': {e}")
+            safe_base = None
+
+    deepseek_base = safe_base or settings.DEEPSEEK_BASE_URL or "https://api.deepseek.com/v1"
     gemini_key = request.user_api_key or settings.GEMINI_API_KEY
     openai_key = request.user_api_key or settings.OPENAI_API_KEY
-    openai_base = request.user_base_url or settings.OPENAI_BASE_URL
+    openai_base = safe_base or settings.OPENAI_BASE_URL
 
     if provider in ("deepseek", "auto") and deepseek_key:
         try:
@@ -436,10 +482,18 @@ async def stream_divination_chunks(request: BaziDivinationRequest) -> AsyncGener
         if provider == "deepseek"
         else (settings.DEEPSEEK_API_KEY or (request.user_api_key if "deepseek" in (model or "").lower() else ""))
     )
-    deepseek_base = request.user_base_url or settings.DEEPSEEK_BASE_URL or "https://api.deepseek.com/v1"
+    safe_base = None
+    if request.user_base_url:
+        try:
+            safe_base = _validate_safe_url(request.user_base_url)
+        except Exception as e:
+            logger.warning(f"Rejected unsafe user_base_url '{request.user_base_url}': {e}")
+            safe_base = None
+
+    deepseek_base = safe_base or settings.DEEPSEEK_BASE_URL or "https://api.deepseek.com/v1"
     gemini_key = request.user_api_key or settings.GEMINI_API_KEY
     openai_key = request.user_api_key or settings.OPENAI_API_KEY
-    openai_base = request.user_base_url or settings.OPENAI_BASE_URL
+    openai_base = safe_base or settings.OPENAI_BASE_URL
 
     # Try streaming from DeepSeek if configured
     if provider in ("deepseek", "auto") and deepseek_key:

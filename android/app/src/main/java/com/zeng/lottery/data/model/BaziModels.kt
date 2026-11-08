@@ -89,7 +89,12 @@ data class BaziDestiny(
     val lackingElementsZh: List<String>? = null,
     @SerializedName("user_name")
     val userName: String? = null,
-    val shichen: String? = null
+    val shichen: String? = null,
+    val gender: String = "male",
+    @SerializedName("dayun_forward")
+    val dayunForward: Boolean? = true,
+    @SerializedName("dayun_list")
+    val dayunList: List<String>? = emptyList()
 )
 
 val BaziDestiny.displayXiYongShen: List<String>

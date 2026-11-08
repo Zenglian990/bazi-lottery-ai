@@ -264,7 +264,8 @@ class OfflineLotteryEngine(private val context: Context? = null) {
             }
 
             val primaryXi = destiny.xiYongShen.firstOrNull() ?: "金"
-            val rationale = "缘主【$effectiveName】命中喜用神【$primaryXi】生扶磁场，融合近30期大数据频率与遗漏加权(A-Res抽样)"
+            val genderTag = if (destiny.gender == "female") "坤造(女)" else "乾造(男)"
+            val rationale = "缘主【$effectiveName】[$genderTag] 命中喜用神【$primaryXi】生扶磁场，融合近30期大数据频率与遗漏加权(A-Res抽样)"
             val betIdx = recommendations.size + 1
             val hexagram = AUSPICIOUS_HEXAGRAMS[recommendations.size % AUSPICIOUS_HEXAGRAMS.size]
             val offlineEvidence = hexagram.copy(
@@ -420,7 +421,9 @@ class OfflineLotteryEngine(private val context: Context? = null) {
             val freqScore = stat?.rate?.coerceIn(0.01f, 1.0f) ?: 0.3f
             val omissionScore = (stat?.currentOmission?.toFloat() ?: 5f).coerceIn(1f, 50f) / 50f
 
-            val totalWeight = (wBazi * baziScore + wFreq * freqScore + wOmission * omissionScore).coerceAtLeast(0.01f)
+            val isMale = (destiny.gender == "male")
+            val genderScore = if (isMale && (num % 2 == 1)) 1.10f else if (!isMale && (num % 2 == 0)) 1.10f else 1.0f
+            val totalWeight = ((wBazi * baziScore + wFreq * freqScore + wOmission * omissionScore) * genderScore).coerceAtLeast(0.01f)
             Pair(numStr, totalWeight)
         }
 

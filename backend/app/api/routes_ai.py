@@ -17,16 +17,26 @@ logger = logging.getLogger(__name__)
 import time
 from collections import defaultdict
 
-_AI_RATE_BUCKETS = defaultdict(list)
+_AI_RATE_BUCKETS = {}
 _AI_RATE_LIMIT = 30
 _AI_RATE_WINDOW = 60.0
 
+def _get_client_ip(req: Request) -> str:
+    forwarded = req.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return req.client.host if req.client else "unknown"
+
 def _check_ai_rate_limit(req: Request) -> None:
-    client_host = req.client.host if req.client else "unknown"
+    client_host = _get_client_ip(req)
     if client_host in ("testclient", "127.0.0.1", "localhost"):
         return
     now = time.monotonic()
-    bucket = [t for t in _AI_RATE_BUCKETS[client_host] if now - t < _AI_RATE_WINDOW]
+    if len(_AI_RATE_BUCKETS) > 500:
+        stale_keys = [k for k, v in _AI_RATE_BUCKETS.items() if not v or (now - v[-1] > _AI_RATE_WINDOW * 2)]
+        for k in stale_keys:
+            _AI_RATE_BUCKETS.pop(k, None)
+    bucket = [t for t in _AI_RATE_BUCKETS.get(client_host, []) if now - t < _AI_RATE_WINDOW]
     if len(bucket) >= _AI_RATE_LIMIT:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -53,12 +63,12 @@ async def ai_divination(
     - Non-streaming JSON: stream=False
     - Server-Sent Events (SSE): stream=True
     """
-    _check_ai_rate_limit(req)
     if request.lottery_type not in settings.SUPPORTED_LOTTERIES:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Unsupported lottery type '{request.lottery_type}'. Supported: {settings.SUPPORTED_LOTTERIES}",
         )
+    _check_ai_rate_limit(req)
 
     # Determine whether to stream based on request.stream or Accept header
     wants_sse = bool(request.stream) or req.headers.get("accept", "").startswith("text/event-stream")

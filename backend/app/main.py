@@ -1,6 +1,7 @@
 """FastAPI main application entrypoint."""
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+import asyncio
 import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.app.core.config import settings
 from backend.app.models.lottery import HealthResponse
 from backend.app.db.database import init_db, get_total_draws_count
+from backend.app.db.sync_service import sync_lottery_data
 from backend.app.api.routes_lottery import router as lottery_router
 from backend.app.api.routes_bazi import router as bazi_router
 from backend.app.api.routes_ai import router as ai_router
@@ -25,6 +27,19 @@ async def lifespan(app: FastAPI):
     init_db(seed_if_empty=True)
     counts = get_total_draws_count()
     logger.info(f"Database ready. Current draw counts: {counts}")
+
+    # Non-blocking background sync on container startup to keep draws fresh
+    async def _auto_sync_background():
+        try:
+            await asyncio.sleep(1.0)
+            logger.info("Triggering non-blocking background startup sync...")
+            loop = asyncio.get_running_loop()
+            synced = await loop.run_in_executor(None, sync_lottery_data, "all", 50)
+            logger.info(f"Background startup sync completed: {synced}")
+        except Exception as e:
+            logger.warning(f"Background startup sync encountered exception: {e}")
+
+    asyncio.create_task(_auto_sync_background())
     yield
     logger.info("Application shutting down...")
 

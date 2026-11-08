@@ -298,9 +298,22 @@ object BaziEngine {
         val percentages = scores.mapValues { it.value / totalScore }
         val strengthRatio = ((peerScore / totalScore) * 10000f).roundToInt() / 10000f
 
+        val solarObj = com.nlf.calendar.Solar.fromYmdHms(dt.year, dt.monthValue, dt.dayOfMonth, dt.hour, dt.minute, dt.second)
+        val lunarObj = solarObj.lunar
+        val yearZodiac = getZodiac(lunarObj.year)
+        val shichenTitle = getShichenName(dt.hour)
+        val formattedLunar = "${lunarObj.year}年 (${lunarObj.yearInGanZhi}${yearZodiac}年) 农历${lunarObj.monthInChinese}月${lunarObj.dayInChinese} $shichenTitle"
+
+        val isYangYear = fourPillars.year.stem in listOf("甲", "丙", "戊", "庚", "壬")
+        val dayunForward = if (isMale) isYangYear else !isYangYear
+        val eightChar = lunarObj.eightChar
+        eightChar.sect = 2
+        val yun = eightChar.getYun(if (isMale) 1 else 0)
+        val dayunList = yun.daYun.mapNotNull { it.ganZhi.takeIf { gz -> gz.isNotBlank() } }.take(8)
+
         return BaziDestiny(
             solarDatetime = dt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
-            lunarDatetime = "农历 ${fourPillars.year.fullText}年 ${fourPillars.month.fullText}月 ${fourPillars.day.fullText}日 ${fourPillars.hour.fullText}时",
+            lunarDatetime = formattedLunar,
             fourPillars = fourPillars,
             wuxingScores = WuxingScores(
                 metal = ((scores["metal"] ?: 0f) * 10f).roundToInt() / 10f,
@@ -315,7 +328,10 @@ object BaziEngine {
             strengthRatio = strengthRatio,
             lackingElements = lackingZh,
             xiYongShen = xiYongShenZh,
-            jiShen = jiShenZh
+            jiShen = jiShenZh,
+            gender = if (isMale) "male" else "female",
+            dayunForward = dayunForward,
+            dayunList = dayunList
         )
     }
 
@@ -328,8 +344,14 @@ object BaziEngine {
     val SHICHEN_NAMES = listOf("子时", "丑时", "寅时", "卯时", "辰时", "巳时", "午时", "未时", "申时", "酉时", "戌时", "亥时")
 
     fun getShichenName(hour: Int): String {
-        val idx = ((hour + 1) % 24) / 2
-        return SHICHEN_NAMES[idx]
+        return when (hour) {
+            0 -> "早子时"
+            23 -> "晚子时"
+            else -> {
+                val idx = ((hour + 1) % 24) / 2
+                SHICHEN_NAMES[idx]
+            }
+        }
     }
 
     fun getYearGanZhi(year: Int): String {

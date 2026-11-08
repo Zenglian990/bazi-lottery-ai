@@ -190,6 +190,7 @@ def analyze_destiny(request: BaziDestinyRequest) -> BaziDestinyResponse:
             lunar_day=request.lunar_day,
             is_leap_month=request.is_leap_month,
             lunar_hour=request.lunar_hour,
+            gender=request.gender,
         )
 
         four_pillars = FourPillarsModel(
@@ -225,6 +226,9 @@ def analyze_destiny(request: BaziDestinyRequest) -> BaziDestinyResponse:
             user_name=effective_name,
             shichen=request.shichen or raw_bazi.get("shichen"),
             name_numerology=name_num,
+            gender=raw_bazi.get("gender", "male"),
+            dayun_forward=raw_bazi.get("dayun_forward", True),
+            dayun_list=raw_bazi.get("dayun_list", []),
         )
     except Exception as e:
         logger.error(f"Error calculating Bazi destiny: {e}", exc_info=True)
@@ -262,6 +266,7 @@ def recommend_tickets(request: BaziRecommendRequest) -> BaziRecommendResponse:
             lunar_day=request.lunar_day,
             is_leap_month=request.is_leap_month,
             lunar_hour=request.lunar_hour,
+            gender=request.gender,
         )
 
         effective_name = request.user_name.strip() if (request.user_name and request.user_name.strip()) else "缘主"
@@ -278,6 +283,7 @@ def recommend_tickets(request: BaziRecommendRequest) -> BaziRecommendResponse:
             deterministic=bool(request.deterministic),
             user_name=effective_name,
             shichen=request.shichen,
+            gender=request.gender,
         )
 
         recs = [

@@ -237,6 +237,7 @@ def calculate_candidate_weights(
     zone_index: int,
     harmonious_elements: Optional[List[str]] = None,
     name_lucky_numbers: Optional[List[int]] = None,
+    gender: Optional[str] = "male",
 ) -> List[Tuple[int, float]]:
     """
     Compute hybrid tri-factor weights for all numbers in [min_val, max_val].
@@ -289,6 +290,13 @@ def calculate_candidate_weights(
         # 5. Personal Name Numerology Bonus (+15% for name lucky numbers or tail matching)
         if lucky_set and (n in lucky_set or (n % 10 or 10) in lucky_set):
             weight *= 1.15
+
+        # 6. Gender Hetu Polarity (乾造奇数阳和 +10%, 坤造偶数阴柔 +10%)
+        is_male = (gender or "male").lower() in ("male", "m", "乾造", "乾", "男")
+        if is_male and (n % 2 == 1):
+            weight *= 1.10
+        elif (not is_male) and (n % 2 == 0):
+            weight *= 1.10
 
         candidates_with_weights.append((n, round(weight, 5)))
 
@@ -355,6 +363,7 @@ def recommend_lottery_tickets(
     deterministic: bool = False,
     user_name: Optional[str] = None,
     shichen: Optional[str] = None,
+    gender: Optional[str] = "male",
 ) -> Dict[str, Any]:
     """
     Main recommendation engine producing legal, ascending, non-duplicate ticket recommendations.
@@ -442,6 +451,7 @@ def recommend_lottery_tickets(
         zone_index=0,
         harmonious_elements=harmonious_elems,
         name_lucky_numbers=name_lucky_numbers,
+        gender=gender,
     )
 
     # Secondary zone candidates with weights if applicable

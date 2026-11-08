@@ -106,6 +106,7 @@ def calculate_four_pillars(
     lunar_day: Optional[int] = None,
     is_leap_month: bool = False,
     lunar_hour: Optional[str] = None,
+    gender: Optional[str] = "male",
 ) -> Dict[str, Any]:
     """
     Calculate Four Pillars (Year, Month, Day, Hour) and astronomical ephemeris.
@@ -216,9 +217,18 @@ def calculate_four_pillars(
         hour_branch=time_zhi,
     )
 
+    is_male = (gender or "male").lower() in ("male", "m", "乾造", "乾", "男")
+    gender_int = 1 if is_male else 0
+    yun = eight_char.getYun(gender_int)
+    dayun_forward = yun.isForward()
+    dayun_list = [d.getGanZhi() for d in yun.getDaYun() if d.getGanZhi()][:8]
+
     return {
         "solar_datetime": solar_dt_str,
         "lunar_datetime": lunar_dt_str,
+        "gender": "male" if is_male else "female",
+        "dayun_forward": dayun_forward,
+        "dayun_list": dayun_list,
         "four_pillars": four_pillars,
         "pillars": four_pillars,
         "wuxing_scores": wuxing_analysis["scores"],

@@ -168,13 +168,31 @@ def validate_ticket_endpoint(
         formatted_string=formatted,
     )
 
+from fastapi import Request
+import time
+
+_SYNC_LAST_TIME: float = 0.0
+_SYNC_COOLDOWN_SECONDS: float = 20.0
+
 @router.post("/sync", response_model=SyncResponse)
-def sync_data(request: SyncRequest = SyncRequest()) -> SyncResponse:
+def sync_data(request: SyncRequest = SyncRequest(), req: Request = None) -> SyncResponse:
     """Trigger background or immediate sync of fresh lottery draws from CWL and 500.com."""
     raw_type = request.lottery_type if request.lottery_type is not None else "all"
     l_type = raw_type.lower()
     if l_type not in ["all", "ssq", "dlt", "fc3d", "qxc"]:
         raise HTTPException(status_code=400, detail=f"Unsupported lottery type: {request.lottery_type}")
+
+    global _SYNC_LAST_TIME
+    now = time.monotonic()
+    client_host = req.client.host if (req and req.client) else "unknown"
+    is_local = client_host in ("testclient", "127.0.0.1", "localhost")
+    if not is_local and (now - _SYNC_LAST_TIME < _SYNC_COOLDOWN_SECONDS):
+        remaining = int(_SYNC_COOLDOWN_SECONDS - (now - _SYNC_LAST_TIME))
+        raise HTTPException(
+            status_code=429,
+            detail=f"数据同步过于频繁，请等待 {remaining} 秒后再试。"
+        )
+    _SYNC_LAST_TIME = now
     counts = sync_lottery_data(lottery_type=l_type, limit=100)
     total_synced = sum(counts.values())
     return SyncResponse(

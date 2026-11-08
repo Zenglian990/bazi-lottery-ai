@@ -1,6 +1,61 @@
 {
   "ssq": [
     {
+      "lottery_type": "ssq",
+      "issue": "2026128",
+      "draw_date": "2026-11-08",
+      "primary_numbers": [
+        "05",
+        "06",
+        "10",
+        "25",
+        "27",
+        "30"
+      ],
+      "secondary_numbers": [
+        "11"
+      ],
+      "sales_amount": 0,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "ssq",
+      "issue": "2026127",
+      "draw_date": "2026-11-05",
+      "primary_numbers": [
+        "13",
+        "14",
+        "19",
+        "25",
+        "29",
+        "32"
+      ],
+      "secondary_numbers": [
+        "12"
+      ],
+      "sales_amount": 346422846,
+      "pool_amount": 1129731594
+    },
+    {
+      "lottery_type": "ssq",
+      "issue": "2026126",
+      "draw_date": "2026-11-03",
+      "primary_numbers": [
+        "09",
+        "10",
+        "13",
+        "22",
+        "29",
+        "32"
+      ],
+      "secondary_numbers": [
+        "12"
+      ],
+      "sales_amount": 342910496,
+      "pool_amount": 1074322050
+    },
+    {
+      "lottery_type": "ssq",
       "issue": "2026125",
       "draw_date": "2026-11-01",
       "primary_numbers": [
@@ -18,6 +73,7 @@
       "pool_amount": 1044117721
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026124",
       "draw_date": "2026-10-29",
       "primary_numbers": [
@@ -35,6 +91,7 @@
       "pool_amount": 1075698427
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026123",
       "draw_date": "2026-10-27",
       "primary_numbers": [
@@ -52,6 +109,7 @@
       "pool_amount": 1079246630
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026122",
       "draw_date": "2026-10-25",
       "primary_numbers": [
@@ -69,6 +127,7 @@
       "pool_amount": 1056837777
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026121",
       "draw_date": "2026-10-22",
       "primary_numbers": [
@@ -86,6 +145,7 @@
       "pool_amount": 1056741122
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026120",
       "draw_date": "2026-10-20",
       "primary_numbers": [
@@ -103,6 +163,7 @@
       "pool_amount": 1035363275
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026119",
       "draw_date": "2026-10-18",
       "primary_numbers": [
@@ -120,6 +181,7 @@
       "pool_amount": 1025112736
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026118",
       "draw_date": "2026-10-15",
       "primary_numbers": [
@@ -137,6 +199,7 @@
       "pool_amount": 958655708
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026117",
       "draw_date": "2026-10-13",
       "primary_numbers": [
@@ -154,6 +217,7 @@
       "pool_amount": 931629281
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026116",
       "draw_date": "2026-10-11",
       "primary_numbers": [
@@ -171,6 +235,7 @@
       "pool_amount": 936031217
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026115",
       "draw_date": "2026-10-08",
       "primary_numbers": [
@@ -188,6 +253,7 @@
       "pool_amount": 909402631
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026114",
       "draw_date": "2026-10-06",
       "primary_numbers": [
@@ -205,6 +271,7 @@
       "pool_amount": 941868611
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026113",
       "draw_date": "2026-09-29",
       "primary_numbers": [
@@ -222,6 +289,7 @@
       "pool_amount": 973407364
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026112",
       "draw_date": "2026-09-27",
       "primary_numbers": [
@@ -239,6 +307,7 @@
       "pool_amount": 972650894
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026111",
       "draw_date": "2026-09-24",
       "primary_numbers": [
@@ -256,6 +325,7 @@
       "pool_amount": 966038984
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026110",
       "draw_date": "2026-09-22",
       "primary_numbers": [
@@ -273,6 +343,7 @@
       "pool_amount": 930967826
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026109",
       "draw_date": "2026-09-20",
       "primary_numbers": [
@@ -290,6 +361,7 @@
       "pool_amount": 936353465
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026108",
       "draw_date": "2026-09-17",
       "primary_numbers": [
@@ -307,6 +379,7 @@
       "pool_amount": 917243647
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026107",
       "draw_date": "2026-09-15",
       "primary_numbers": [
@@ -324,6 +397,7 @@
       "pool_amount": 858528126
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026106",
       "draw_date": "2026-09-13",
       "primary_numbers": [
@@ -341,6 +415,7 @@
       "pool_amount": 856497196
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026105",
       "draw_date": "2026-09-10",
       "primary_numbers": [
@@ -358,6 +433,7 @@
       "pool_amount": 833007469
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026104",
       "draw_date": "2026-09-08",
       "primary_numbers": [
@@ -375,6 +451,7 @@
       "pool_amount": 798557035
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026103",
       "draw_date": "2026-09-06",
       "primary_numbers": [
@@ -392,6 +469,7 @@
       "pool_amount": 805259723
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026102",
       "draw_date": "2026-09-03",
       "primary_numbers": [
@@ -409,6 +487,7 @@
       "pool_amount": 782244968
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026101",
       "draw_date": "2026-09-01",
       "primary_numbers": [
@@ -426,6 +505,7 @@
       "pool_amount": 766096090
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026100",
       "draw_date": "2026-08-30",
       "primary_numbers": [
@@ -443,6 +523,7 @@
       "pool_amount": 743395010
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026099",
       "draw_date": "2026-08-27",
       "primary_numbers": [
@@ -460,6 +541,7 @@
       "pool_amount": 776452438
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026098",
       "draw_date": "2026-08-25",
       "primary_numbers": [
@@ -477,6 +559,7 @@
       "pool_amount": 711169786
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026097",
       "draw_date": "2026-08-23",
       "primary_numbers": [
@@ -494,6 +577,7 @@
       "pool_amount": 710238057
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026096",
       "draw_date": "2026-08-20",
       "primary_numbers": [
@@ -511,6 +595,7 @@
       "pool_amount": 654135395
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026095",
       "draw_date": "2026-08-18",
       "primary_numbers": [
@@ -528,6 +613,7 @@
       "pool_amount": 628888733
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026094",
       "draw_date": "2026-08-16",
       "primary_numbers": [
@@ -545,6 +631,7 @@
       "pool_amount": 616242219
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026093",
       "draw_date": "2026-08-13",
       "primary_numbers": [
@@ -562,6 +649,7 @@
       "pool_amount": 566415284
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026092",
       "draw_date": "2026-08-11",
       "primary_numbers": [
@@ -579,6 +667,7 @@
       "pool_amount": 571623532
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026091",
       "draw_date": "2026-08-09",
       "primary_numbers": [
@@ -596,6 +685,7 @@
       "pool_amount": 583235682
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026090",
       "draw_date": "2026-08-06",
       "primary_numbers": [
@@ -613,6 +703,7 @@
       "pool_amount": 545331466
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026089",
       "draw_date": "2026-08-04",
       "primary_numbers": [
@@ -630,6 +721,7 @@
       "pool_amount": 489539135
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026088",
       "draw_date": "2026-08-02",
       "primary_numbers": [
@@ -647,6 +739,7 @@
       "pool_amount": 442158322
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026087",
       "draw_date": "2026-07-30",
       "primary_numbers": [
@@ -664,6 +757,7 @@
       "pool_amount": 473791046
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026086",
       "draw_date": "2026-07-28",
       "primary_numbers": [
@@ -681,6 +775,7 @@
       "pool_amount": 463257269
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026085",
       "draw_date": "2026-07-26",
       "primary_numbers": [
@@ -698,6 +793,7 @@
       "pool_amount": 450096595
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026084",
       "draw_date": "2026-07-23",
       "primary_numbers": [
@@ -715,6 +811,7 @@
       "pool_amount": 480566551
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026083",
       "draw_date": "2026-07-21",
       "primary_numbers": [
@@ -732,6 +829,7 @@
       "pool_amount": 480802779
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026082",
       "draw_date": "2026-07-19",
       "primary_numbers": [
@@ -749,6 +847,7 @@
       "pool_amount": 409487566
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026081",
       "draw_date": "2026-07-16",
       "primary_numbers": [
@@ -766,6 +865,7 @@
       "pool_amount": 401606257
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026080",
       "draw_date": "2026-07-14",
       "primary_numbers": [
@@ -783,6 +883,7 @@
       "pool_amount": 384218118
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026079",
       "draw_date": "2026-07-12",
       "primary_numbers": [
@@ -800,6 +901,7 @@
       "pool_amount": 367458887
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026078",
       "draw_date": "2026-07-09",
       "primary_numbers": [
@@ -817,6 +919,7 @@
       "pool_amount": 285632700
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026077",
       "draw_date": "2026-07-07",
       "primary_numbers": [
@@ -834,6 +937,7 @@
       "pool_amount": 320076738
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026076",
       "draw_date": "2026-07-05",
       "primary_numbers": [
@@ -851,6 +955,7 @@
       "pool_amount": 292048181
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026075",
       "draw_date": "2026-07-02",
       "primary_numbers": [
@@ -868,6 +973,7 @@
       "pool_amount": 283183968
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026074",
       "draw_date": "2026-06-30",
       "primary_numbers": [
@@ -885,6 +991,7 @@
       "pool_amount": 308183968
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026073",
       "draw_date": "2026-06-28",
       "primary_numbers": [
@@ -902,6 +1009,7 @@
       "pool_amount": 328183968
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026072",
       "draw_date": "2026-06-25",
       "primary_numbers": [
@@ -919,6 +1027,7 @@
       "pool_amount": 378183968
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026071",
       "draw_date": "2026-06-23",
       "primary_numbers": [
@@ -936,6 +1045,7 @@
       "pool_amount": 398183968
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026070",
       "draw_date": "2026-06-21",
       "primary_numbers": [
@@ -953,6 +1063,7 @@
       "pool_amount": 438183968
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026069",
       "draw_date": "2026-06-18",
       "primary_numbers": [
@@ -970,6 +1081,7 @@
       "pool_amount": 493183968
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026068",
       "draw_date": "2026-06-16",
       "primary_numbers": [
@@ -987,6 +1099,7 @@
       "pool_amount": 588469423
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026067",
       "draw_date": "2026-06-14",
       "primary_numbers": [
@@ -1004,6 +1117,7 @@
       "pool_amount": 658469423
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026066",
       "draw_date": "2026-06-11",
       "primary_numbers": [
@@ -1021,6 +1135,7 @@
       "pool_amount": 671837950
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026065",
       "draw_date": "2026-06-09",
       "primary_numbers": [
@@ -1038,6 +1153,7 @@
       "pool_amount": 706837950
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026064",
       "draw_date": "2026-06-07",
       "primary_numbers": [
@@ -1055,6 +1171,7 @@
       "pool_amount": 741837950
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026063",
       "draw_date": "2026-06-04",
       "primary_numbers": [
@@ -1072,6 +1189,7 @@
       "pool_amount": 816837950
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026062",
       "draw_date": "2026-06-02",
       "primary_numbers": [
@@ -1089,6 +1207,7 @@
       "pool_amount": 909990283
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026061",
       "draw_date": "2026-05-31",
       "primary_numbers": [
@@ -1106,6 +1225,7 @@
       "pool_amount": 1009990273
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026060",
       "draw_date": "2026-05-28",
       "primary_numbers": [
@@ -1123,6 +1243,7 @@
       "pool_amount": 1049990273
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026059",
       "draw_date": "2026-05-26",
       "primary_numbers": [
@@ -1140,6 +1261,7 @@
       "pool_amount": 1139990273
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026058",
       "draw_date": "2026-05-24",
       "primary_numbers": [
@@ -1157,6 +1279,7 @@
       "pool_amount": 1154771516
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026057",
       "draw_date": "2026-05-21",
       "primary_numbers": [
@@ -1174,6 +1297,7 @@
       "pool_amount": 1199771516
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026056",
       "draw_date": "2026-05-19",
       "primary_numbers": [
@@ -1191,6 +1315,7 @@
       "pool_amount": 1229771516
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026055",
       "draw_date": "2026-05-17",
       "primary_numbers": [
@@ -1208,6 +1333,7 @@
       "pool_amount": 1237107160
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026054",
       "draw_date": "2026-05-14",
       "primary_numbers": [
@@ -1225,6 +1351,7 @@
       "pool_amount": 1251883761
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026053",
       "draw_date": "2026-05-12",
       "primary_numbers": [
@@ -1242,6 +1369,7 @@
       "pool_amount": 1276883761
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026052",
       "draw_date": "2026-05-10",
       "primary_numbers": [
@@ -1259,6 +1387,7 @@
       "pool_amount": 1306883761
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026051",
       "draw_date": "2026-05-07",
       "primary_numbers": [
@@ -1276,6 +1405,7 @@
       "pool_amount": 1400262206
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026050",
       "draw_date": "2026-05-05",
       "primary_numbers": [
@@ -1293,6 +1423,7 @@
       "pool_amount": 1470262206
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026049",
       "draw_date": "2026-05-03",
       "primary_numbers": [
@@ -1310,6 +1441,7 @@
       "pool_amount": 1490262206
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026048",
       "draw_date": "2026-04-30",
       "primary_numbers": [
@@ -1327,6 +1459,7 @@
       "pool_amount": 1520262206
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026047",
       "draw_date": "2026-04-28",
       "primary_numbers": [
@@ -1344,6 +1477,7 @@
       "pool_amount": 1505111504
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026046",
       "draw_date": "2026-04-26",
       "primary_numbers": [
@@ -1361,6 +1495,7 @@
       "pool_amount": 1535111504
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026045",
       "draw_date": "2026-04-23",
       "primary_numbers": [
@@ -1378,6 +1513,7 @@
       "pool_amount": 1559981238
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026044",
       "draw_date": "2026-04-21",
       "primary_numbers": [
@@ -1395,6 +1531,7 @@
       "pool_amount": 1619981238
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026043",
       "draw_date": "2026-04-19",
       "primary_numbers": [
@@ -1412,6 +1549,7 @@
       "pool_amount": 1649981238
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026042",
       "draw_date": "2026-04-16",
       "primary_numbers": [
@@ -1429,6 +1567,7 @@
       "pool_amount": 1729981238
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026041",
       "draw_date": "2026-04-14",
       "primary_numbers": [
@@ -1446,6 +1585,7 @@
       "pool_amount": 1799981238
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026040",
       "draw_date": "2026-04-12",
       "primary_numbers": [
@@ -1463,6 +1603,7 @@
       "pool_amount": 1869981238
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026039",
       "draw_date": "2026-04-09",
       "primary_numbers": [
@@ -1480,6 +1621,7 @@
       "pool_amount": 1934981238
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026038",
       "draw_date": "2026-04-07",
       "primary_numbers": [
@@ -1497,6 +1639,7 @@
       "pool_amount": 1933841973
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026037",
       "draw_date": "2026-04-05",
       "primary_numbers": [
@@ -1514,6 +1657,7 @@
       "pool_amount": 1973841973
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026036",
       "draw_date": "2026-04-02",
       "primary_numbers": [
@@ -1531,6 +1675,7 @@
       "pool_amount": 2063784926
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026035",
       "draw_date": "2026-03-31",
       "primary_numbers": [
@@ -1548,6 +1693,7 @@
       "pool_amount": 2108784926
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026034",
       "draw_date": "2026-03-29",
       "primary_numbers": [
@@ -1565,6 +1711,7 @@
       "pool_amount": 2138784926
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026033",
       "draw_date": "2026-03-26",
       "primary_numbers": [
@@ -1582,6 +1729,7 @@
       "pool_amount": 2203784926
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026032",
       "draw_date": "2026-03-24",
       "primary_numbers": [
@@ -1599,6 +1747,7 @@
       "pool_amount": 2278784926
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026031",
       "draw_date": "2026-03-22",
       "primary_numbers": [
@@ -1616,6 +1765,7 @@
       "pool_amount": 2308784926
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026030",
       "draw_date": "2026-03-19",
       "primary_numbers": [
@@ -1633,6 +1783,7 @@
       "pool_amount": 2358784926
     },
     {
+      "lottery_type": "ssq",
       "issue": "2026029",
       "draw_date": "2026-03-17",
       "primary_numbers": [
@@ -1648,1263 +1799,65 @@
       ],
       "sales_amount": 390925844,
       "pool_amount": 2383784926
-    },
-    {
-      "issue": "2026028",
-      "draw_date": "2026-03-15",
-      "primary_numbers": [
-        "02",
-        "06",
-        "09",
-        "17",
-        "25",
-        "28"
-      ],
-      "secondary_numbers": [
-        "15"
-      ],
-      "sales_amount": 425241582,
-      "pool_amount": 2403784926
-    },
-    {
-      "issue": "2026027",
-      "draw_date": "2026-03-12",
-      "primary_numbers": [
-        "02",
-        "13",
-        "17",
-        "18",
-        "25",
-        "26"
-      ],
-      "secondary_numbers": [
-        "13"
-      ],
-      "sales_amount": 397777968,
-      "pool_amount": 2428784926
-    },
-    {
-      "issue": "2026026",
-      "draw_date": "2026-03-10",
-      "primary_numbers": [
-        "02",
-        "09",
-        "16",
-        "22",
-        "25",
-        "29"
-      ],
-      "secondary_numbers": [
-        "03"
-      ],
-      "sales_amount": 377828982,
-      "pool_amount": 2518926159
-    }
-  ],
-  "fc3d": [
-    {
-      "issue": "2026291",
-      "draw_date": "2026-11-01",
-      "primary_numbers": [
-        "0",
-        "8",
-        "6"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 99205938,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026290",
-      "draw_date": "2026-10-31",
-      "primary_numbers": [
-        "7",
-        "3",
-        "5"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 98013484,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026289",
-      "draw_date": "2026-10-30",
-      "primary_numbers": [
-        "8",
-        "4",
-        "3"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 100121182,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026288",
-      "draw_date": "2026-10-29",
-      "primary_numbers": [
-        "6",
-        "1",
-        "2"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 98279284,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026287",
-      "draw_date": "2026-10-28",
-      "primary_numbers": [
-        "1",
-        "2",
-        "1"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 101470054,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026286",
-      "draw_date": "2026-10-27",
-      "primary_numbers": [
-        "1",
-        "9",
-        "2"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 100468510,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026285",
-      "draw_date": "2026-10-26",
-      "primary_numbers": [
-        "9",
-        "3",
-        "2"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 99355354,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026284",
-      "draw_date": "2026-10-25",
-      "primary_numbers": [
-        "1",
-        "7",
-        "6"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 97106772,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026283",
-      "draw_date": "2026-10-24",
-      "primary_numbers": [
-        "2",
-        "0",
-        "2"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 96685046,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026282",
-      "draw_date": "2026-10-23",
-      "primary_numbers": [
-        "3",
-        "0",
-        "0"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 108680926,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026281",
-      "draw_date": "2026-10-22",
-      "primary_numbers": [
-        "8",
-        "1",
-        "3"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 103092230,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026280",
-      "draw_date": "2026-10-21",
-      "primary_numbers": [
-        "4",
-        "3",
-        "5"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 99542826,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026279",
-      "draw_date": "2026-10-20",
-      "primary_numbers": [
-        "7",
-        "9",
-        "1"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 96142502,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026278",
-      "draw_date": "2026-10-19",
-      "primary_numbers": [
-        "6",
-        "6",
-        "6"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 104768858,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026277",
-      "draw_date": "2026-10-18",
-      "primary_numbers": [
-        "5",
-        "6",
-        "8"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 103487554,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026276",
-      "draw_date": "2026-10-17",
-      "primary_numbers": [
-        "9",
-        "6",
-        "0"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 101608874,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026275",
-      "draw_date": "2026-10-16",
-      "primary_numbers": [
-        "2",
-        "8",
-        "7"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 106583766,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026274",
-      "draw_date": "2026-10-15",
-      "primary_numbers": [
-        "8",
-        "2",
-        "3"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 103583876,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026273",
-      "draw_date": "2026-10-14",
-      "primary_numbers": [
-        "9",
-        "0",
-        "2"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 100404550,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026272",
-      "draw_date": "2026-10-13",
-      "primary_numbers": [
-        "0",
-        "1",
-        "5"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 100832020,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026271",
-      "draw_date": "2026-10-12",
-      "primary_numbers": [
-        "2",
-        "8",
-        "0"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 103211018,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026270",
-      "draw_date": "2026-10-11",
-      "primary_numbers": [
-        "0",
-        "8",
-        "4"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 101830580,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026269",
-      "draw_date": "2026-10-10",
-      "primary_numbers": [
-        "3",
-        "4",
-        "1"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 101283970,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026268",
-      "draw_date": "2026-10-09",
-      "primary_numbers": [
-        "8",
-        "9",
-        "0"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 103871566,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026267",
-      "draw_date": "2026-10-08",
-      "primary_numbers": [
-        "8",
-        "5",
-        "7"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 99125960,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026266",
-      "draw_date": "2026-10-07",
-      "primary_numbers": [
-        "3",
-        "4",
-        "6"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 91197060,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026265",
-      "draw_date": "2026-10-06",
-      "primary_numbers": [
-        "1",
-        "6",
-        "1"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 87684304,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026264",
-      "draw_date": "2026-10-05",
-      "primary_numbers": [
-        "1",
-        "1",
-        "9"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 88928694,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026263",
-      "draw_date": "2026-09-30",
-      "primary_numbers": [
-        "9",
-        "8",
-        "7"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 103864936,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026262",
-      "draw_date": "2026-09-29",
-      "primary_numbers": [
-        "3",
-        "4",
-        "7"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 96846432,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026261",
-      "draw_date": "2026-09-28",
-      "primary_numbers": [
-        "5",
-        "1",
-        "1"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 98832432,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026260",
-      "draw_date": "2026-09-27",
-      "primary_numbers": [
-        "6",
-        "1",
-        "9"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 96943708,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026259",
-      "draw_date": "2026-09-26",
-      "primary_numbers": [
-        "7",
-        "3",
-        "1"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 96542876,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026258",
-      "draw_date": "2026-09-25",
-      "primary_numbers": [
-        "6",
-        "3",
-        "5"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 95669692,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026257",
-      "draw_date": "2026-09-24",
-      "primary_numbers": [
-        "4",
-        "8",
-        "6"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 97749434,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026256",
-      "draw_date": "2026-09-23",
-      "primary_numbers": [
-        "0",
-        "5",
-        "1"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 101368636,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026255",
-      "draw_date": "2026-09-22",
-      "primary_numbers": [
-        "6",
-        "9",
-        "9"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 103419024,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026254",
-      "draw_date": "2026-09-21",
-      "primary_numbers": [
-        "8",
-        "5",
-        "0"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 102498432,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026253",
-      "draw_date": "2026-09-20",
-      "primary_numbers": [
-        "0",
-        "3",
-        "4"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 104791332,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026252",
-      "draw_date": "2026-09-19",
-      "primary_numbers": [
-        "0",
-        "9",
-        "2"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 99448856,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026251",
-      "draw_date": "2026-09-18",
-      "primary_numbers": [
-        "7",
-        "7",
-        "7"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 112900898,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026250",
-      "draw_date": "2026-09-17",
-      "primary_numbers": [
-        "9",
-        "5",
-        "4"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 105900836,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026249",
-      "draw_date": "2026-09-16",
-      "primary_numbers": [
-        "6",
-        "8",
-        "9"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 102027188,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026248",
-      "draw_date": "2026-09-15",
-      "primary_numbers": [
-        "8",
-        "7",
-        "6"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 103199168,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026247",
-      "draw_date": "2026-09-14",
-      "primary_numbers": [
-        "6",
-        "0",
-        "9"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 102179952,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026246",
-      "draw_date": "2026-09-13",
-      "primary_numbers": [
-        "9",
-        "8",
-        "2"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 98247910,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026245",
-      "draw_date": "2026-09-12",
-      "primary_numbers": [
-        "5",
-        "4",
-        "9"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 95511108,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026244",
-      "draw_date": "2026-09-11",
-      "primary_numbers": [
-        "6",
-        "5",
-        "4"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 98530436,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026243",
-      "draw_date": "2026-09-10",
-      "primary_numbers": [
-        "2",
-        "1",
-        "9"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 91668582,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026242",
-      "draw_date": "2026-09-09",
-      "primary_numbers": [
-        "5",
-        "5",
-        "5"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 92602358,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026241",
-      "draw_date": "2026-09-08",
-      "primary_numbers": [
-        "0",
-        "0",
-        "2"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 97418934,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026240",
-      "draw_date": "2026-09-07",
-      "primary_numbers": [
-        "9",
-        "8",
-        "1"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 93199346,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026239",
-      "draw_date": "2026-09-06",
-      "primary_numbers": [
-        "0",
-        "0",
-        "2"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 96172590,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026238",
-      "draw_date": "2026-09-05",
-      "primary_numbers": [
-        "8",
-        "9",
-        "9"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 101277746,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026237",
-      "draw_date": "2026-09-04",
-      "primary_numbers": [
-        "8",
-        "5",
-        "4"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 102044338,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026236",
-      "draw_date": "2026-09-03",
-      "primary_numbers": [
-        "0",
-        "4",
-        "7"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 103055378,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026235",
-      "draw_date": "2026-09-02",
-      "primary_numbers": [
-        "2",
-        "1",
-        "9"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 101179200,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026234",
-      "draw_date": "2026-09-01",
-      "primary_numbers": [
-        "6",
-        "9",
-        "5"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 100945514,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026233",
-      "draw_date": "2026-08-31",
-      "primary_numbers": [
-        "9",
-        "7",
-        "0"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 101106056,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026232",
-      "draw_date": "2026-08-30",
-      "primary_numbers": [
-        "6",
-        "5",
-        "8"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 100737340,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026231",
-      "draw_date": "2026-08-29",
-      "primary_numbers": [
-        "7",
-        "3",
-        "3"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 99547098,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026230",
-      "draw_date": "2026-08-28",
-      "primary_numbers": [
-        "0",
-        "6",
-        "6"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 104695954,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026229",
-      "draw_date": "2026-08-27",
-      "primary_numbers": [
-        "8",
-        "2",
-        "8"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 104741902,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026228",
-      "draw_date": "2026-08-26",
-      "primary_numbers": [
-        "3",
-        "9",
-        "9"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 107058866,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026227",
-      "draw_date": "2026-08-25",
-      "primary_numbers": [
-        "5",
-        "2",
-        "2"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 104266778,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026226",
-      "draw_date": "2026-08-24",
-      "primary_numbers": [
-        "8",
-        "5",
-        "1"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 99249730,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026225",
-      "draw_date": "2026-08-23",
-      "primary_numbers": [
-        "5",
-        "5",
-        "5"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 107577374,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026224",
-      "draw_date": "2026-08-22",
-      "primary_numbers": [
-        "8",
-        "6",
-        "2"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 104875148,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026223",
-      "draw_date": "2026-08-21",
-      "primary_numbers": [
-        "9",
-        "4",
-        "8"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 109896280,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026222",
-      "draw_date": "2026-08-20",
-      "primary_numbers": [
-        "3",
-        "8",
-        "0"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 107512234,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026221",
-      "draw_date": "2026-08-19",
-      "primary_numbers": [
-        "2",
-        "9",
-        "6"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 105700632,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026220",
-      "draw_date": "2026-08-18",
-      "primary_numbers": [
-        "3",
-        "7",
-        "3"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 106804902,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026219",
-      "draw_date": "2026-08-17",
-      "primary_numbers": [
-        "2",
-        "2",
-        "5"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 105692666,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026218",
-      "draw_date": "2026-08-16",
-      "primary_numbers": [
-        "3",
-        "8",
-        "2"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 108117598,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026217",
-      "draw_date": "2026-08-15",
-      "primary_numbers": [
-        "8",
-        "8",
-        "2"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 107924072,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026216",
-      "draw_date": "2026-08-14",
-      "primary_numbers": [
-        "9",
-        "3",
-        "5"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 111654440,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026215",
-      "draw_date": "2026-08-13",
-      "primary_numbers": [
-        "1",
-        "7",
-        "2"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 107614142,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026214",
-      "draw_date": "2026-08-12",
-      "primary_numbers": [
-        "5",
-        "4",
-        "5"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 109910022,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026213",
-      "draw_date": "2026-08-11",
-      "primary_numbers": [
-        "8",
-        "7",
-        "2"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 109153150,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026212",
-      "draw_date": "2026-08-10",
-      "primary_numbers": [
-        "5",
-        "6",
-        "1"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 105944728,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026211",
-      "draw_date": "2026-08-09",
-      "primary_numbers": [
-        "7",
-        "0",
-        "8"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 106241288,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026210",
-      "draw_date": "2026-08-08",
-      "primary_numbers": [
-        "7",
-        "5",
-        "5"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 113312530,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026209",
-      "draw_date": "2026-08-07",
-      "primary_numbers": [
-        "2",
-        "8",
-        "9"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 114564306,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026208",
-      "draw_date": "2026-08-06",
-      "primary_numbers": [
-        "6",
-        "3",
-        "2"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 110194926,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026207",
-      "draw_date": "2026-08-05",
-      "primary_numbers": [
-        "4",
-        "1",
-        "5"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 107407356,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026206",
-      "draw_date": "2026-08-04",
-      "primary_numbers": [
-        "9",
-        "4",
-        "2"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 110155880,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026205",
-      "draw_date": "2026-08-03",
-      "primary_numbers": [
-        "8",
-        "1",
-        "4"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 106516632,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026204",
-      "draw_date": "2026-08-02",
-      "primary_numbers": [
-        "9",
-        "7",
-        "8"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 106652492,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026203",
-      "draw_date": "2026-08-01",
-      "primary_numbers": [
-        "4",
-        "3",
-        "5"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 105017956,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026202",
-      "draw_date": "2026-07-31",
-      "primary_numbers": [
-        "9",
-        "8",
-        "8"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 115106130,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026201",
-      "draw_date": "2026-07-30",
-      "primary_numbers": [
-        "3",
-        "2",
-        "1"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 112870158,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026200",
-      "draw_date": "2026-07-29",
-      "primary_numbers": [
-        "9",
-        "1",
-        "2"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 112497770,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026199",
-      "draw_date": "2026-07-28",
-      "primary_numbers": [
-        "5",
-        "9",
-        "1"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 107329046,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026198",
-      "draw_date": "2026-07-27",
-      "primary_numbers": [
-        "6",
-        "8",
-        "5"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 105595438,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026197",
-      "draw_date": "2026-07-26",
-      "primary_numbers": [
-        "2",
-        "3",
-        "2"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 107804510,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026196",
-      "draw_date": "2026-07-25",
-      "primary_numbers": [
-        "4",
-        "1",
-        "9"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 105675128,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026195",
-      "draw_date": "2026-07-24",
-      "primary_numbers": [
-        "2",
-        "7",
-        "5"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 108062604,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026194",
-      "draw_date": "2026-07-23",
-      "primary_numbers": [
-        "2",
-        "8",
-        "3"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 105643658,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026193",
-      "draw_date": "2026-07-22",
-      "primary_numbers": [
-        "2",
-        "5",
-        "4"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 107397096,
-      "pool_amount": 0
-    },
-    {
-      "issue": "2026192",
-      "draw_date": "2026-07-21",
-      "primary_numbers": [
-        "4",
-        "2",
-        "5"
-      ],
-      "secondary_numbers": null,
-      "sales_amount": 106726524,
-      "pool_amount": 0
     }
   ],
   "dlt": [
     {
+      "lottery_type": "dlt",
+      "issue": "2026127",
+      "draw_date": "2026-11-07",
+      "primary_numbers": [
+        "05",
+        "06",
+        "17",
+        "18",
+        "27"
+      ],
+      "secondary_numbers": [
+        "03",
+        "12"
+      ],
+      "sales_amount": 762911587,
+      "pool_amount": 5
+    },
+    {
+      "lottery_type": "dlt",
+      "issue": "2026126",
+      "draw_date": "2026-11-04",
+      "primary_numbers": [
+        "05",
+        "11",
+        "17",
+        "25",
+        "34"
+      ],
+      "secondary_numbers": [
+        "04",
+        "06"
+      ],
+      "sales_amount": 750154899,
+      "pool_amount": 9
+    },
+    {
+      "lottery_type": "dlt",
+      "issue": "2026125",
+      "draw_date": "2026-11-02",
+      "primary_numbers": [
+        "12",
+        "13",
+        "23",
+        "25",
+        "29"
+      ],
+      "secondary_numbers": [
+        "07",
+        "10"
+      ],
+      "sales_amount": 764828748,
+      "pool_amount": 5
+    },
+    {
+      "lottery_type": "dlt",
       "issue": "2026124",
       "draw_date": "2026-10-31",
       "primary_numbers": [
@@ -2922,6 +1875,7 @@
       "pool_amount": 6
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026123",
       "draw_date": "2026-10-28",
       "primary_numbers": [
@@ -2939,6 +1893,7 @@
       "pool_amount": 11
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026122",
       "draw_date": "2026-10-26",
       "primary_numbers": [
@@ -2956,6 +1911,7 @@
       "pool_amount": 7
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026121",
       "draw_date": "2026-10-24",
       "primary_numbers": [
@@ -2973,6 +1929,7 @@
       "pool_amount": 6
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026120",
       "draw_date": "2026-10-21",
       "primary_numbers": [
@@ -2990,6 +1947,7 @@
       "pool_amount": 3
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026119",
       "draw_date": "2026-10-19",
       "primary_numbers": [
@@ -3007,6 +1965,7 @@
       "pool_amount": 3
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026118",
       "draw_date": "2026-10-17",
       "primary_numbers": [
@@ -3024,6 +1983,7 @@
       "pool_amount": 2
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026117",
       "draw_date": "2026-10-14",
       "primary_numbers": [
@@ -3041,6 +2001,7 @@
       "pool_amount": 10
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026116",
       "draw_date": "2026-10-12",
       "primary_numbers": [
@@ -3058,6 +2019,7 @@
       "pool_amount": 2
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026115",
       "draw_date": "2026-10-10",
       "primary_numbers": [
@@ -3075,6 +2037,7 @@
       "pool_amount": 10
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026114",
       "draw_date": "2026-10-07",
       "primary_numbers": [
@@ -3092,6 +2055,7 @@
       "pool_amount": 5
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026113",
       "draw_date": "2026-10-05",
       "primary_numbers": [
@@ -3109,6 +2073,7 @@
       "pool_amount": 37
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026112",
       "draw_date": "2026-09-30",
       "primary_numbers": [
@@ -3126,6 +2091,7 @@
       "pool_amount": 6
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026111",
       "draw_date": "2026-09-28",
       "primary_numbers": [
@@ -3143,6 +2109,7 @@
       "pool_amount": 7
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026110",
       "draw_date": "2026-09-26",
       "primary_numbers": [
@@ -3160,6 +2127,7 @@
       "pool_amount": 6
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026109",
       "draw_date": "2026-09-23",
       "primary_numbers": [
@@ -3177,6 +2145,7 @@
       "pool_amount": 1
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026108",
       "draw_date": "2026-09-21",
       "primary_numbers": [
@@ -3194,6 +2163,7 @@
       "pool_amount": 3
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026107",
       "draw_date": "2026-09-19",
       "primary_numbers": [
@@ -3211,6 +2181,7 @@
       "pool_amount": 3
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026106",
       "draw_date": "2026-09-16",
       "primary_numbers": [
@@ -3228,6 +2199,7 @@
       "pool_amount": 3
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026105",
       "draw_date": "2026-09-14",
       "primary_numbers": [
@@ -3245,6 +2217,7 @@
       "pool_amount": 3
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026104",
       "draw_date": "2026-09-12",
       "primary_numbers": [
@@ -3262,6 +2235,7 @@
       "pool_amount": 7
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026103",
       "draw_date": "2026-09-09",
       "primary_numbers": [
@@ -3279,6 +2253,7 @@
       "pool_amount": 3
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026102",
       "draw_date": "2026-09-07",
       "primary_numbers": [
@@ -3296,6 +2271,7 @@
       "pool_amount": 1
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026101",
       "draw_date": "2026-09-05",
       "primary_numbers": [
@@ -3313,6 +2289,7 @@
       "pool_amount": 10
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026100",
       "draw_date": "2026-09-02",
       "primary_numbers": [
@@ -3330,6 +2307,7 @@
       "pool_amount": 6
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026099",
       "draw_date": "2026-08-31",
       "primary_numbers": [
@@ -3347,6 +2325,7 @@
       "pool_amount": 4
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026098",
       "draw_date": "2026-08-29",
       "primary_numbers": [
@@ -3364,6 +2343,7 @@
       "pool_amount": 15
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026097",
       "draw_date": "2026-08-26",
       "primary_numbers": [
@@ -3381,6 +2361,7 @@
       "pool_amount": 7
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026096",
       "draw_date": "2026-08-24",
       "primary_numbers": [
@@ -3398,6 +2379,7 @@
       "pool_amount": 9
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026095",
       "draw_date": "2026-08-22",
       "primary_numbers": [
@@ -3415,6 +2397,7 @@
       "pool_amount": 6
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026094",
       "draw_date": "2026-08-19",
       "primary_numbers": [
@@ -3432,6 +2415,7 @@
       "pool_amount": 3
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026093",
       "draw_date": "2026-08-17",
       "primary_numbers": [
@@ -3449,6 +2433,7 @@
       "pool_amount": 10
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026092",
       "draw_date": "2026-08-15",
       "primary_numbers": [
@@ -3466,6 +2451,7 @@
       "pool_amount": 4
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026091",
       "draw_date": "2026-08-12",
       "primary_numbers": [
@@ -3483,6 +2469,7 @@
       "pool_amount": 3
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026090",
       "draw_date": "2026-08-10",
       "primary_numbers": [
@@ -3500,6 +2487,7 @@
       "pool_amount": 2
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026089",
       "draw_date": "2026-08-08",
       "primary_numbers": [
@@ -3517,6 +2505,7 @@
       "pool_amount": 3
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026088",
       "draw_date": "2026-08-05",
       "primary_numbers": [
@@ -3534,6 +2523,7 @@
       "pool_amount": 2
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026087",
       "draw_date": "2026-08-03",
       "primary_numbers": [
@@ -3551,6 +2541,7 @@
       "pool_amount": 9
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026086",
       "draw_date": "2026-08-01",
       "primary_numbers": [
@@ -3568,6 +2559,7 @@
       "pool_amount": 2
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026085",
       "draw_date": "2026-07-29",
       "primary_numbers": [
@@ -3585,6 +2577,7 @@
       "pool_amount": 2
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026084",
       "draw_date": "2026-07-27",
       "primary_numbers": [
@@ -3602,6 +2595,7 @@
       "pool_amount": 8
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026083",
       "draw_date": "2026-07-25",
       "primary_numbers": [
@@ -3619,6 +2613,7 @@
       "pool_amount": 8
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026082",
       "draw_date": "2026-07-22",
       "primary_numbers": [
@@ -3636,6 +2631,7 @@
       "pool_amount": 5
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026081",
       "draw_date": "2026-07-20",
       "primary_numbers": [
@@ -3653,6 +2649,7 @@
       "pool_amount": 5
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026080",
       "draw_date": "2026-07-18",
       "primary_numbers": [
@@ -3670,6 +2667,7 @@
       "pool_amount": 10
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026079",
       "draw_date": "2026-07-15",
       "primary_numbers": [
@@ -3687,6 +2685,7 @@
       "pool_amount": 5
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026078",
       "draw_date": "2026-07-13",
       "primary_numbers": [
@@ -3704,6 +2703,7 @@
       "pool_amount": 5
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026077",
       "draw_date": "2026-07-11",
       "primary_numbers": [
@@ -3721,6 +2721,7 @@
       "pool_amount": 2
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026076",
       "draw_date": "2026-07-08",
       "primary_numbers": [
@@ -3738,6 +2739,7 @@
       "pool_amount": 4
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026075",
       "draw_date": "2026-07-06",
       "primary_numbers": [
@@ -3755,6 +2757,7 @@
       "pool_amount": 3
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026074",
       "draw_date": "2026-07-04",
       "primary_numbers": [
@@ -3772,6 +2775,7 @@
       "pool_amount": 6
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026073",
       "draw_date": "2026-07-01",
       "primary_numbers": [
@@ -3789,6 +2793,7 @@
       "pool_amount": 6
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026072",
       "draw_date": "2026-06-29",
       "primary_numbers": [
@@ -3806,6 +2811,7 @@
       "pool_amount": 5
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026071",
       "draw_date": "2026-06-27",
       "primary_numbers": [
@@ -3823,6 +2829,7 @@
       "pool_amount": 1
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026070",
       "draw_date": "2026-06-24",
       "primary_numbers": [
@@ -3840,6 +2847,7 @@
       "pool_amount": 1
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026069",
       "draw_date": "2026-06-22",
       "primary_numbers": [
@@ -3857,6 +2865,7 @@
       "pool_amount": 8
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026068",
       "draw_date": "2026-06-20",
       "primary_numbers": [
@@ -3874,6 +2883,7 @@
       "pool_amount": 5
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026067",
       "draw_date": "2026-06-17",
       "primary_numbers": [
@@ -3891,6 +2901,7 @@
       "pool_amount": 6
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026066",
       "draw_date": "2026-06-15",
       "primary_numbers": [
@@ -3908,6 +2919,7 @@
       "pool_amount": 2
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026065",
       "draw_date": "2026-06-13",
       "primary_numbers": [
@@ -3925,6 +2937,7 @@
       "pool_amount": 6
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026064",
       "draw_date": "2026-06-10",
       "primary_numbers": [
@@ -3942,6 +2955,7 @@
       "pool_amount": 4
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026063",
       "draw_date": "2026-06-08",
       "primary_numbers": [
@@ -3959,6 +2973,7 @@
       "pool_amount": 5
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026062",
       "draw_date": "2026-06-06",
       "primary_numbers": [
@@ -3976,6 +2991,7 @@
       "pool_amount": 15
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026061",
       "draw_date": "2026-06-03",
       "primary_numbers": [
@@ -3993,6 +3009,7 @@
       "pool_amount": 4
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026060",
       "draw_date": "2026-06-01",
       "primary_numbers": [
@@ -4010,6 +3027,7 @@
       "pool_amount": 37
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026059",
       "draw_date": "2026-05-30",
       "primary_numbers": [
@@ -4027,6 +3045,7 @@
       "pool_amount": 3
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026058",
       "draw_date": "2026-05-27",
       "primary_numbers": [
@@ -4044,6 +3063,7 @@
       "pool_amount": 5
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026057",
       "draw_date": "2026-05-25",
       "primary_numbers": [
@@ -4061,6 +3081,7 @@
       "pool_amount": 4
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026056",
       "draw_date": "2026-05-23",
       "primary_numbers": [
@@ -4078,6 +3099,7 @@
       "pool_amount": 6
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026055",
       "draw_date": "2026-05-20",
       "primary_numbers": [
@@ -4095,6 +3117,7 @@
       "pool_amount": 4
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026054",
       "draw_date": "2026-05-18",
       "primary_numbers": [
@@ -4112,6 +3135,7 @@
       "pool_amount": 13
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026053",
       "draw_date": "2026-05-16",
       "primary_numbers": [
@@ -4129,6 +3153,7 @@
       "pool_amount": 14
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026052",
       "draw_date": "2026-05-13",
       "primary_numbers": [
@@ -4146,6 +3171,7 @@
       "pool_amount": 9
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026051",
       "draw_date": "2026-05-11",
       "primary_numbers": [
@@ -4163,6 +3189,7 @@
       "pool_amount": 4
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026050",
       "draw_date": "2026-05-09",
       "primary_numbers": [
@@ -4180,6 +3207,7 @@
       "pool_amount": 6
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026049",
       "draw_date": "2026-05-06",
       "primary_numbers": [
@@ -4197,6 +3225,7 @@
       "pool_amount": 6
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026048",
       "draw_date": "2026-05-04",
       "primary_numbers": [
@@ -4214,6 +3243,7 @@
       "pool_amount": 7
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026047",
       "draw_date": "2026-05-02",
       "primary_numbers": [
@@ -4231,6 +3261,7 @@
       "pool_amount": 5
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026046",
       "draw_date": "2026-04-29",
       "primary_numbers": [
@@ -4248,6 +3279,7 @@
       "pool_amount": 6
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026045",
       "draw_date": "2026-04-27",
       "primary_numbers": [
@@ -4265,6 +3297,7 @@
       "pool_amount": 7
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026044",
       "draw_date": "2026-04-25",
       "primary_numbers": [
@@ -4282,6 +3315,7 @@
       "pool_amount": 8
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026043",
       "draw_date": "2026-04-22",
       "primary_numbers": [
@@ -4299,6 +3333,7 @@
       "pool_amount": 1
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026042",
       "draw_date": "2026-04-20",
       "primary_numbers": [
@@ -4316,6 +3351,7 @@
       "pool_amount": 5
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026041",
       "draw_date": "2026-04-18",
       "primary_numbers": [
@@ -4333,6 +3369,7 @@
       "pool_amount": 6
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026040",
       "draw_date": "2026-04-15",
       "primary_numbers": [
@@ -4350,6 +3387,7 @@
       "pool_amount": 6
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026039",
       "draw_date": "2026-04-13",
       "primary_numbers": [
@@ -4367,6 +3405,7 @@
       "pool_amount": 11
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026038",
       "draw_date": "2026-04-11",
       "primary_numbers": [
@@ -4384,6 +3423,7 @@
       "pool_amount": 2
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026037",
       "draw_date": "2026-04-08",
       "primary_numbers": [
@@ -4401,6 +3441,7 @@
       "pool_amount": 5
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026036",
       "draw_date": "2026-04-06",
       "primary_numbers": [
@@ -4418,6 +3459,7 @@
       "pool_amount": 9
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026035",
       "draw_date": "2026-04-04",
       "primary_numbers": [
@@ -4435,6 +3477,7 @@
       "pool_amount": 11
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026034",
       "draw_date": "2026-04-01",
       "primary_numbers": [
@@ -4452,6 +3495,7 @@
       "pool_amount": 6
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026033",
       "draw_date": "2026-03-30",
       "primary_numbers": [
@@ -4469,6 +3513,7 @@
       "pool_amount": 12
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026032",
       "draw_date": "2026-03-28",
       "primary_numbers": [
@@ -4486,6 +3531,7 @@
       "pool_amount": 6
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026031",
       "draw_date": "2026-03-25",
       "primary_numbers": [
@@ -4503,6 +3549,7 @@
       "pool_amount": 9
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026030",
       "draw_date": "2026-03-23",
       "primary_numbers": [
@@ -4520,6 +3567,7 @@
       "pool_amount": 8
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026029",
       "draw_date": "2026-03-21",
       "primary_numbers": [
@@ -4537,6 +3585,7 @@
       "pool_amount": 6
     },
     {
+      "lottery_type": "dlt",
       "issue": "2026028",
       "draw_date": "2026-03-18",
       "primary_numbers": [
@@ -4552,61 +3601,1367 @@
       ],
       "sales_amount": 861344046,
       "pool_amount": 1
+    }
+  ],
+  "fc3d": [
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026298",
+      "draw_date": "2026-11-08",
+      "primary_numbers": [
+        "0",
+        "8",
+        "5"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 96893284,
+      "pool_amount": 0
     },
     {
-      "issue": "2026027",
-      "draw_date": "2026-03-16",
+      "lottery_type": "fc3d",
+      "issue": "2026297",
+      "draw_date": "2026-11-07",
       "primary_numbers": [
-        "09",
-        "10",
-        "11",
-        "12",
-        "16"
+        "1",
+        "2",
+        "3"
       ],
-      "secondary_numbers": [
-        "01",
-        "11"
-      ],
-      "sales_amount": 799972392,
-      "pool_amount": 7
+      "secondary_numbers": null,
+      "sales_amount": 96507570,
+      "pool_amount": 0
     },
     {
-      "issue": "2026026",
-      "draw_date": "2026-03-14",
+      "lottery_type": "fc3d",
+      "issue": "2026296",
+      "draw_date": "2026-11-06",
       "primary_numbers": [
-        "10",
-        "11",
-        "22",
-        "26",
-        "32"
+        "9",
+        "0",
+        "7"
       ],
-      "secondary_numbers": [
-        "01",
-        "08"
-      ],
-      "sales_amount": 794063794,
-      "pool_amount": 3
+      "secondary_numbers": null,
+      "sales_amount": 102199598,
+      "pool_amount": 0
     },
     {
-      "issue": "2026025",
-      "draw_date": "2026-03-11",
+      "lottery_type": "fc3d",
+      "issue": "2026295",
+      "draw_date": "2026-11-05",
       "primary_numbers": [
-        "03",
-        "15",
-        "24",
-        "28",
-        "29"
+        "7",
+        "4",
+        "1"
       ],
-      "secondary_numbers": [
-        "03",
-        "07"
+      "secondary_numbers": null,
+      "sales_amount": 101775582,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026294",
+      "draw_date": "2026-11-04",
+      "primary_numbers": [
+        "2",
+        "6",
+        "1"
       ],
-      "sales_amount": 761949362,
-      "pool_amount": 10
+      "secondary_numbers": null,
+      "sales_amount": 98099882,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026293",
+      "draw_date": "2026-11-03",
+      "primary_numbers": [
+        "1",
+        "8",
+        "5"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 96388532,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026292",
+      "draw_date": "2026-11-02",
+      "primary_numbers": [
+        "9",
+        "9",
+        "3"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 100426902,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026291",
+      "draw_date": "2026-11-01",
+      "primary_numbers": [
+        "0",
+        "8",
+        "6"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 99205938,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026290",
+      "draw_date": "2026-10-31",
+      "primary_numbers": [
+        "7",
+        "3",
+        "5"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 98013484,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026289",
+      "draw_date": "2026-10-30",
+      "primary_numbers": [
+        "8",
+        "4",
+        "3"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 100121182,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026288",
+      "draw_date": "2026-10-29",
+      "primary_numbers": [
+        "6",
+        "1",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 98279284,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026287",
+      "draw_date": "2026-10-28",
+      "primary_numbers": [
+        "1",
+        "2",
+        "1"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 101470054,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026286",
+      "draw_date": "2026-10-27",
+      "primary_numbers": [
+        "1",
+        "9",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 100468510,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026285",
+      "draw_date": "2026-10-26",
+      "primary_numbers": [
+        "9",
+        "3",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 99355354,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026284",
+      "draw_date": "2026-10-25",
+      "primary_numbers": [
+        "1",
+        "7",
+        "6"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 97106772,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026283",
+      "draw_date": "2026-10-24",
+      "primary_numbers": [
+        "2",
+        "0",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 96685046,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026282",
+      "draw_date": "2026-10-23",
+      "primary_numbers": [
+        "3",
+        "0",
+        "0"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 108680926,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026281",
+      "draw_date": "2026-10-22",
+      "primary_numbers": [
+        "8",
+        "1",
+        "3"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 103092230,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026280",
+      "draw_date": "2026-10-21",
+      "primary_numbers": [
+        "4",
+        "3",
+        "5"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 99542826,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026279",
+      "draw_date": "2026-10-20",
+      "primary_numbers": [
+        "7",
+        "9",
+        "1"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 96142502,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026278",
+      "draw_date": "2026-10-19",
+      "primary_numbers": [
+        "6",
+        "6",
+        "6"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 104768858,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026277",
+      "draw_date": "2026-10-18",
+      "primary_numbers": [
+        "5",
+        "6",
+        "8"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 103487554,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026276",
+      "draw_date": "2026-10-17",
+      "primary_numbers": [
+        "9",
+        "6",
+        "0"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 101608874,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026275",
+      "draw_date": "2026-10-16",
+      "primary_numbers": [
+        "2",
+        "8",
+        "7"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 106583766,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026274",
+      "draw_date": "2026-10-15",
+      "primary_numbers": [
+        "8",
+        "2",
+        "3"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 103583876,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026273",
+      "draw_date": "2026-10-14",
+      "primary_numbers": [
+        "9",
+        "0",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 100404550,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026272",
+      "draw_date": "2026-10-13",
+      "primary_numbers": [
+        "0",
+        "1",
+        "5"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 100832020,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026271",
+      "draw_date": "2026-10-12",
+      "primary_numbers": [
+        "2",
+        "8",
+        "0"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 103211018,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026270",
+      "draw_date": "2026-10-11",
+      "primary_numbers": [
+        "0",
+        "8",
+        "4"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 101830580,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026269",
+      "draw_date": "2026-10-10",
+      "primary_numbers": [
+        "3",
+        "4",
+        "1"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 101283970,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026268",
+      "draw_date": "2026-10-09",
+      "primary_numbers": [
+        "8",
+        "9",
+        "0"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 103871566,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026267",
+      "draw_date": "2026-10-08",
+      "primary_numbers": [
+        "8",
+        "5",
+        "7"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 99125960,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026266",
+      "draw_date": "2026-10-07",
+      "primary_numbers": [
+        "3",
+        "4",
+        "6"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 91197060,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026265",
+      "draw_date": "2026-10-06",
+      "primary_numbers": [
+        "1",
+        "6",
+        "1"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 87684304,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026264",
+      "draw_date": "2026-10-05",
+      "primary_numbers": [
+        "1",
+        "1",
+        "9"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 88928694,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026263",
+      "draw_date": "2026-09-30",
+      "primary_numbers": [
+        "9",
+        "8",
+        "7"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 103864936,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026262",
+      "draw_date": "2026-09-29",
+      "primary_numbers": [
+        "3",
+        "4",
+        "7"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 96846432,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026261",
+      "draw_date": "2026-09-28",
+      "primary_numbers": [
+        "5",
+        "1",
+        "1"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 98832432,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026260",
+      "draw_date": "2026-09-27",
+      "primary_numbers": [
+        "6",
+        "1",
+        "9"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 96943708,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026259",
+      "draw_date": "2026-09-26",
+      "primary_numbers": [
+        "7",
+        "3",
+        "1"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 96542876,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026258",
+      "draw_date": "2026-09-25",
+      "primary_numbers": [
+        "6",
+        "3",
+        "5"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 95669692,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026257",
+      "draw_date": "2026-09-24",
+      "primary_numbers": [
+        "4",
+        "8",
+        "6"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 97749434,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026256",
+      "draw_date": "2026-09-23",
+      "primary_numbers": [
+        "0",
+        "5",
+        "1"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 101368636,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026255",
+      "draw_date": "2026-09-22",
+      "primary_numbers": [
+        "6",
+        "9",
+        "9"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 103419024,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026254",
+      "draw_date": "2026-09-21",
+      "primary_numbers": [
+        "8",
+        "5",
+        "0"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 102498432,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026253",
+      "draw_date": "2026-09-20",
+      "primary_numbers": [
+        "0",
+        "3",
+        "4"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 104791332,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026252",
+      "draw_date": "2026-09-19",
+      "primary_numbers": [
+        "0",
+        "9",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 99448856,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026251",
+      "draw_date": "2026-09-18",
+      "primary_numbers": [
+        "7",
+        "7",
+        "7"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 112900898,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026250",
+      "draw_date": "2026-09-17",
+      "primary_numbers": [
+        "9",
+        "5",
+        "4"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 105900836,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026249",
+      "draw_date": "2026-09-16",
+      "primary_numbers": [
+        "6",
+        "8",
+        "9"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 102027188,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026248",
+      "draw_date": "2026-09-15",
+      "primary_numbers": [
+        "8",
+        "7",
+        "6"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 103199168,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026247",
+      "draw_date": "2026-09-14",
+      "primary_numbers": [
+        "6",
+        "0",
+        "9"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 102179952,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026246",
+      "draw_date": "2026-09-13",
+      "primary_numbers": [
+        "9",
+        "8",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 98247910,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026245",
+      "draw_date": "2026-09-12",
+      "primary_numbers": [
+        "5",
+        "4",
+        "9"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 95511108,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026244",
+      "draw_date": "2026-09-11",
+      "primary_numbers": [
+        "6",
+        "5",
+        "4"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 98530436,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026243",
+      "draw_date": "2026-09-10",
+      "primary_numbers": [
+        "2",
+        "1",
+        "9"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 91668582,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026242",
+      "draw_date": "2026-09-09",
+      "primary_numbers": [
+        "5",
+        "5",
+        "5"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 92602358,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026241",
+      "draw_date": "2026-09-08",
+      "primary_numbers": [
+        "0",
+        "0",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 97418934,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026240",
+      "draw_date": "2026-09-07",
+      "primary_numbers": [
+        "9",
+        "8",
+        "1"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 93199346,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026239",
+      "draw_date": "2026-09-06",
+      "primary_numbers": [
+        "0",
+        "0",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 96172590,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026238",
+      "draw_date": "2026-09-05",
+      "primary_numbers": [
+        "8",
+        "9",
+        "9"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 101277746,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026237",
+      "draw_date": "2026-09-04",
+      "primary_numbers": [
+        "8",
+        "5",
+        "4"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 102044338,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026236",
+      "draw_date": "2026-09-03",
+      "primary_numbers": [
+        "0",
+        "4",
+        "7"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 103055378,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026235",
+      "draw_date": "2026-09-02",
+      "primary_numbers": [
+        "2",
+        "1",
+        "9"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 101179200,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026234",
+      "draw_date": "2026-09-01",
+      "primary_numbers": [
+        "6",
+        "9",
+        "5"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 100945514,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026233",
+      "draw_date": "2026-08-31",
+      "primary_numbers": [
+        "9",
+        "7",
+        "0"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 101106056,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026232",
+      "draw_date": "2026-08-30",
+      "primary_numbers": [
+        "6",
+        "5",
+        "8"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 100737340,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026231",
+      "draw_date": "2026-08-29",
+      "primary_numbers": [
+        "7",
+        "3",
+        "3"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 99547098,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026230",
+      "draw_date": "2026-08-28",
+      "primary_numbers": [
+        "0",
+        "6",
+        "6"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 104695954,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026229",
+      "draw_date": "2026-08-27",
+      "primary_numbers": [
+        "8",
+        "2",
+        "8"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 104741902,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026228",
+      "draw_date": "2026-08-26",
+      "primary_numbers": [
+        "3",
+        "9",
+        "9"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 107058866,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026227",
+      "draw_date": "2026-08-25",
+      "primary_numbers": [
+        "5",
+        "2",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 104266778,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026226",
+      "draw_date": "2026-08-24",
+      "primary_numbers": [
+        "8",
+        "5",
+        "1"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 99249730,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026225",
+      "draw_date": "2026-08-23",
+      "primary_numbers": [
+        "5",
+        "5",
+        "5"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 107577374,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026224",
+      "draw_date": "2026-08-22",
+      "primary_numbers": [
+        "8",
+        "6",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 104875148,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026223",
+      "draw_date": "2026-08-21",
+      "primary_numbers": [
+        "9",
+        "4",
+        "8"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 109896280,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026222",
+      "draw_date": "2026-08-20",
+      "primary_numbers": [
+        "3",
+        "8",
+        "0"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 107512234,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026221",
+      "draw_date": "2026-08-19",
+      "primary_numbers": [
+        "2",
+        "9",
+        "6"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 105700632,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026220",
+      "draw_date": "2026-08-18",
+      "primary_numbers": [
+        "3",
+        "7",
+        "3"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 106804902,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026219",
+      "draw_date": "2026-08-17",
+      "primary_numbers": [
+        "2",
+        "2",
+        "5"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 105692666,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026218",
+      "draw_date": "2026-08-16",
+      "primary_numbers": [
+        "3",
+        "8",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 108117598,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026217",
+      "draw_date": "2026-08-15",
+      "primary_numbers": [
+        "8",
+        "8",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 107924072,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026216",
+      "draw_date": "2026-08-14",
+      "primary_numbers": [
+        "9",
+        "3",
+        "5"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 111654440,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026215",
+      "draw_date": "2026-08-13",
+      "primary_numbers": [
+        "1",
+        "7",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 107614142,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026214",
+      "draw_date": "2026-08-12",
+      "primary_numbers": [
+        "5",
+        "4",
+        "5"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 109910022,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026213",
+      "draw_date": "2026-08-11",
+      "primary_numbers": [
+        "8",
+        "7",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 109153150,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026212",
+      "draw_date": "2026-08-10",
+      "primary_numbers": [
+        "5",
+        "6",
+        "1"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 105944728,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026211",
+      "draw_date": "2026-08-09",
+      "primary_numbers": [
+        "7",
+        "0",
+        "8"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 106241288,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026210",
+      "draw_date": "2026-08-08",
+      "primary_numbers": [
+        "7",
+        "5",
+        "5"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 113312530,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026209",
+      "draw_date": "2026-08-07",
+      "primary_numbers": [
+        "2",
+        "8",
+        "9"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 114564306,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026208",
+      "draw_date": "2026-08-06",
+      "primary_numbers": [
+        "6",
+        "3",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 110194926,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026207",
+      "draw_date": "2026-08-05",
+      "primary_numbers": [
+        "4",
+        "1",
+        "5"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 107407356,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026206",
+      "draw_date": "2026-08-04",
+      "primary_numbers": [
+        "9",
+        "4",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 110155880,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026205",
+      "draw_date": "2026-08-03",
+      "primary_numbers": [
+        "8",
+        "1",
+        "4"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 106516632,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026204",
+      "draw_date": "2026-08-02",
+      "primary_numbers": [
+        "9",
+        "7",
+        "8"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 106652492,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026203",
+      "draw_date": "2026-08-01",
+      "primary_numbers": [
+        "4",
+        "3",
+        "5"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 105017956,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026202",
+      "draw_date": "2026-07-31",
+      "primary_numbers": [
+        "9",
+        "8",
+        "8"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 115106130,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026201",
+      "draw_date": "2026-07-30",
+      "primary_numbers": [
+        "3",
+        "2",
+        "1"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 112870158,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026200",
+      "draw_date": "2026-07-29",
+      "primary_numbers": [
+        "9",
+        "1",
+        "2"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 112497770,
+      "pool_amount": 0
+    },
+    {
+      "lottery_type": "fc3d",
+      "issue": "2026199",
+      "draw_date": "2026-07-28",
+      "primary_numbers": [
+        "5",
+        "9",
+        "1"
+      ],
+      "secondary_numbers": null,
+      "sales_amount": 107329046,
+      "pool_amount": 0
     }
   ],
   "qxc": [
     {
+      "lottery_type": "qxc",
+      "issue": "2026128",
+      "draw_date": "2026-11-08",
+      "primary_numbers": [
+        "9",
+        "3",
+        "8",
+        "6",
+        "2",
+        "5"
+      ],
+      "secondary_numbers": [
+        "08"
+      ],
+      "sales_amount": 41,
+      "pool_amount": 13324046
+    },
+    {
+      "lottery_type": "qxc",
+      "issue": "2026127",
+      "draw_date": "2026-11-06",
+      "primary_numbers": [
+        "5",
+        "1",
+        "3",
+        "7",
+        "4",
+        "8"
+      ],
+      "secondary_numbers": [
+        "08"
+      ],
+      "sales_amount": 36,
+      "pool_amount": 20065104
+    },
+    {
+      "lottery_type": "qxc",
+      "issue": "2026126",
+      "draw_date": "2026-11-03",
+      "primary_numbers": [
+        "3",
+        "3",
+        "3",
+        "4",
+        "1",
+        "7"
+      ],
+      "secondary_numbers": [
+        "08"
+      ],
+      "sales_amount": 29,
+      "pool_amount": 13625790
+    },
+    {
+      "lottery_type": "qxc",
       "issue": "2026125",
       "draw_date": "2026-11-01",
       "primary_numbers": [
@@ -4624,6 +4979,7 @@
       "pool_amount": 14020048
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026124",
       "draw_date": "2026-10-30",
       "primary_numbers": [
@@ -4641,6 +4997,7 @@
       "pool_amount": 23715650
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026123",
       "draw_date": "2026-10-27",
       "primary_numbers": [
@@ -4658,6 +5015,7 @@
       "pool_amount": 15663882
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026122",
       "draw_date": "2026-10-25",
       "primary_numbers": [
@@ -4675,6 +5033,7 @@
       "pool_amount": 15998982
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026121",
       "draw_date": "2026-10-23",
       "primary_numbers": [
@@ -4692,6 +5051,7 @@
       "pool_amount": 23196448
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026120",
       "draw_date": "2026-10-20",
       "primary_numbers": [
@@ -4709,6 +5069,7 @@
       "pool_amount": 15416824
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026119",
       "draw_date": "2026-10-18",
       "primary_numbers": [
@@ -4726,6 +5087,7 @@
       "pool_amount": 15945192
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026118",
       "draw_date": "2026-10-16",
       "primary_numbers": [
@@ -4743,6 +5105,7 @@
       "pool_amount": 23608974
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026117",
       "draw_date": "2026-10-13",
       "primary_numbers": [
@@ -4760,6 +5123,7 @@
       "pool_amount": 15523102
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026116",
       "draw_date": "2026-10-11",
       "primary_numbers": [
@@ -4777,6 +5141,7 @@
       "pool_amount": 15998496
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026115",
       "draw_date": "2026-10-09",
       "primary_numbers": [
@@ -4794,6 +5159,7 @@
       "pool_amount": 23907286
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026114",
       "draw_date": "2026-10-06",
       "primary_numbers": [
@@ -4811,6 +5177,7 @@
       "pool_amount": 16531850
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026113",
       "draw_date": "2026-09-29",
       "primary_numbers": [
@@ -4828,6 +5195,7 @@
       "pool_amount": 16144844
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026112",
       "draw_date": "2026-09-27",
       "primary_numbers": [
@@ -4845,6 +5213,7 @@
       "pool_amount": 15775054
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026111",
       "draw_date": "2026-09-25",
       "primary_numbers": [
@@ -4862,6 +5231,7 @@
       "pool_amount": 24560396
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026110",
       "draw_date": "2026-09-22",
       "primary_numbers": [
@@ -4879,6 +5249,7 @@
       "pool_amount": 17175876
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026109",
       "draw_date": "2026-09-20",
       "primary_numbers": [
@@ -4896,6 +5267,7 @@
       "pool_amount": 17587914
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026108",
       "draw_date": "2026-09-18",
       "primary_numbers": [
@@ -4913,6 +5285,7 @@
       "pool_amount": 25316222
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026107",
       "draw_date": "2026-09-15",
       "primary_numbers": [
@@ -4930,6 +5303,7 @@
       "pool_amount": 16854278
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026106",
       "draw_date": "2026-09-13",
       "primary_numbers": [
@@ -4947,6 +5321,7 @@
       "pool_amount": 17370904
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026105",
       "draw_date": "2026-09-11",
       "primary_numbers": [
@@ -4964,6 +5339,7 @@
       "pool_amount": 24961344
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026104",
       "draw_date": "2026-09-08",
       "primary_numbers": [
@@ -4981,6 +5357,7 @@
       "pool_amount": 17332862
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026103",
       "draw_date": "2026-09-06",
       "primary_numbers": [
@@ -4998,6 +5375,7 @@
       "pool_amount": 17642292
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026102",
       "draw_date": "2026-09-04",
       "primary_numbers": [
@@ -5015,6 +5393,7 @@
       "pool_amount": 25186278
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026101",
       "draw_date": "2026-09-01",
       "primary_numbers": [
@@ -5032,6 +5411,7 @@
       "pool_amount": 17370196
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026100",
       "draw_date": "2026-08-30",
       "primary_numbers": [
@@ -5049,6 +5429,7 @@
       "pool_amount": 17720386
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026099",
       "draw_date": "2026-08-28",
       "primary_numbers": [
@@ -5066,6 +5447,7 @@
       "pool_amount": 25305764
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026098",
       "draw_date": "2026-08-25",
       "primary_numbers": [
@@ -5083,6 +5465,7 @@
       "pool_amount": 17328440
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026097",
       "draw_date": "2026-08-23",
       "primary_numbers": [
@@ -5100,6 +5483,7 @@
       "pool_amount": 17738382
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026096",
       "draw_date": "2026-08-21",
       "primary_numbers": [
@@ -5117,6 +5501,7 @@
       "pool_amount": 25798192
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026095",
       "draw_date": "2026-08-18",
       "primary_numbers": [
@@ -5134,6 +5519,7 @@
       "pool_amount": 17662328
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026094",
       "draw_date": "2026-08-16",
       "primary_numbers": [
@@ -5151,6 +5537,7 @@
       "pool_amount": 17662548
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026093",
       "draw_date": "2026-08-14",
       "primary_numbers": [
@@ -5168,6 +5555,7 @@
       "pool_amount": 25176544
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026092",
       "draw_date": "2026-08-11",
       "primary_numbers": [
@@ -5185,6 +5573,7 @@
       "pool_amount": 16587138
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026091",
       "draw_date": "2026-08-09",
       "primary_numbers": [
@@ -5202,6 +5591,7 @@
       "pool_amount": 16798926
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026090",
       "draw_date": "2026-08-07",
       "primary_numbers": [
@@ -5219,6 +5609,7 @@
       "pool_amount": 24885984
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026089",
       "draw_date": "2026-08-04",
       "primary_numbers": [
@@ -5236,6 +5627,7 @@
       "pool_amount": 16296846
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026088",
       "draw_date": "2026-08-02",
       "primary_numbers": [
@@ -5253,6 +5645,7 @@
       "pool_amount": 16625484
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026087",
       "draw_date": "2026-07-31",
       "primary_numbers": [
@@ -5270,6 +5663,7 @@
       "pool_amount": 24962268
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026086",
       "draw_date": "2026-07-28",
       "primary_numbers": [
@@ -5287,6 +5681,7 @@
       "pool_amount": 16987448
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026085",
       "draw_date": "2026-07-26",
       "primary_numbers": [
@@ -5304,6 +5699,7 @@
       "pool_amount": 17102340
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026084",
       "draw_date": "2026-07-24",
       "primary_numbers": [
@@ -5321,6 +5717,7 @@
       "pool_amount": 24865542
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026083",
       "draw_date": "2026-07-21",
       "primary_numbers": [
@@ -5338,6 +5735,7 @@
       "pool_amount": 16831732
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026082",
       "draw_date": "2026-07-19",
       "primary_numbers": [
@@ -5355,6 +5753,7 @@
       "pool_amount": 17284378
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026081",
       "draw_date": "2026-07-17",
       "primary_numbers": [
@@ -5372,6 +5771,7 @@
       "pool_amount": 24755596
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026080",
       "draw_date": "2026-07-14",
       "primary_numbers": [
@@ -5389,6 +5789,7 @@
       "pool_amount": 16510816
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026079",
       "draw_date": "2026-07-12",
       "primary_numbers": [
@@ -5406,6 +5807,7 @@
       "pool_amount": 17039050
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026078",
       "draw_date": "2026-07-10",
       "primary_numbers": [
@@ -5423,6 +5825,7 @@
       "pool_amount": 24610918
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026077",
       "draw_date": "2026-07-07",
       "primary_numbers": [
@@ -5440,6 +5843,7 @@
       "pool_amount": 16723146
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026076",
       "draw_date": "2026-07-05",
       "primary_numbers": [
@@ -5457,6 +5861,7 @@
       "pool_amount": 17117406
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026075",
       "draw_date": "2026-07-03",
       "primary_numbers": [
@@ -5474,6 +5879,7 @@
       "pool_amount": 24742186
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026074",
       "draw_date": "2026-06-30",
       "primary_numbers": [
@@ -5491,6 +5897,7 @@
       "pool_amount": 16889362
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026073",
       "draw_date": "2026-06-28",
       "primary_numbers": [
@@ -5508,6 +5915,7 @@
       "pool_amount": 17325444
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026072",
       "draw_date": "2026-06-26",
       "primary_numbers": [
@@ -5525,6 +5933,7 @@
       "pool_amount": 25110154
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026071",
       "draw_date": "2026-06-23",
       "primary_numbers": [
@@ -5542,6 +5951,7 @@
       "pool_amount": 17066082
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026070",
       "draw_date": "2026-06-21",
       "primary_numbers": [
@@ -5559,6 +5969,7 @@
       "pool_amount": 17363616
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026069",
       "draw_date": "2026-06-19",
       "primary_numbers": [
@@ -5576,6 +5987,7 @@
       "pool_amount": 24704992
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026068",
       "draw_date": "2026-06-16",
       "primary_numbers": [
@@ -5593,6 +6005,7 @@
       "pool_amount": 17149520
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026067",
       "draw_date": "2026-06-14",
       "primary_numbers": [
@@ -5610,6 +6023,7 @@
       "pool_amount": 18270946
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026066",
       "draw_date": "2026-06-12",
       "primary_numbers": [
@@ -5627,6 +6041,7 @@
       "pool_amount": 26545672
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026065",
       "draw_date": "2026-06-09",
       "primary_numbers": [
@@ -5644,6 +6059,7 @@
       "pool_amount": 17935848
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026064",
       "draw_date": "2026-06-07",
       "primary_numbers": [
@@ -5661,6 +6077,7 @@
       "pool_amount": 18593568
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026063",
       "draw_date": "2026-06-05",
       "primary_numbers": [
@@ -5678,6 +6095,7 @@
       "pool_amount": 26580410
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026062",
       "draw_date": "2026-06-02",
       "primary_numbers": [
@@ -5695,6 +6113,7 @@
       "pool_amount": 17563290
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026061",
       "draw_date": "2026-05-31",
       "primary_numbers": [
@@ -5712,6 +6131,7 @@
       "pool_amount": 17206620
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026060",
       "draw_date": "2026-05-29",
       "primary_numbers": [
@@ -5729,6 +6149,7 @@
       "pool_amount": 25208832
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026059",
       "draw_date": "2026-05-26",
       "primary_numbers": [
@@ -5746,6 +6167,7 @@
       "pool_amount": 16562206
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026058",
       "draw_date": "2026-05-24",
       "primary_numbers": [
@@ -5763,6 +6185,7 @@
       "pool_amount": 17054062
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026057",
       "draw_date": "2026-05-22",
       "primary_numbers": [
@@ -5780,6 +6203,7 @@
       "pool_amount": 25236408
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026056",
       "draw_date": "2026-05-19",
       "primary_numbers": [
@@ -5797,6 +6221,7 @@
       "pool_amount": 16795464
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026055",
       "draw_date": "2026-05-17",
       "primary_numbers": [
@@ -5814,6 +6239,7 @@
       "pool_amount": 17129272
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026054",
       "draw_date": "2026-05-15",
       "primary_numbers": [
@@ -5831,6 +6257,7 @@
       "pool_amount": 25196052
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026053",
       "draw_date": "2026-05-12",
       "primary_numbers": [
@@ -5848,6 +6275,7 @@
       "pool_amount": 16935980
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026052",
       "draw_date": "2026-05-10",
       "primary_numbers": [
@@ -5865,6 +6293,7 @@
       "pool_amount": 17144188
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026051",
       "draw_date": "2026-05-08",
       "primary_numbers": [
@@ -5882,6 +6311,7 @@
       "pool_amount": 25403702
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026050",
       "draw_date": "2026-05-05",
       "primary_numbers": [
@@ -5899,6 +6329,7 @@
       "pool_amount": 16606362
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026049",
       "draw_date": "2026-05-03",
       "primary_numbers": [
@@ -5916,6 +6347,7 @@
       "pool_amount": 16392162
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026048",
       "draw_date": "2026-05-01",
       "primary_numbers": [
@@ -5933,6 +6365,7 @@
       "pool_amount": 24902500
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026047",
       "draw_date": "2026-04-28",
       "primary_numbers": [
@@ -5950,6 +6383,7 @@
       "pool_amount": 17108558
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026046",
       "draw_date": "2026-04-26",
       "primary_numbers": [
@@ -5967,6 +6401,7 @@
       "pool_amount": 17629280
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026045",
       "draw_date": "2026-04-24",
       "primary_numbers": [
@@ -5984,6 +6419,7 @@
       "pool_amount": 25972354
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026044",
       "draw_date": "2026-04-21",
       "primary_numbers": [
@@ -6001,6 +6437,7 @@
       "pool_amount": 18413848
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026043",
       "draw_date": "2026-04-19",
       "primary_numbers": [
@@ -6018,6 +6455,7 @@
       "pool_amount": 18516020
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026042",
       "draw_date": "2026-04-17",
       "primary_numbers": [
@@ -6035,6 +6473,7 @@
       "pool_amount": 26276702
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026041",
       "draw_date": "2026-04-14",
       "primary_numbers": [
@@ -6052,6 +6491,7 @@
       "pool_amount": 17547320
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026040",
       "draw_date": "2026-04-12",
       "primary_numbers": [
@@ -6069,6 +6509,7 @@
       "pool_amount": 17922842
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026039",
       "draw_date": "2026-04-10",
       "primary_numbers": [
@@ -6086,6 +6527,7 @@
       "pool_amount": 26719876
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026038",
       "draw_date": "2026-04-07",
       "primary_numbers": [
@@ -6103,6 +6545,7 @@
       "pool_amount": 17731814
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026037",
       "draw_date": "2026-04-05",
       "primary_numbers": [
@@ -6120,6 +6563,7 @@
       "pool_amount": 17475184
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026036",
       "draw_date": "2026-04-03",
       "primary_numbers": [
@@ -6137,6 +6581,7 @@
       "pool_amount": 27875616
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026035",
       "draw_date": "2026-03-31",
       "primary_numbers": [
@@ -6154,6 +6599,7 @@
       "pool_amount": 19002972
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026034",
       "draw_date": "2026-03-29",
       "primary_numbers": [
@@ -6171,6 +6617,7 @@
       "pool_amount": 19351222
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026033",
       "draw_date": "2026-03-27",
       "primary_numbers": [
@@ -6188,6 +6635,7 @@
       "pool_amount": 27392228
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026032",
       "draw_date": "2026-03-24",
       "primary_numbers": [
@@ -6205,6 +6653,7 @@
       "pool_amount": 17949512
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026031",
       "draw_date": "2026-03-22",
       "primary_numbers": [
@@ -6222,6 +6671,7 @@
       "pool_amount": 18327048
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026030",
       "draw_date": "2026-03-20",
       "primary_numbers": [
@@ -6239,6 +6689,7 @@
       "pool_amount": 27665494
     },
     {
+      "lottery_type": "qxc",
       "issue": "2026029",
       "draw_date": "2026-03-17",
       "primary_numbers": [
@@ -6254,57 +6705,6 @@
       ],
       "sales_amount": 25,
       "pool_amount": 17945560
-    },
-    {
-      "issue": "2026028",
-      "draw_date": "2026-03-15",
-      "primary_numbers": [
-        "7",
-        "9",
-        "8",
-        "0",
-        "1",
-        "1"
-      ],
-      "secondary_numbers": [
-        "06"
-      ],
-      "sales_amount": 32,
-      "pool_amount": 19505278
-    },
-    {
-      "issue": "2026027",
-      "draw_date": "2026-03-13",
-      "primary_numbers": [
-        "8",
-        "7",
-        "7",
-        "3",
-        "6",
-        "0"
-      ],
-      "secondary_numbers": [
-        "09"
-      ],
-      "sales_amount": 40,
-      "pool_amount": 27731470
-    },
-    {
-      "issue": "2026026",
-      "draw_date": "2026-03-10",
-      "primary_numbers": [
-        "2",
-        "6",
-        "9",
-        "8",
-        "3",
-        "8"
-      ],
-      "secondary_numbers": [
-        "14"
-      ],
-      "sales_amount": 50,
-      "pool_amount": 18489692
     }
   ]
 }
