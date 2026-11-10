@@ -109,6 +109,7 @@ fun LotteryApp(
     val userName by viewModel.userName.collectAsState()
     val betCount by viewModel.betCount.collectAsState()
     val historyDraws by viewModel.historyDraws.collectAsState()
+    val savedTickets by viewModel.savedTickets.collectAsState()
 
     var selectedNavIndex by remember { mutableIntStateOf(0) }
     var showSettingsDialog by remember { mutableStateOf(false) }
@@ -239,7 +240,12 @@ fun LotteryApp(
                         onStrategySelected = { viewModel.selectStrategy(it) },
                         onBetCountSelected = { viewModel.setBetCount(it) },
                         onReroll = { viewModel.reroll() },
-                        onOpenDivination = { viewModel.openDivinationSheet() }
+                        onOpenDivination = { viewModel.openDivinationSheet() },
+                        savedTickets = savedTickets,
+                        onSaveTicket = { item, idx -> viewModel.saveCurrentTicket(item, idx) },
+                        onSaveAllTickets = { viewModel.saveAllCurrentTickets() },
+                        onDeleteSavedTicket = { viewModel.deleteSavedTicket(it) },
+                        onClearAllSavedTickets = { viewModel.clearAllSavedTickets() }
                     )
 
                     LotterySelectScreen(

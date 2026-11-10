@@ -17,13 +17,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Update
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
@@ -52,6 +55,7 @@ import com.zeng.lottery.data.local.BaziEngine
 import com.zeng.lottery.data.model.LunarDate
 import com.zeng.lottery.ui.theme.FortuneGold
 import com.zeng.lottery.ui.theme.ImperialRed
+import java.time.LocalDateTime
 
 /**
  * Pure Lunar Date Picker Dialog supporting years 1930 to 2030,
@@ -111,12 +115,43 @@ fun LunarDatePickerDialog(
     AlertDialog(
         onDismissRequest = onDismissRequest,
         title = {
-            Text(
-                text = "选择纯农历生辰",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = ImperialRed
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "选择纯农历生辰",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = ImperialRed
+                )
+                OutlinedButton(
+                    onClick = {
+                        val now = LocalDateTime.now()
+                        val nowLunar = BaziEngine.solarToLunar(now)
+                        selectedYear = nowLunar.year.coerceIn(1930, 2030)
+                        selectedMonth = nowLunar.month.coerceIn(1, 12)
+                        isLeap = nowLunar.isLeap
+                        selectedDay = nowLunar.day.coerceIn(1, 30)
+                        selectedHour = nowLunar.hour.coerceIn(0, 23)
+                        selectedMinute = nowLunar.minute.coerceIn(0, 59)
+                    },
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                    modifier = Modifier.height(30.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = FortuneGold)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Update,
+                        contentDescription = "对齐当前时间",
+                        modifier = Modifier.size(13.dp),
+                        tint = FortuneGold
+                    )
+                    Spacer(modifier = Modifier.width(3.dp))
+                    Text("对齐当前时间", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+            }
         },
         text = {
             Column(

@@ -11,8 +11,12 @@ import com.zeng.lottery.ai.KeyStoreManager
 import com.zeng.lottery.data.api.ApiClient
 import com.zeng.lottery.data.local.BaziEngine
 import com.zeng.lottery.data.local.OfflineLotteryEngine
+import com.zeng.lottery.data.local.SavedTicket
+import com.zeng.lottery.data.local.UserPickHistoryStore
+import com.zeng.lottery.data.local.UserPreferencesManager
 import com.zeng.lottery.data.model.BaziDestiny
 import com.zeng.lottery.data.model.BaziRecommendationResponse
+import com.zeng.lottery.data.model.RecommendationItem
 import com.zeng.lottery.data.model.DrawItem
 import com.zeng.lottery.data.model.LotteryStats
 import com.zeng.lottery.data.model.LotteryType
@@ -27,7 +31,15 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import java.time.LocalDateTime
 
-class LotteryViewModel(application: Application) : AndroidViewModel(application) {
+class LotteryViewModel(
+    application: Application,
+    private val preferencesManager: UserPreferencesManager = UserPreferencesManager(
+        try { application.applicationContext } catch (e: Throwable) { null }
+    ),
+    private val historyStore: UserPickHistoryStore = UserPickHistoryStore(
+        try { application.applicationContext } catch (e: Throwable) { null }
+    )
+) : AndroidViewModel(application) {
 
     companion object {
         private const val PREFS_NAME = "lottery_app_settings"
@@ -50,27 +62,27 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
     private var selectJob: Job? = null
     private var destinyJob: Job? = null
 
-    private val _userName = MutableStateFlow(prefs?.getString("user_name", "缘主") ?: "缘主")
+    private val _userName = MutableStateFlow(preferencesManager.getUserName())
     val userName: StateFlow<String> = _userName.asStateFlow()
     val effectiveUserName: String
         get() = if (_userName.value.isBlank()) "缘主" else _userName.value.trim()
 
-    private val _betCount = MutableStateFlow(5)
+    private val _betCount = MutableStateFlow(preferencesManager.getBetCount())
     val betCount: StateFlow<Int> = _betCount.asStateFlow()
 
-    private val _selectedLottery = MutableStateFlow(LotteryType.SSQ)
+    private val _selectedLottery = MutableStateFlow(preferencesManager.getSelectedLottery())
     val selectedLottery: StateFlow<LotteryType> = _selectedLottery.asStateFlow()
 
-    private val _lunarDate = MutableStateFlow(LunarDate(1990, 6, false, 24, 8, 30))
+    private val _lunarDate = MutableStateFlow(preferencesManager.getLunarDate())
     val lunarDate: StateFlow<LunarDate> = _lunarDate.asStateFlow()
 
-    private val _birthDateTime = MutableStateFlow(LocalDateTime.of(1990, 8, 15, 8, 30))
+    private val _birthDateTime = MutableStateFlow(BaziEngine.lunarToSolar(_lunarDate.value))
     val birthDateTime: StateFlow<LocalDateTime> = _birthDateTime.asStateFlow()
 
-    private val _isLunar = MutableStateFlow(true)
+    private val _isLunar = MutableStateFlow(preferencesManager.getIsLunar())
     val isLunar: StateFlow<Boolean> = _isLunar.asStateFlow()
 
-    private val _isMale = MutableStateFlow(true)
+    private val _isMale = MutableStateFlow(preferencesManager.getGender())
     val isMale: StateFlow<Boolean> = _isMale.asStateFlow()
 
     private val _destiny = MutableStateFlow<BaziDestiny?>(null)
@@ -85,7 +97,7 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
     private val _recommendation = MutableStateFlow<BaziRecommendationResponse?>(null)
     val recommendation: StateFlow<BaziRecommendationResponse?> = _recommendation.asStateFlow()
 
-    private val _selectedStrategy = MutableStateFlow("命理吉数优先")
+    private val _selectedStrategy = MutableStateFlow(preferencesManager.getSelectedStrategy())
     val selectedStrategy: StateFlow<String> = _selectedStrategy.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
@@ -117,7 +129,26 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
     private val _showAiSettingsDialog = MutableStateFlow(false)
     val showAiSettingsDialog: StateFlow<Boolean> = _showAiSettingsDialog.asStateFlow()
 
+    private val _savedTickets = MutableStateFlow<List<SavedTicket>>(emptyList())
+    val savedTickets: StateFlow<List<SavedTicket>> = _savedTickets.asStateFlow()
+
+    private fun isNetworkAvailable(): Boolean {
+        val ctx = try { getApplication<Application>().applicationContext } catch (e: Throwable) { null }
+        if (ctx == null) return false
+        return try {
+            val cm = ctx.getSystemService(Context.CONNECTIVITY_SERVICE) as? android.net.ConnectivityManager
+            val net = cm?.activeNetwork
+            val caps = cm?.getNetworkCapabilities(net)
+            caps?.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+        } catch (e: Throwable) {
+            true
+        }
+    }
+
     init {
+        // Prime saved tickets history synchronously
+        _savedTickets.value = historyStore.getAllTickets()
+
         // Automatic migration away from legacy 10.0.2.2 emulator loopback to official Cloud Run
         val savedUrl = prefs?.getString(KEY_SERVER_URL, null)
         val initialUrl = if (savedUrl.isNullOrBlank() || savedUrl.contains("10.0.2.2")) {
@@ -148,12 +179,14 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
 
     fun setUserName(name: String) {
         _userName.value = name
+        preferencesManager.saveUserName(name)
         prefs?.edit()?.putString("user_name", name)?.apply()
     }
 
     fun setBetCount(count: Int) {
         val validCount = count.coerceIn(1, 20)
         _betCount.value = validCount
+        preferencesManager.saveBetCount(validCount)
         reroll()
     }
 
@@ -164,32 +197,40 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
     fun setLunarDate(date: LunarDate) {
         _lunarDate.value = date
         _birthDateTime.value = BaziEngine.lunarToSolar(date)
+        preferencesManager.saveLunarDate(date)
         refreshDestinyAndRecommend()
     }
 
     fun resetToCurrentTime() {
         val now = LocalDateTime.now()
-        setLunarDate(BaziEngine.solarToLunar(now))
+        val lunar = BaziEngine.solarToLunar(now)
+        setLunarDate(lunar)
+        _toastMessage.value = "已对齐当前农历：${lunar.year}年${lunar.monthZh}${lunar.dayZh} ${lunar.shichenZh}"
     }
 
     fun setBirthDateTime(dt: LocalDateTime) {
         _birthDateTime.value = dt
-        _lunarDate.value = BaziEngine.solarToLunar(dt)
+        val lunar = BaziEngine.solarToLunar(dt)
+        _lunarDate.value = lunar
+        preferencesManager.saveLunarDate(lunar)
         refreshDestinyAndRecommend()
     }
 
     fun setLunar(lunar: Boolean) {
         _isLunar.value = lunar
+        preferencesManager.saveIsLunar(lunar)
         refreshDestinyAndRecommend()
     }
 
     fun setGender(male: Boolean) {
         _isMale.value = male
+        preferencesManager.saveGender(male)
         refreshDestinyAndRecommend()
     }
 
     fun selectLottery(type: LotteryType) {
         _selectedLottery.value = type
+        preferencesManager.saveSelectedLottery(type)
         // Immediately show offline stats, history & recommendations for instant responsiveness
         val currentDestiny = _destiny.value ?: repository.getOfflineDestinyFromLunar(_lunarDate.value, _isMale.value, effectiveUserName)
         _stats.value = repository.getOfflineStats(type)
@@ -202,11 +243,16 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
             userName = effectiveUserName
         )
 
+        if (!isNetworkAvailable() || repository.isOffline.value) {
+            _isLoading.value = false
+            return
+        }
+
         selectJob?.cancel()
         selectJob = viewModelScope.launch {
             _isLoading.value = true
             try {
-                withTimeout(5500L) {
+                withTimeout(2500L) {
                     _stats.value = repository.getStats(type)
                     val remoteHist = repository.getHistoryDraws(type, 50)
                     if (remoteHist.isNotEmpty()) {
@@ -233,6 +279,7 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
 
     fun selectStrategy(strategy: String) {
         _selectedStrategy.value = strategy
+        preferencesManager.saveSelectedStrategy(strategy)
         reroll()
     }
 
@@ -247,11 +294,17 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
             userName = effectiveUserName
         )
 
+        if (!isNetworkAvailable() || repository.isOffline.value) {
+            _toastMessage.value = "当前处于离线模式，已启动离线纯算引擎极速推演"
+            _isLoading.value = false
+            return
+        }
+
         rerollJob?.cancel()
         rerollJob = viewModelScope.launch {
             _isLoading.value = true
             try {
-                withTimeout(5500L) {
+                withTimeout(2500L) {
                     val rec = repository.getRecommendations(
                         destiny = currentDestiny,
                         lotteryType = _selectedLottery.value,
@@ -328,11 +381,16 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
             userName = effectiveUserName
         )
 
+        if (!isNetworkAvailable() || repository.isOffline.value) {
+            _isLoading.value = false
+            return
+        }
+
         destinyJob?.cancel()
         destinyJob = viewModelScope.launch {
             _isLoading.value = true
             try {
-                withTimeout(6500L) {
+                withTimeout(2500L) {
                     val remoteD = repository.getDestinyFromLunar(_lunarDate.value, _isMale.value, effectiveUserName)
                     _destiny.value = remoteD
                     _recommendation.value = repository.getRecommendations(
@@ -355,6 +413,9 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
     }
 
     private fun syncFromCloud() {
+        if (!isNetworkAvailable() || repository.isOffline.value) {
+            return
+        }
         viewModelScope.launch {
             try {
                 repository.checkHealth()
@@ -380,11 +441,33 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun refreshAll() {
+        if (!isNetworkAvailable() || repository.isOffline.value) {
+            val d = _destiny.value ?: repository.getOfflineDestinyFromLunar(_lunarDate.value, _isMale.value, effectiveUserName)
+            _destiny.value = d
+            if (_stats.value == null) {
+                _stats.value = repository.getOfflineStats(_selectedLottery.value)
+            }
+            if (_historyDraws.value.isEmpty()) {
+                _historyDraws.value = repository.getOfflineHistoryDraws(_selectedLottery.value, 50)
+            }
+            if (_recommendation.value == null) {
+                _recommendation.value = repository.getOfflineRecommendations(
+                    destiny = d,
+                    lotteryType = _selectedLottery.value,
+                    count = _betCount.value,
+                    strategy = _selectedStrategy.value,
+                    userName = effectiveUserName
+                )
+            }
+            _isLoading.value = false
+            return
+        }
+
         refreshJob?.cancel()
         refreshJob = viewModelScope.launch {
             _isLoading.value = true
             try {
-                withTimeout(8000L) {
+                withTimeout(3000L) {
                     repository.checkHealth()
                     val d = repository.getDestinyFromLunar(_lunarDate.value, _isMale.value, effectiveUserName)
                     _destiny.value = d
@@ -497,5 +580,56 @@ class LotteryViewModel(application: Application) : AndroidViewModel(application)
                 _isAiStreaming.value = false
             }
         }
+    }
+
+    fun saveCurrentTicket(item: RecommendationItem, index: Int = 0) {
+        val priInts = item.primaryNumbers.mapNotNull { it.toIntOrNull() }
+        val secInts = item.secondaryNumbers.mapNotNull { it.toIntOrNull() }
+        val ticket = SavedTicket(
+            lotteryType = _selectedLottery.value,
+            userName = effectiveUserName,
+            primaryNumbers = priInts,
+            secondaryNumbers = secInts,
+            strategy = _selectedStrategy.value,
+            rationale = item.scoreRationale
+        )
+        historyStore.saveTicket(ticket)
+        _savedTickets.value = historyStore.getAllTickets()
+        val label = if (index < 26) ('A' + index).toString() else "${index + 1}"
+        _toastMessage.value = "已收藏第 [$label] 注灵感号码"
+    }
+
+    fun saveAllCurrentTickets() {
+        val items = _recommendation.value?.recommendations ?: return
+        if (items.isEmpty()) return
+        val newTickets = items.map { item ->
+            SavedTicket(
+                lotteryType = _selectedLottery.value,
+                userName = effectiveUserName,
+                primaryNumbers = item.primaryNumbers.mapNotNull { it.toIntOrNull() },
+                secondaryNumbers = item.secondaryNumbers.mapNotNull { it.toIntOrNull() },
+                strategy = _selectedStrategy.value,
+                rationale = item.scoreRationale
+            )
+        }
+        historyStore.saveTickets(newTickets)
+        _savedTickets.value = historyStore.getAllTickets()
+        _toastMessage.value = "已将全部 ${newTickets.size} 注灵感号码保存至历史收藏"
+    }
+
+    fun deleteSavedTicket(id: String) {
+        historyStore.deleteTicket(id)
+        _savedTickets.value = historyStore.getAllTickets()
+        _toastMessage.value = "已删除历史记录"
+    }
+
+    fun clearAllSavedTickets() {
+        historyStore.clearAll()
+        _savedTickets.value = emptyList()
+        _toastMessage.value = "已清空所有历史灵感记录"
+    }
+
+    fun refreshSavedTickets() {
+        _savedTickets.value = historyStore.getAllTickets()
     }
 }

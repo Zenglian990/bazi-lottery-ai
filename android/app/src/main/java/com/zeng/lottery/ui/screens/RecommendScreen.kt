@@ -11,14 +11,19 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.BookmarkAdd
 import androidx.compose.material.icons.filled.Casino
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -31,7 +36,18 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import com.zeng.lottery.data.local.SavedTicket
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -65,12 +81,18 @@ fun RecommendScreen(
     onBetCountSelected: (Int) -> Unit = {},
     onReroll: () -> Unit,
     onOpenDivination: () -> Unit = {},
+    savedTickets: List<SavedTicket> = emptyList(),
+    onSaveTicket: (RecommendationItem, Int) -> Unit = { _, _ -> },
+    onSaveAllTickets: () -> Unit = {},
+    onDeleteSavedTicket: (String) -> Unit = {},
+    onClearAllSavedTickets: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
     val strategies = listOf("命理吉数优先", "稳健大数据", "冷热追号")
     val recommendations = recommendationResponse?.recommendations ?: emptyList()
+    var showHistoryDialog by remember { mutableStateOf(false) }
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -195,25 +217,49 @@ fun RecommendScreen(
                                         color = FortuneGold
                                     )
 
-                                    OutlinedButton(
-                                        onClick = {
-                                            val text = item.formattedTicket?.takeIf { it.isNotBlank() } ?: formatSingleBet(lotteryType, item, index)
-                                            clipboardManager.setText(AnnotatedString(text))
-                                            Toast.makeText(context, "已复制单注: $text", Toast.LENGTH_SHORT).show()
-                                        },
-                                        shape = RoundedCornerShape(8.dp),
-                                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 2.dp),
-                                        modifier = Modifier.height(28.dp),
-                                        colors = ButtonDefaults.outlinedButtonColors(contentColor = FortuneGold)
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Icon(
-                                            imageVector = Icons.Default.ContentCopy,
-                                            contentDescription = "单注复制",
-                                            modifier = Modifier.size(12.dp),
-                                            tint = FortuneGold
-                                        )
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text("单注复制", fontSize = 11.sp)
+                                        OutlinedButton(
+                                            onClick = {
+                                                onSaveTicket(item, index)
+                                            },
+                                            shape = RoundedCornerShape(8.dp),
+                                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                                            modifier = Modifier.height(28.dp),
+                                            colors = ButtonDefaults.outlinedButtonColors(contentColor = FortuneGold)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.BookmarkAdd,
+                                                contentDescription = "收藏单注",
+                                                modifier = Modifier.size(12.dp),
+                                                tint = FortuneGold
+                                            )
+                                            Spacer(modifier = Modifier.width(3.dp))
+                                            Text("收藏", fontSize = 11.sp)
+                                        }
+
+                                        OutlinedButton(
+                                            onClick = {
+                                                val text = item.formattedTicket?.takeIf { it.isNotBlank() } ?: formatSingleBet(lotteryType, item, index)
+                                                clipboardManager.setText(AnnotatedString(text))
+                                                Toast.makeText(context, "已复制单注: $text", Toast.LENGTH_SHORT).show()
+                                            },
+                                            shape = RoundedCornerShape(8.dp),
+                                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                                            modifier = Modifier.height(28.dp),
+                                            colors = ButtonDefaults.outlinedButtonColors(contentColor = FortuneGold)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.ContentCopy,
+                                                contentDescription = "单注复制",
+                                                modifier = Modifier.size(12.dp),
+                                                tint = FortuneGold
+                                            )
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Text("单注复制", fontSize = 11.sp)
+                                        }
                                     }
                                 }
 
@@ -335,7 +381,7 @@ fun RecommendScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Full Ticket Copy Button ("全票复制 (全部N注)")
+            // Full Ticket Copy Button & History Collection Actions
             if (recommendations.isNotEmpty()) {
                 OutlinedButton(
                     onClick = {
@@ -346,21 +392,96 @@ fun RecommendScreen(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(46.dp),
+                        .height(44.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = FortuneGold)
                 ) {
                     Icon(
                         imageVector = Icons.Default.ContentCopy,
                         contentDescription = "全票复制",
-                        modifier = Modifier.size(18.dp),
+                        modifier = Modifier.size(16.dp),
                         tint = FortuneGold
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "全票复制 (全部 ${recommendations.size} 注 · ¥${recommendations.size * 2})",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
+                        fontSize = 13.sp
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onSaveAllTickets,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(42.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = FortuneGold)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.BookmarkAdd,
+                            contentDescription = "收藏全票",
+                            modifier = Modifier.size(15.dp),
+                            tint = FortuneGold
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "收藏本组灵感",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+
+                    OutlinedButton(
+                        onClick = { showHistoryDialog = true },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(42.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = FortuneGold)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.History,
+                            contentDescription = "历史灵感记录",
+                            modifier = Modifier.size(15.dp),
+                            tint = FortuneGold
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "历史灵感 (${savedTickets.size})",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+            } else {
+                OutlinedButton(
+                    onClick = { showHistoryDialog = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(42.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = FortuneGold)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.History,
+                        contentDescription = "历史灵感记录",
+                        modifier = Modifier.size(16.dp),
+                        tint = FortuneGold
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "查看历史灵感记录 (${savedTickets.size})",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
 
@@ -443,6 +564,193 @@ fun RecommendScreen(
             )
         }
     }
+
+    if (showHistoryDialog) {
+        HistoryTicketsDialog(
+            savedTickets = savedTickets,
+            onDismiss = { showHistoryDialog = false },
+            onDeleteTicket = onDeleteSavedTicket,
+            onClearAll = onClearAllSavedTickets
+        )
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun HistoryTicketsDialog(
+    savedTickets: List<SavedTicket>,
+    onDismiss: () -> Unit,
+    onDeleteTicket: (String) -> Unit,
+    onClearAll: () -> Unit
+) {
+    val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
+    val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "缘主灵感收藏 (${savedTickets.size})",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = ImperialRed
+                )
+                if (savedTickets.isNotEmpty()) {
+                    TextButton(
+                        onClick = onClearAll,
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.DeleteOutline,
+                            contentDescription = "清空全部",
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(2.dp))
+                        Text("清空全部", fontSize = 11.sp)
+                    }
+                }
+            }
+        },
+        text = {
+            if (savedTickets.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "暂无保存的灵感记录，\n在机选推荐中点击“收藏”即可随时回顾！",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 420.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    savedTickets.forEachIndexed { idx, ticket ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
+                            )
+                        ) {
+                            Column(modifier = Modifier.padding(10.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "${idx + 1}. ${ticket.lotteryType.title}",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = ImperialRed
+                                        )
+                                        Text(
+                                            text = dateFormat.format(Date(ticket.timestamp)),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontSize = 10.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+
+                                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        IconButton(
+                                            onClick = {
+                                                val pri = ticket.primaryNumbers.joinToString(" ") { it.toString().padStart(2, '0') }
+                                                val sec = if (ticket.secondaryNumbers.isNotEmpty()) " + " + ticket.secondaryNumbers.joinToString(" ") { it.toString().padStart(2, '0') } else ""
+                                                val text = "${ticket.lotteryType.title}: $pri$sec"
+                                                clipboardManager.setText(AnnotatedString(text))
+                                                Toast.makeText(context, "已复制: $text", Toast.LENGTH_SHORT).show()
+                                            },
+                                            modifier = Modifier.size(24.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.ContentCopy,
+                                                contentDescription = "复制",
+                                                modifier = Modifier.size(14.dp),
+                                                tint = FortuneGold
+                                            )
+                                        }
+
+                                        IconButton(
+                                            onClick = { onDeleteTicket(ticket.id) },
+                                            modifier = Modifier.size(24.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.DeleteOutline,
+                                                contentDescription = "删除",
+                                                modifier = Modifier.size(14.dp),
+                                                tint = MaterialTheme.colorScheme.error
+                                            )
+                                        }
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(6.dp))
+
+                                // Number balls preview
+                                FlowRow(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.Start,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    ticket.primaryNumbers.forEach { num ->
+                                        val numStr = num.toString().padStart(2, '0')
+                                        val elem = BaziEngine.getHetuElementZh(num)
+                                        LotteryBall(
+                                            number = numStr,
+                                            colorType = BallColorType.RED,
+                                            wuxingElement = elem,
+                                            size = 28.dp
+                                        )
+                                    }
+
+                                    if (ticket.secondaryNumbers.isNotEmpty()) {
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        val secColor = if (ticket.lotteryType == LotteryType.QXC) BallColorType.GOLD else BallColorType.BLUE
+                                        ticket.secondaryNumbers.forEach { num ->
+                                            val numStr = num.toString().padStart(2, '0')
+                                            val elem = BaziEngine.getHetuElementZh(num)
+                                            LotteryBall(
+                                                number = numStr,
+                                                colorType = secColor,
+                                                wuxingElement = elem,
+                                                size = 28.dp
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("关闭", fontWeight = FontWeight.Bold, color = FortuneGold)
+            }
+        }
+    )
 }
 
 private fun formatSingleBet(

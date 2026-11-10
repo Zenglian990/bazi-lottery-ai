@@ -1,8 +1,11 @@
 package com.zeng.lottery.ui.screens
 
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Update
@@ -35,6 +39,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zeng.lottery.data.local.BaziEngine
@@ -61,6 +67,7 @@ fun BirthInputScreen(
     showTodayLiuRi: Boolean = true,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     var showDatePicker by remember { mutableStateOf(false) }
     var showShichenPicker by remember { mutableStateOf(false) }
 
@@ -128,7 +135,20 @@ fun BirthInputScreen(
                     )
 
                     OutlinedButton(
-                        onClick = onResetCurrentTime,
+                        onClick = {
+                            onResetCurrentTime()
+                            try {
+                                val now = LocalDateTime.now()
+                                val nowLunar = BaziEngine.solarToLunar(now)
+                                Toast.makeText(
+                                    context,
+                                    "已对齐当前农历：${nowLunar.year}年${nowLunar.monthZh}${nowLunar.dayZh} ${nowLunar.shichenZh}",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            } catch (e: Throwable) {
+                                // Fallback when running without Android UI context
+                            }
+                        },
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier.height(54.dp),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = FortuneGold)
@@ -150,65 +170,113 @@ fun BirthInputScreen(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Pure Lunar Date / Shichen / Gender Selector Buttons
-                Row(
+                // 1. Dedicated Full-Width Lunar Birth Date Selector (Row 1)
+                OutlinedButton(
+                    onClick = { showDatePicker = true },
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    shape = RoundedCornerShape(12.dp),
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
+                    )
                 ) {
-                    // Pure Lunar Date picker trigger button
-                    OutlinedButton(
-                        onClick = { showDatePicker = true },
-                        modifier = Modifier.weight(1.4f),
-                        shape = RoundedCornerShape(10.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.CalendarMonth,
-                            contentDescription = "选择农历日期",
-                            modifier = Modifier.size(14.dp),
-                            tint = FortuneGold
-                        )
-                        Spacer(modifier = Modifier.width(3.dp))
+                    Icon(
+                        imageVector = Icons.Default.CalendarMonth,
+                        contentDescription = "选择农历日期",
+                        modifier = Modifier.size(20.dp),
+                        tint = FortuneGold
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                text = "${lunarDate.year}年 (${lunarDate.ganzhiYear}${lunarDate.zodiac}年)",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f, fill = false)
+                            )
+                            Text(
+                                text = "农历",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = FortuneGold,
+                                modifier = Modifier
+                                    .background(FortuneGold.copy(alpha = 0.15f), RoundedCornerShape(4.dp))
+                                    .padding(horizontal = 4.dp, vertical = 1.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = lunarDate.displayButtonDate,
-                            style = MaterialTheme.typography.labelSmall,
-                            fontSize = 10.sp,
+                            text = "${lunarDate.monthZh}${lunarDate.dayZh}",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = ImperialRed,
                             maxLines = 1,
-                            fontWeight = FontWeight.SemiBold
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
+                    Icon(
+                        imageVector = Icons.Default.ChevronRight,
+                        contentDescription = "修改日期",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
 
-                    // 12 Shichen Picker trigger button
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // 2. Shichen & Gender Controls in Balanced 2-Column Row (Row 2)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // 12 Shichen Picker Button with Ample Breathing Room
                     OutlinedButton(
                         onClick = { showShichenPicker = true },
-                        modifier = Modifier.weight(0.9f),
-                        shape = RoundedCornerShape(10.dp)
+                        modifier = Modifier.weight(1.3f),
+                        shape = RoundedCornerShape(10.dp),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Schedule,
                             contentDescription = "十二时辰",
-                            modifier = Modifier.size(14.dp),
+                            modifier = Modifier.size(16.dp),
                             tint = FortuneGold
                         )
-                        Spacer(modifier = Modifier.width(2.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = "${lunarDate.shichenZh} (${BaziEngine.getShichenShortRange(lunarDate.hour)})",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontSize = 10.sp,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.SemiBold,
                             maxLines = 1,
-                            fontWeight = FontWeight.SemiBold
+                            overflow = TextOverflow.Ellipsis,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
 
-                    // Gender Chip
+                    // Gender Chip with Traditional Bazi Terminology (乾造 / 坤造)
                     FilterChip(
                         selected = isMale,
                         onClick = { onGenderChanged(!isMale) },
+                        modifier = Modifier.weight(0.9f),
+                        shape = RoundedCornerShape(10.dp),
                         label = {
                             Text(
-                                text = if (isMale) "乾(男)" else "坤(女)",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontSize = 11.sp
+                                text = if (isMale) "乾造(男)" else "坤造(女)",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         },
                         colors = FilterChipDefaults.filterChipColors(
