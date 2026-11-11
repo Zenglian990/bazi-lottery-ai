@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.google.gson.annotations.SerializedName
 import com.google.gson.reflect.TypeToken
 import com.zeng.lottery.data.model.LotteryType
 import java.util.UUID
@@ -13,13 +14,21 @@ import java.util.concurrent.ConcurrentHashMap
  * Saved lottery ticket entity representing a user's favorited or divined pick.
  */
 data class SavedTicket(
+    @SerializedName("id")
     val id: String = UUID.randomUUID().toString(),
+    @SerializedName("timestamp")
     val timestamp: Long = System.currentTimeMillis(),
+    @SerializedName("lotteryType")
     val lotteryType: LotteryType,
+    @SerializedName("userName")
     val userName: String = "缘主",
+    @SerializedName("primaryNumbers")
     val primaryNumbers: List<Int>,
+    @SerializedName("secondaryNumbers")
     val secondaryNumbers: List<Int> = emptyList(),
+    @SerializedName("strategy")
     val strategy: String = "命理吉数优先",
+    @SerializedName("rationale")
     val rationale: String = ""
 )
 
@@ -71,10 +80,14 @@ class UserPickHistoryStore(
     private val listType = object : TypeToken<List<SavedTicket>>() {}.type
 
     override fun getAllTickets(): List<SavedTicket> {
-        val json = if (prefs != null) {
-            prefs.getString(KEY_SAVED_TICKETS, null)
-        } else {
-            memoryStore[KEY_SAVED_TICKETS]
+        val json = try {
+            if (prefs != null) {
+                prefs.getString(KEY_SAVED_TICKETS, null)
+            } else {
+                memoryStore[KEY_SAVED_TICKETS]
+            }
+        } catch (e: Throwable) {
+            null
         }
 
         if (json.isNullOrBlank()) {
@@ -83,7 +96,7 @@ class UserPickHistoryStore(
 
         return try {
             val list: List<SavedTicket>? = gson.fromJson(json, listType)
-            list?.sortedByDescending { it.timestamp } ?: emptyList()
+            list?.filterNotNull()?.sortedByDescending { it.timestamp } ?: emptyList()
         } catch (e: Throwable) {
             emptyList()
         }
@@ -135,11 +148,15 @@ class UserPickHistoryStore(
     }
 
     private fun writeTickets(list: List<SavedTicket>) {
-        val json = gson.toJson(list)
-        if (prefs != null) {
-            prefs.edit().putString(KEY_SAVED_TICKETS, json).apply()
-        } else {
-            memoryStore[KEY_SAVED_TICKETS] = json
+        try {
+            val json = gson.toJson(list)
+            if (prefs != null) {
+                prefs.edit().putString(KEY_SAVED_TICKETS, json).apply()
+            } else {
+                memoryStore[KEY_SAVED_TICKETS] = json
+            }
+        } catch (e: Throwable) {
+            // Defensive swallow: prevent serialization errors from crashing callers
         }
     }
 }

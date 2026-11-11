@@ -21,7 +21,7 @@ import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.withTimeout
 
 class LotteryRepository(
-    private val context: Context,
+    private val context: Context? = null,
     private val apiService: LotteryApiService = ApiClient.apiService,
     private val offlineEngine: OfflineLotteryEngine = OfflineLotteryEngine(context)
 ) {

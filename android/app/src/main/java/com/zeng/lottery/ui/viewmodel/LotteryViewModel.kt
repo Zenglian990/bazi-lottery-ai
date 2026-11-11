@@ -31,13 +31,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import java.time.LocalDateTime
 
-class LotteryViewModel(
+class LotteryViewModel @JvmOverloads constructor(
     application: Application,
     private val preferencesManager: UserPreferencesManager = UserPreferencesManager(
-        try { application.applicationContext } catch (e: Throwable) { null }
+        try { application.applicationContext ?: application } catch (e: Throwable) { null }
     ),
     private val historyStore: UserPickHistoryStore = UserPickHistoryStore(
-        try { application.applicationContext } catch (e: Throwable) { null }
+        try { application.applicationContext ?: application } catch (e: Throwable) { null }
     )
 ) : AndroidViewModel(application) {
 
@@ -46,14 +46,21 @@ class LotteryViewModel(
         private const val KEY_SERVER_URL = "server_url"
     }
 
-    private val prefs: SharedPreferences? = try {
-        application.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    private val safeContext: Context? = try {
+        application.applicationContext ?: application
     } catch (e: Throwable) {
         null
     }
 
-    private val repository = LotteryRepository(application.applicationContext)
-    private val offlineEngine = OfflineLotteryEngine(application.applicationContext)
+    private val prefs: SharedPreferences? = try {
+        safeContext?.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            ?: application.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    } catch (e: Throwable) {
+        null
+    }
+
+    private val repository = LotteryRepository(safeContext)
+    private val offlineEngine = OfflineLotteryEngine(safeContext)
     private val aiDivinationManager = AiDivinationManager()
 
     private var divinationJob: Job? = null
@@ -111,7 +118,7 @@ class LotteryViewModel(
     private val _toastMessage = MutableStateFlow<String?>(null)
     val toastMessage: StateFlow<String?> = _toastMessage.asStateFlow()
 
-    private val _aiConfig = MutableStateFlow(KeyStoreManager.loadAiConfig(application.applicationContext))
+    private val _aiConfig = MutableStateFlow(KeyStoreManager.loadAiConfig(safeContext))
     val aiConfig: StateFlow<AiConfig> = _aiConfig.asStateFlow()
 
     private val _aiDivinationText = MutableStateFlow("")
@@ -133,7 +140,7 @@ class LotteryViewModel(
     val savedTickets: StateFlow<List<SavedTicket>> = _savedTickets.asStateFlow()
 
     private fun isNetworkAvailable(): Boolean {
-        val ctx = try { getApplication<Application>().applicationContext } catch (e: Throwable) { null }
+        val ctx = safeContext ?: try { getApplication<Application>()?.applicationContext ?: getApplication<Application>() } catch (e: Throwable) { null }
         if (ctx == null) return false
         return try {
             val cm = ctx.getSystemService(Context.CONNECTIVITY_SERVICE) as? android.net.ConnectivityManager
@@ -531,7 +538,8 @@ class LotteryViewModel(
 
     fun updateAiConfig(config: AiConfig) {
         try {
-            KeyStoreManager.saveAiConfig(getApplication<Application>().applicationContext, config)
+            val ctx = safeContext ?: try { getApplication<Application>()?.applicationContext ?: getApplication<Application>() } catch (e: Throwable) { null }
+            KeyStoreManager.saveAiConfig(ctx, config)
             _aiConfig.value = config
             _toastMessage.value = "AI 解盘配置已加密保存"
         } catch (e: Throwable) {
@@ -562,8 +570,9 @@ class LotteryViewModel(
 
         divinationJob = viewModelScope.launch {
             try {
+                val ctx = safeContext ?: try { getApplication<Application>()?.applicationContext ?: getApplication<Application>() } catch (e: Throwable) { null }
                 aiDivinationManager.streamDivination(
-                    context = getApplication<Application>().applicationContext,
+                    context = ctx,
                     lotteryType = currentLottery,
                     primaryNumbers = primary,
                     secondaryNumbers = secondary,
