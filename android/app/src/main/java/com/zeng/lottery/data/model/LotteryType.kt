@@ -69,7 +69,9 @@ enum class LotteryType(
 
     companion object {
         fun fromCode(code: String): LotteryType {
-            return entries.firstOrNull { it.code.equals(code, ignoreCase = true) } ?: SSQ
+            return entries.firstOrNull {
+                it.code.equals(code, ignoreCase = true) || it.name.equals(code, ignoreCase = true)
+            } ?: SSQ
         }
     }
 }

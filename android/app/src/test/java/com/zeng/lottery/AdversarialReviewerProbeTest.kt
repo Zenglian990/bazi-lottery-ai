@@ -17,6 +17,7 @@ import com.zeng.lottery.data.local.UserPickHistoryStore
 import com.zeng.lottery.data.local.UserPreferencesManager
 import com.zeng.lottery.data.model.LotteryType
 import com.zeng.lottery.data.model.LunarDate
+import com.zeng.lottery.data.model.BaziRecommendationResponse
 import com.zeng.lottery.data.model.RecommendationItem
 import com.zeng.lottery.ui.viewmodel.LotteryViewModel
 import kotlinx.coroutines.Dispatchers
@@ -175,7 +176,7 @@ class AdversarialReviewerProbeTest {
         val memory = ConcurrentHashMap<String, String>()
         val store = UserPickHistoryStore(context = null, inMemoryFallback = memory)
 
-        // Inject JSON array containing null elements, missing fields, corrupted missing lotteryType/primaryNumbers, and lowercase enum strings
+        // Inject JSON array containing null elements, missing fields, corrupted missing lotteryType/primaryNumbers, null elements inside lists, and lowercase enum strings
         val badJson = """
             [
                 null,
@@ -184,6 +185,9 @@ class AdversarialReviewerProbeTest {
                 {"id": "corrupt-no-primary", "lotteryType": "SSQ", "userName": "缺失红球", "timestamp": 1500},
                 {"id": "corrupt-no-type", "primaryNumbers": [1, 2, 3], "userName": "缺失彩种", "timestamp": 1600},
                 {"id": "valid-2", "lotteryType": "DLT", "userName": "李四", "primaryNumbers": [4, 5, 6], "timestamp": 2000},
+                {"id": "corrupt-null-in-primary", "lotteryType": "SSQ", "userName": "含null红球", "primaryNumbers": [1, null, 3], "secondaryNumbers": [null, 7], "timestamp": 2500},
+                {"id": "corrupt-all-null-primary", "lotteryType": "SSQ", "userName": "全空红球", "primaryNumbers": [null, null], "timestamp": 2600},
+                {"id": "corrupt-empty-primary", "lotteryType": "SSQ", "userName": "空列表红球", "primaryNumbers": [], "timestamp": 2700},
                 {"id": "legacy-ssq", "lotteryType": "ssq", "userName": "小写双色球", "primaryNumbers": [7, 8, 9, 10, 11, 12], "secondaryNumbers": [16], "timestamp": 3000},
                 {"id": "legacy-dlt", "lotteryType": "dlt", "userName": "小写大乐透", "primaryNumbers": [1, 2, 3, 4, 5], "secondaryNumbers": [6, 7], "timestamp": 4000}
             ]
@@ -191,16 +195,19 @@ class AdversarialReviewerProbeTest {
         memory[UserPickHistoryStore.KEY_SAVED_TICKETS] = badJson
 
         val tickets = store.getAllTickets()
-        assertEquals("Must filter out null elements and corrupt tickets (no type or no primary numbers)", 4, tickets.size)
+        assertEquals("Must filter out null elements, corrupt tickets, and empty-number tickets", 5, tickets.size)
         // Ordered newest first
         assertEquals("legacy-dlt", tickets[0].id)
         assertEquals(LotteryType.DLT, tickets[0].lotteryType)
         assertEquals("legacy-ssq", tickets[1].id)
         assertEquals(LotteryType.SSQ, tickets[1].lotteryType)
-        assertEquals("valid-2", tickets[2].id)
-        assertEquals(LotteryType.DLT, tickets[2].lotteryType)
-        assertEquals("valid-1", tickets[3].id)
-        assertEquals(LotteryType.SSQ, tickets[3].lotteryType)
+        assertEquals("corrupt-null-in-primary", tickets[2].id)
+        assertEquals(listOf(1, 3), tickets[2].primaryNumbers)
+        assertEquals(listOf(7), tickets[2].secondaryNumbers)
+        assertEquals("valid-2", tickets[3].id)
+        assertEquals(LotteryType.DLT, tickets[3].lotteryType)
+        assertEquals("valid-1", tickets[4].id)
+        assertEquals(LotteryType.SSQ, tickets[4].lotteryType)
     }
 
     @Test
@@ -349,4 +356,89 @@ class AdversarialReviewerProbeTest {
         executor.shutdown()
         assertTrue("Saved tickets must be non-empty after concurrent writes", vm.savedTickets.value.isNotEmpty())
     }
+
+    @Test
+    fun testFc3dNullSecondaryNumbersRecommendationSafety() {
+        val json = """
+            {
+                "bet_index": 1,
+                "primary_numbers": ["3", "5", "8"],
+                "secondary_numbers": null,
+                "formatted_ticket": "3 5 8",
+                "score_rationale": "福彩3D吉数"
+            }
+        """.trimIndent()
+        val item = Gson().fromJson(json, RecommendationItem::class.java)
+
+        val app = Application()
+        val vm = LotteryViewModel(app)
+        // Verify saving single ticket doesn't crash when secondary_numbers is null
+        vm.saveCurrentTicket(item, 0)
+        assertEquals(1, vm.savedTickets.value.size)
+        val saved = vm.savedTickets.value.first()
+        assertEquals(listOf(3, 5, 8), saved.primaryNumbers)
+        assertTrue(saved.secondaryNumbers.isEmpty())
+    }
+
+    @Test
+    fun testFc3dNullSecondaryNumbersBatchAndFullLifecycleSafety() {
+        val json = """
+            {
+                "lottery_type": "fc3d",
+                "strategy": "balanced",
+                "recommendations": [
+                    {
+                        "bet_index": 1,
+                        "primary_numbers": ["1", "2", "3"],
+                        "secondary_numbers": null,
+                        "score_rationale": "单注一"
+                    },
+                    {
+                        "bet_index": 2,
+                        "primary_numbers": ["4", "5", "6"],
+                        "secondary_numbers": null,
+                        "score_rationale": "单注二"
+                    }
+                ]
+            }
+        """.trimIndent()
+        val response = Gson().fromJson(json, BaziRecommendationResponse::class.java)
+
+        val app = Application()
+        val vm = LotteryViewModel(app)
+        // Inject response into recommendation StateFlow via reflection or direct call
+        val recField = LotteryViewModel::class.java.getDeclaredField("_recommendation")
+        recField.isAccessible = true
+        @Suppress("UNCHECKED_CAST")
+        (recField.get(vm) as kotlinx.coroutines.flow.MutableStateFlow<BaziRecommendationResponse?>).value = response
+
+        // Verify saveAllCurrentTickets works without NPE
+        vm.saveAllCurrentTickets()
+        assertEquals(2, vm.savedTickets.value.size)
+
+        // Verify startDivination works without NPE
+        vm.startDivination()
+        assertTrue(vm.isAiStreaming.value)
+        vm.cancelDivination()
+    }
+
+    @Test
+    fun testLotteryTypeFromCodeAndNameCompatibility() {
+        // Lowercase codes
+        assertEquals(LotteryType.SSQ, LotteryType.fromCode("ssq"))
+        assertEquals(LotteryType.DLT, LotteryType.fromCode("dlt"))
+        assertEquals(LotteryType.FC3D, LotteryType.fromCode("fc3d"))
+        assertEquals(LotteryType.QXC, LotteryType.fromCode("qxc"))
+
+        // Uppercase codes / Enum names
+        assertEquals(LotteryType.SSQ, LotteryType.fromCode("SSQ"))
+        assertEquals(LotteryType.DLT, LotteryType.fromCode("DLT"))
+        assertEquals(LotteryType.FC3D, LotteryType.fromCode("FC3D"))
+        assertEquals(LotteryType.QXC, LotteryType.fromCode("QXC"))
+
+        // Unknown code fallback to SSQ
+        assertEquals(LotteryType.SSQ, LotteryType.fromCode("UNKNOWN_LOTTERY"))
+    }
 }
+
+

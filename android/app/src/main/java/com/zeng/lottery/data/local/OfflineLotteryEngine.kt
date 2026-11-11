@@ -22,6 +22,7 @@ import kotlin.random.Random
 class OfflineLotteryEngine(private val context: Context? = null) {
 
     private val gson = Gson()
+    @Volatile
     private var cachedSeedMap: Map<String, List<DrawItem>>? = null
 
     /**
@@ -36,28 +37,32 @@ class OfflineLotteryEngine(private val context: Context? = null) {
 
     private fun getDrawsForType(lotteryType: LotteryType): List<DrawItem> {
         if (cachedSeedMap == null) {
-            if (context != null) {
-                try {
-                    context.assets.open("seed_lottery_data.json").use { stream ->
-                        val reader = InputStreamReader(stream)
-                        val type = object : TypeToken<Map<String, List<DrawItem>>>() {}.type
-                        cachedSeedMap = gson.fromJson(reader, type)
+            synchronized(this) {
+                if (cachedSeedMap == null) {
+                    if (context != null) {
+                        try {
+                            context.assets.open("seed_lottery_data.json").use { stream ->
+                                val reader = InputStreamReader(stream)
+                                val type = object : TypeToken<Map<String, List<DrawItem>>>() {}.type
+                                cachedSeedMap = gson.fromJson(reader, type)
+                            }
+                        } catch (e: Exception) {
+                            // Fall through to classloader
+                        }
                     }
-                } catch (e: Exception) {
-                    // Fall through to classloader
-                }
-            }
-            if (cachedSeedMap == null) {
-                try {
-                    val stream = OfflineLotteryEngine::class.java.classLoader?.getResourceAsStream("seed_lottery_data.json")
-                        ?: OfflineLotteryEngine::class.java.classLoader?.getResourceAsStream("assets/seed_lottery_data.json")
-                    stream?.use { s ->
-                        val reader = InputStreamReader(s)
-                        val type = object : TypeToken<Map<String, List<DrawItem>>>() {}.type
-                        cachedSeedMap = gson.fromJson(reader, type)
+                    if (cachedSeedMap == null) {
+                        try {
+                            val stream = OfflineLotteryEngine::class.java.classLoader?.getResourceAsStream("seed_lottery_data.json")
+                                ?: OfflineLotteryEngine::class.java.classLoader?.getResourceAsStream("assets/seed_lottery_data.json")
+                            stream?.use { s ->
+                                val reader = InputStreamReader(s)
+                                val type = object : TypeToken<Map<String, List<DrawItem>>>() {}.type
+                                cachedSeedMap = gson.fromJson(reader, type)
+                            }
+                        } catch (e: Exception) {
+                            // Return empty if fallback fails
+                        }
                     }
-                } catch (e: Exception) {
-                    // Return empty if fallback fails
                 }
             }
         }

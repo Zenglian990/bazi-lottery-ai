@@ -193,8 +193,8 @@ fun RecommendScreen(
                 ) {
                     recommendations.forEachIndexed { index, item ->
                         val ticketLabel = if (index < 26) ('A' + index).toString() else "${index + 1}"
-                        val primaryBalls = item.primaryNumbers
-                        val secondaryBalls = item.secondaryNumbers
+                        val primaryBalls = (item.primaryNumbers as? List<*>)?.mapNotNull { it?.toString() } ?: emptyList()
+                        val secondaryBalls = (item.secondaryNumbers as? List<*>)?.mapNotNull { it?.toString() } ?: emptyList()
 
                         Card(
                             modifier = Modifier.fillMaxWidth(),
@@ -673,10 +673,13 @@ private fun HistoryTicketsDialog(
                                     }
 
                                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        val priList = (ticket.primaryNumbers as? List<*>)?.mapNotNull { (it as? Number)?.toInt() ?: it?.toString()?.toIntOrNull() } ?: emptyList()
+                                        val secList = (ticket.secondaryNumbers as? List<*>)?.mapNotNull { (it as? Number)?.toInt() ?: it?.toString()?.toIntOrNull() } ?: emptyList()
+
                                         IconButton(
                                             onClick = {
-                                                val pri = ticket.primaryNumbers.joinToString(" ") { it.toString().padStart(2, '0') }
-                                                val sec = if (ticket.secondaryNumbers.isNotEmpty()) " + " + ticket.secondaryNumbers.joinToString(" ") { it.toString().padStart(2, '0') } else ""
+                                                val pri = priList.joinToString(" ") { it.toString().padStart(2, '0') }
+                                                val sec = if (secList.isNotEmpty()) " + " + secList.joinToString(" ") { it.toString().padStart(2, '0') } else ""
                                                 val text = "${ticket.lotteryType.title}: $pri$sec"
                                                 clipboardManager.setText(AnnotatedString(text))
                                                 Toast.makeText(context, "已复制: $text", Toast.LENGTH_SHORT).show()
@@ -713,7 +716,10 @@ private fun HistoryTicketsDialog(
                                     horizontalArrangement = Arrangement.Start,
                                     verticalArrangement = Arrangement.Center
                                 ) {
-                                    ticket.primaryNumbers.forEach { num ->
+                                    val priList = (ticket.primaryNumbers as? List<*>)?.mapNotNull { (it as? Number)?.toInt() ?: it?.toString()?.toIntOrNull() } ?: emptyList()
+                                    val secList = (ticket.secondaryNumbers as? List<*>)?.mapNotNull { (it as? Number)?.toInt() ?: it?.toString()?.toIntOrNull() } ?: emptyList()
+
+                                    priList.forEach { num ->
                                         val numStr = num.toString().padStart(2, '0')
                                         val elem = BaziEngine.getHetuElementZh(num)
                                         LotteryBall(
@@ -724,10 +730,10 @@ private fun HistoryTicketsDialog(
                                         )
                                     }
 
-                                    if (ticket.secondaryNumbers.isNotEmpty()) {
+                                    if (secList.isNotEmpty()) {
                                         Spacer(modifier = Modifier.width(4.dp))
                                         val secColor = if (ticket.lotteryType == LotteryType.QXC) BallColorType.GOLD else BallColorType.BLUE
-                                        ticket.secondaryNumbers.forEach { num ->
+                                        secList.forEach { num ->
                                             val numStr = num.toString().padStart(2, '0')
                                             val elem = BaziEngine.getHetuElementZh(num)
                                             LotteryBall(
@@ -759,8 +765,9 @@ private fun formatSingleBet(
     index: Int
 ): String {
     val label = if (index < 26) ('A' + index).toString() else "${index + 1}"
-    val pri = item.primaryNumbers.joinToString(" ")
-    val sec = if (item.secondaryNumbers.isNotEmpty()) " + " + item.secondaryNumbers.joinToString(" ") else ""
+    val pri = (item.primaryNumbers as? List<*>)?.mapNotNull { it?.toString() }?.joinToString(" ") ?: ""
+    val secList = (item.secondaryNumbers as? List<*>)?.mapNotNull { it?.toString() } ?: emptyList()
+    val sec = if (secList.isNotEmpty()) " + " + secList.joinToString(" ") else ""
     return "${lotteryType.title} [$label] $pri$sec"
 }
 
@@ -782,8 +789,9 @@ private fun buildFullTicketString(
     sb.appendLine("--------------------------------")
     items.forEachIndexed { idx, item ->
         val label = if (idx < 26) ('A' + idx).toString() else "${idx + 1}"
-        val pri = item.primaryNumbers.joinToString(" ")
-        val sec = if (item.secondaryNumbers.isNotEmpty()) " + " + item.secondaryNumbers.joinToString(" ") else ""
+        val pri = (item.primaryNumbers as? List<*>)?.mapNotNull { it?.toString() }?.joinToString(" ") ?: ""
+        val secList = (item.secondaryNumbers as? List<*>)?.mapNotNull { it?.toString() } ?: emptyList()
+        val sec = if (secList.isNotEmpty()) " + " + secList.joinToString(" ") else ""
         sb.appendLine("[$label] $pri$sec")
     }
     sb.appendLine("--------------------------------")

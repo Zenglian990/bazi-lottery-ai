@@ -572,8 +572,8 @@ class LotteryViewModel @JvmOverloads constructor(
         _isAiStreaming.value = true
 
         val rec = _recommendation.value?.recommendations?.firstOrNull()
-        val primary = rec?.primaryNumbers ?: emptyList()
-        val secondary = rec?.secondaryNumbers ?: emptyList()
+        val primary = (rec?.primaryNumbers as? List<*>)?.mapNotNull { it?.toString() } ?: emptyList()
+        val secondary = (rec?.secondaryNumbers as? List<*>)?.mapNotNull { it?.toString() } ?: emptyList()
         val currentDestiny = _destiny.value
         val dt = _birthDateTime.value
         val currentLottery = _selectedLottery.value
@@ -604,15 +604,15 @@ class LotteryViewModel @JvmOverloads constructor(
     }
 
     fun saveCurrentTicket(item: RecommendationItem, index: Int = 0) {
-        val priInts = item.primaryNumbers.mapNotNull { it.toIntOrNull() }
-        val secInts = item.secondaryNumbers.mapNotNull { it.toIntOrNull() }
+        val priInts = (item.primaryNumbers as? List<*>)?.mapNotNull { (it as? Number)?.toInt() ?: it?.toString()?.toIntOrNull() } ?: emptyList()
+        val secInts = (item.secondaryNumbers as? List<*>)?.mapNotNull { (it as? Number)?.toInt() ?: it?.toString()?.toIntOrNull() } ?: emptyList()
         val ticket = SavedTicket(
             lotteryType = _selectedLottery.value,
             userName = effectiveUserName,
             primaryNumbers = priInts,
             secondaryNumbers = secInts,
             strategy = _selectedStrategy.value,
-            rationale = item.scoreRationale
+            rationale = item.scoreRationale ?: ""
         )
         historyStore.saveTicket(ticket)
         _savedTickets.value = historyStore.getAllTickets()
@@ -623,19 +623,24 @@ class LotteryViewModel @JvmOverloads constructor(
     fun saveAllCurrentTickets() {
         val items = _recommendation.value?.recommendations ?: return
         if (items.isEmpty()) return
-        val newTickets = items.map { item ->
+        val newTickets = items.mapNotNull { item ->
+            val pri = (item.primaryNumbers as? List<*>)?.mapNotNull { (it as? Number)?.toInt() ?: it?.toString()?.toIntOrNull() } ?: emptyList()
+            if (pri.isEmpty()) return@mapNotNull null
+            val sec = (item.secondaryNumbers as? List<*>)?.mapNotNull { (it as? Number)?.toInt() ?: it?.toString()?.toIntOrNull() } ?: emptyList()
             SavedTicket(
                 lotteryType = _selectedLottery.value,
                 userName = effectiveUserName,
-                primaryNumbers = item.primaryNumbers.mapNotNull { it.toIntOrNull() },
-                secondaryNumbers = item.secondaryNumbers.mapNotNull { it.toIntOrNull() },
+                primaryNumbers = pri,
+                secondaryNumbers = sec,
                 strategy = _selectedStrategy.value,
-                rationale = item.scoreRationale
+                rationale = item.scoreRationale ?: ""
             )
         }
-        historyStore.saveTickets(newTickets)
-        _savedTickets.value = historyStore.getAllTickets()
-        _toastMessage.value = "已将全部 ${newTickets.size} 注灵感号码保存至历史收藏"
+        if (newTickets.isNotEmpty()) {
+            historyStore.saveTickets(newTickets)
+            _savedTickets.value = historyStore.getAllTickets()
+            _toastMessage.value = "已将全部 ${newTickets.size} 注灵感号码保存至历史收藏"
+        }
     }
 
     fun deleteSavedTicket(id: String) {

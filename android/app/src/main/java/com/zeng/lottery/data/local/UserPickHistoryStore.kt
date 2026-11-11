@@ -101,11 +101,15 @@ class UserPickHistoryStore(
                     @Suppress("SENSELESS_COMPARISON")
                     it.lotteryType != null && it.primaryNumbers != null
                 }
-                ?.map { ticket ->
+                ?.mapNotNull { ticket ->
+                    val pri = (ticket.primaryNumbers as? List<*>)?.mapNotNull { (it as? Number)?.toInt() ?: it?.toString()?.toIntOrNull() } ?: emptyList()
+                    if (pri.isEmpty()) return@mapNotNull null
+                    val sec = (ticket.secondaryNumbers as? List<*>)?.mapNotNull { (it as? Number)?.toInt() ?: it?.toString()?.toIntOrNull() } ?: emptyList()
                     ticket.copy(
                         id = ticket.id ?: UUID.randomUUID().toString(),
                         userName = ticket.userName ?: "缘主",
-                        secondaryNumbers = ticket.secondaryNumbers ?: emptyList(),
+                        primaryNumbers = pri,
+                        secondaryNumbers = sec,
                         strategy = ticket.strategy ?: "命理吉数优先",
                         rationale = ticket.rationale ?: ""
                     )
