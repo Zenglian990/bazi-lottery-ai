@@ -81,13 +81,13 @@ class UserPickHistoryStore(
 
     override fun getAllTickets(): List<SavedTicket> {
         val json = try {
-            if (prefs != null) {
-                prefs.getString(KEY_SAVED_TICKETS, null)
+            if (prefs != null && prefs.contains(KEY_SAVED_TICKETS)) {
+                prefs.getString(KEY_SAVED_TICKETS, null) ?: memoryStore[KEY_SAVED_TICKETS]
             } else {
                 memoryStore[KEY_SAVED_TICKETS]
             }
         } catch (e: Throwable) {
-            null
+            memoryStore[KEY_SAVED_TICKETS]
         }
 
         if (json.isNullOrBlank()) {
@@ -96,7 +96,21 @@ class UserPickHistoryStore(
 
         return try {
             val list: List<SavedTicket>? = gson.fromJson(json, listType)
-            list?.filterNotNull()?.sortedByDescending { it.timestamp } ?: emptyList()
+            list?.filterNotNull()
+                ?.filter {
+                    @Suppress("SENSELESS_COMPARISON")
+                    it.lotteryType != null && it.primaryNumbers != null
+                }
+                ?.map { ticket ->
+                    ticket.copy(
+                        id = ticket.id ?: UUID.randomUUID().toString(),
+                        userName = ticket.userName ?: "缘主",
+                        secondaryNumbers = ticket.secondaryNumbers ?: emptyList(),
+                        strategy = ticket.strategy ?: "命理吉数优先",
+                        rationale = ticket.rationale ?: ""
+                    )
+                }
+                ?.sortedByDescending { it.timestamp } ?: emptyList()
         } catch (e: Throwable) {
             emptyList()
         }
@@ -136,8 +150,10 @@ class UserPickHistoryStore(
 
     override fun clearAll() {
         synchronized(this) {
-            if (prefs != null) {
-                prefs.edit().remove(KEY_SAVED_TICKETS).apply()
+            try {
+                prefs?.edit()?.remove(KEY_SAVED_TICKETS)?.apply()
+            } catch (e: Throwable) {
+                // Defensive swallow
             }
             memoryStore.remove(KEY_SAVED_TICKETS)
         }
@@ -150,11 +166,12 @@ class UserPickHistoryStore(
     private fun writeTickets(list: List<SavedTicket>) {
         try {
             val json = gson.toJson(list)
-            if (prefs != null) {
-                prefs.edit().putString(KEY_SAVED_TICKETS, json).apply()
-            } else {
-                memoryStore[KEY_SAVED_TICKETS] = json
+            try {
+                prefs?.edit()?.putString(KEY_SAVED_TICKETS, json)?.apply()
+            } catch (e: Throwable) {
+                // Defensive swallow
             }
+            memoryStore[KEY_SAVED_TICKETS] = json
         } catch (e: Throwable) {
             // Defensive swallow: prevent serialization errors from crashing callers
         }

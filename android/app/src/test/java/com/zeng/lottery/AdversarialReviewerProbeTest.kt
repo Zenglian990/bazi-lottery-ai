@@ -2,12 +2,14 @@ package com.zeng.lottery
 
 import android.app.Application
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.lifecycle.AndroidViewModel
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.zeng.lottery.ai.AiConfig
 import com.zeng.lottery.ai.AiProvider
 import com.zeng.lottery.ai.KeyStoreManager
+import com.zeng.lottery.data.api.ApiClient
 import com.zeng.lottery.data.local.BaziEngine
 import com.zeng.lottery.data.local.OfflineLotteryEngine
 import com.zeng.lottery.data.local.SavedTicket
@@ -60,6 +62,52 @@ class AdversarialReviewerProbeTest {
         override fun getApplicationContext(): Context? {
             return null
         }
+    }
+
+    class ThrowingSharedPreferences : SharedPreferences {
+        override fun getAll(): MutableMap<String, *> = mutableMapOf<String, Any>()
+        override fun getString(key: String?, defValue: String?): String? = defValue
+        override fun getStringSet(key: String?, defValues: MutableSet<String>?): MutableSet<String>? = defValues
+        override fun getInt(key: String?, defValue: Int): Int = defValue
+        override fun getLong(key: String?, defValue: Long): Long = defValue
+        override fun getFloat(key: String?, defValue: Float): Float = defValue
+        override fun getBoolean(key: String?, defValue: Boolean): Boolean = defValue
+        override fun contains(key: String?): Boolean = false
+        override fun edit(): SharedPreferences.Editor = throw RuntimeException("Simulated SQLite/disk error on edit()")
+        override fun registerOnSharedPreferenceChangeListener(listener: SharedPreferences.OnSharedPreferenceChangeListener?) {}
+        override fun unregisterOnSharedPreferenceChangeListener(listener: SharedPreferences.OnSharedPreferenceChangeListener?) {}
+    }
+
+    class ThrowingEditorSharedPreferences : SharedPreferences {
+        override fun getAll(): MutableMap<String, *> = mutableMapOf<String, Any>()
+        override fun getString(key: String?, defValue: String?): String? = defValue
+        override fun getStringSet(key: String?, defValues: MutableSet<String>?): MutableSet<String>? = defValues
+        override fun getInt(key: String?, defValue: Int): Int = defValue
+        override fun getLong(key: String?, defValue: Long): Long = defValue
+        override fun getFloat(key: String?, defValue: Float): Float = defValue
+        override fun getBoolean(key: String?, defValue: Boolean): Boolean = defValue
+        override fun contains(key: String?): Boolean = false
+        override fun edit(): SharedPreferences.Editor = ThrowingEditor()
+        override fun registerOnSharedPreferenceChangeListener(listener: SharedPreferences.OnSharedPreferenceChangeListener?) {}
+        override fun unregisterOnSharedPreferenceChangeListener(listener: SharedPreferences.OnSharedPreferenceChangeListener?) {}
+    }
+
+    class ThrowingEditor : SharedPreferences.Editor {
+        override fun putString(key: String?, value: String?): SharedPreferences.Editor = this
+        override fun putStringSet(key: String?, values: MutableSet<String>?): SharedPreferences.Editor = this
+        override fun putInt(key: String?, value: Int): SharedPreferences.Editor = this
+        override fun putLong(key: String?, value: Long): SharedPreferences.Editor = this
+        override fun putFloat(key: String?, value: Float): SharedPreferences.Editor = this
+        override fun putBoolean(key: String?, value: Boolean): SharedPreferences.Editor = this
+        override fun remove(key: String?): SharedPreferences.Editor = this
+        override fun clear(): SharedPreferences.Editor = this
+        override fun commit(): Boolean = throw RuntimeException("Simulated disk full commit failure")
+        override fun apply() = throw RuntimeException("Simulated disk full apply failure")
+    }
+
+    class ThrowingPrefsApplication(private val prefs: SharedPreferences) : Application() {
+        override fun getSharedPreferences(name: String?, mode: Int): SharedPreferences = prefs
+        override fun getApplicationContext(): Context = this
     }
 
     @Before
@@ -127,21 +175,69 @@ class AdversarialReviewerProbeTest {
         val memory = ConcurrentHashMap<String, String>()
         val store = UserPickHistoryStore(context = null, inMemoryFallback = memory)
 
-        // Inject JSON array containing null elements, missing fields, and bad values
+        // Inject JSON array containing null elements, missing fields, corrupted missing lotteryType/primaryNumbers, and lowercase enum strings
         val badJson = """
             [
                 null,
                 {"id": "valid-1", "lotteryType": "SSQ", "userName": "张三", "primaryNumbers": [1, 2, 3], "timestamp": 1000},
                 null,
-                {"id": "valid-2", "lotteryType": "DLT", "userName": "李四", "primaryNumbers": [4, 5, 6], "timestamp": 2000}
+                {"id": "corrupt-no-primary", "lotteryType": "SSQ", "userName": "缺失红球", "timestamp": 1500},
+                {"id": "corrupt-no-type", "primaryNumbers": [1, 2, 3], "userName": "缺失彩种", "timestamp": 1600},
+                {"id": "valid-2", "lotteryType": "DLT", "userName": "李四", "primaryNumbers": [4, 5, 6], "timestamp": 2000},
+                {"id": "legacy-ssq", "lotteryType": "ssq", "userName": "小写双色球", "primaryNumbers": [7, 8, 9, 10, 11, 12], "secondaryNumbers": [16], "timestamp": 3000},
+                {"id": "legacy-dlt", "lotteryType": "dlt", "userName": "小写大乐透", "primaryNumbers": [1, 2, 3, 4, 5], "secondaryNumbers": [6, 7], "timestamp": 4000}
             ]
         """.trimIndent()
         memory[UserPickHistoryStore.KEY_SAVED_TICKETS] = badJson
 
         val tickets = store.getAllTickets()
-        assertEquals("Must filter out null elements without crashing", 2, tickets.size)
-        assertEquals("valid-2", tickets[0].id)
-        assertEquals("valid-1", tickets[1].id)
+        assertEquals("Must filter out null elements and corrupt tickets (no type or no primary numbers)", 4, tickets.size)
+        // Ordered newest first
+        assertEquals("legacy-dlt", tickets[0].id)
+        assertEquals(LotteryType.DLT, tickets[0].lotteryType)
+        assertEquals("legacy-ssq", tickets[1].id)
+        assertEquals(LotteryType.SSQ, tickets[1].lotteryType)
+        assertEquals("valid-2", tickets[2].id)
+        assertEquals(LotteryType.DLT, tickets[2].lotteryType)
+        assertEquals("valid-1", tickets[3].id)
+        assertEquals(LotteryType.SSQ, tickets[3].lotteryType)
+    }
+
+    @Test
+    fun testThrowingSharedPreferencesStartupAndSaveSafety() {
+        val throwingPrefs = ThrowingSharedPreferences()
+        val throwingApp = ThrowingPrefsApplication(throwingPrefs)
+
+        // 1. Verify ViewModel reflection instantiation does not crash when prefs.edit() throws on startup URL migration
+        val constructor = LotteryViewModel::class.java.getConstructor(Application::class.java)
+        val vm = constructor.newInstance(throwingApp)
+        assertNotNull("ViewModel must survive throwing SharedPreferences during cold start", vm)
+        assertEquals(ApiClient.PRODUCTION_CLOUD_URL, vm.serverUrl.value)
+
+        // 2. Verify UserPreferencesManager handles throwing SharedPreferences on save without crashing
+        val memory = ConcurrentHashMap<String, Any>()
+        val prefsManager = UserPreferencesManager(context = throwingApp, inMemoryFallback = memory)
+        prefsManager.saveUserName("曾仙人")
+        assertEquals("曾仙人", prefsManager.getUserName())
+        prefsManager.saveBetCount(8)
+        assertEquals(8, prefsManager.getBetCount())
+        prefsManager.saveGender(false)
+        assertFalse(prefsManager.getGender())
+
+        // 3. Verify UserPickHistoryStore handles throwing SharedPreferences on save without crashing
+        val historyMemory = ConcurrentHashMap<String, String>()
+        val historyStore = UserPickHistoryStore(context = throwingApp, inMemoryFallback = historyMemory)
+        val testTicket = SavedTicket(
+            id = "resilience-ticket",
+            lotteryType = LotteryType.SSQ,
+            primaryNumbers = listOf(1, 2, 3, 4, 5, 6),
+            secondaryNumbers = listOf(7)
+        )
+        historyStore.saveTicket(testTicket)
+        assertEquals(1, historyStore.getTicketCount())
+        assertEquals("resilience-ticket", historyStore.getAllTickets().first().id)
+        historyStore.clearAll()
+        assertEquals(0, historyStore.getTicketCount())
     }
 
     @Test

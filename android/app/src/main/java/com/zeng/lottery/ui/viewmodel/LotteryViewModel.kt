@@ -157,14 +157,22 @@ class LotteryViewModel @JvmOverloads constructor(
         _savedTickets.value = historyStore.getAllTickets()
 
         // Automatic migration away from legacy 10.0.2.2 emulator loopback to official Cloud Run
-        val savedUrl = prefs?.getString(KEY_SERVER_URL, null)
+        val savedUrl = try {
+            prefs?.getString(KEY_SERVER_URL, null)
+        } catch (e: Throwable) {
+            null
+        }
         val initialUrl = if (savedUrl.isNullOrBlank() || savedUrl.contains("10.0.2.2")) {
             ApiClient.PRODUCTION_CLOUD_URL
         } else {
             savedUrl
         }
         ApiClient.setBaseUrl(initialUrl)
-        prefs?.edit()?.putString(KEY_SERVER_URL, initialUrl)?.apply()
+        try {
+            prefs?.edit()?.putString(KEY_SERVER_URL, initialUrl)?.apply()
+        } catch (e: Throwable) {
+            // Defensive swallow: never crash cold start on SharedPreferences write issues
+        }
         _serverUrl.value = ApiClient.getBaseUrl()
 
         // Eagerly prime UI within 5ms from offline engine to prevent any 0-draw or blank card states
@@ -187,7 +195,11 @@ class LotteryViewModel @JvmOverloads constructor(
     fun setUserName(name: String) {
         _userName.value = name
         preferencesManager.saveUserName(name)
-        prefs?.edit()?.putString("user_name", name)?.apply()
+        try {
+            prefs?.edit()?.putString("user_name", name)?.apply()
+        } catch (e: Throwable) {
+            // Defensive swallow
+        }
     }
 
     fun setBetCount(count: Int) {

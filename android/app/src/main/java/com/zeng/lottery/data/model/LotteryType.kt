@@ -1,5 +1,7 @@
 package com.zeng.lottery.data.model
 
+import com.google.gson.annotations.SerializedName
+
 /**
  * Supported lottery types with rules and range specifications.
  */
@@ -14,6 +16,7 @@ enum class LotteryType(
     val primaryAllowDuplicate: Boolean = false,
     val secondaryAllowDuplicate: Boolean = false
 ) {
+    @SerializedName("SSQ", alternate = ["ssq"])
     SSQ(
         code = "ssq",
         title = "双色球",
@@ -25,6 +28,7 @@ enum class LotteryType(
         primaryAllowDuplicate = false,
         secondaryAllowDuplicate = false
     ),
+    @SerializedName("DLT", alternate = ["dlt"])
     DLT(
         code = "dlt",
         title = "大乐透",
@@ -36,6 +40,7 @@ enum class LotteryType(
         primaryAllowDuplicate = false,
         secondaryAllowDuplicate = false
     ),
+    @SerializedName("FC3D", alternate = ["fc3d"])
     FC3D(
         code = "fc3d",
         title = "福彩3D",
@@ -47,6 +52,7 @@ enum class LotteryType(
         primaryAllowDuplicate = true,
         secondaryAllowDuplicate = false
     ),
+    @SerializedName("QXC", alternate = ["qxc"])
     QXC(
         code = "qxc",
         title = "七星彩",
