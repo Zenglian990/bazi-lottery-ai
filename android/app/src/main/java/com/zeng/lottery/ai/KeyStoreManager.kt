@@ -332,7 +332,7 @@ object KeyStoreManager {
                 val providerStr = prefs.getString("provider", AiProvider.BACKEND_RELAY.name) ?: AiProvider.BACKEND_RELAY.name
                 val encDeepSeek = prefs.getString("deepseek_key", "") ?: ""
                 val deepseekBaseUrl = prefs.getString("deepseek_base_url", "https://api.deepseek.com/v1") ?: "https://api.deepseek.com/v1"
-                val deepseekModel = prefs.getString("deepseek_model", "deepseek-flash") ?: "deepseek-flash"
+                val deepseekModel = prefs.getString("deepseek_model", "deepseek-chat") ?: "deepseek-chat"
                 val encGemini = prefs.getString("gemini_key", "") ?: ""
                 val geminiModel = prefs.getString("gemini_model", "gemini-3.8-flash") ?: "gemini-3.8-flash"
                 val encOpenAi = prefs.getString("openai_key", "") ?: ""
@@ -354,7 +354,7 @@ object KeyStoreManager {
                 val providerStr = jvmTestPrefs["provider"] ?: AiProvider.BACKEND_RELAY.name
                 val encDeepSeek = jvmTestPrefs["deepseek_key"] ?: ""
                 val deepseekBaseUrl = jvmTestPrefs["deepseek_base_url"] ?: "https://api.deepseek.com/v1"
-                val deepseekModel = jvmTestPrefs["deepseek_model"] ?: "deepseek-flash"
+                val deepseekModel = jvmTestPrefs["deepseek_model"] ?: "deepseek-chat"
                 val encGemini = jvmTestPrefs["gemini_key"] ?: ""
                 val geminiModel = jvmTestPrefs["gemini_model"] ?: "gemini-3.8-flash"
                 val encOpenAi = jvmTestPrefs["openai_key"] ?: ""

@@ -11,7 +11,7 @@ SEEDS_DIR = DB_DIR / "seeds"
 
 class Settings:
     PROJECT_NAME: str = "曾练彩票助手 - 易道乾坤与大数据分析中枢"
-    VERSION: str = "1.3.5"
+    VERSION: str = "1.3.6"
     API_V1_PREFIX: str = "/api"
 
     # Database settings
@@ -36,7 +36,7 @@ class Settings:
     # AI LLM Provider Configuration
     DEEPSEEK_API_KEY: str = os.getenv("DEEPSEEK_API_KEY", "")
     DEEPSEEK_BASE_URL: str = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1")
-    DEEPSEEK_MODEL: str = os.getenv("DEEPSEEK_MODEL", "deepseek-flash")
+    DEEPSEEK_MODEL: str = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")

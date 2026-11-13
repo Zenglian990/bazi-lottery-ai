@@ -28,9 +28,9 @@ class AiDivinationManager(
     companion object {
         fun defaultClient(): OkHttpClient {
             return OkHttpClient.Builder()
-                .connectTimeout(15, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
-                .writeTimeout(15, TimeUnit.SECONDS)
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(90, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
                 .build()
         }
     }
@@ -62,7 +62,7 @@ class AiDivinationManager(
                         userPrompt = userPrompt,
                         apiKey = config.deepseekApiKey,
                         baseUrl = config.deepseekBaseUrl.ifBlank { "https://api.deepseek.com/v1" },
-                        model = config.deepseekModel.ifBlank { "deepseek-flash" }
+                        model = config.deepseekModel.ifBlank { "deepseek-chat" }
                     ).catch {
                         emitAllFallback(lotteryType, primaryNumbers, secondaryNumbers, destiny, userName)
                     }

@@ -163,9 +163,9 @@ class AiClientTest {
 
         // Test Default Model Names in AiConfig
         val defaultConfig = AiConfig()
-        assertEquals("deepseek-flash", defaultConfig.deepseekModel)
+        assertEquals("deepseek-chat", defaultConfig.deepseekModel)
         assertEquals("gemini-3.8-flash", defaultConfig.geminiModel)
-        assertEquals(AiProvider.DIRECT_DEEPSEEK.defaultModel, "deepseek-flash")
+        assertEquals(AiProvider.DIRECT_DEEPSEEK.defaultModel, "deepseek-chat")
         assertEquals(AiProvider.DIRECT_GEMINI.defaultModel, "gemini-3.8-flash")
 
         // Test Config Save & Load with JVM Fallback
@@ -173,7 +173,7 @@ class AiClientTest {
             provider = AiProvider.DIRECT_DEEPSEEK,
             deepseekApiKey = "sk-deepseek-test-9999",
             deepseekBaseUrl = "https://api.deepseek.com/v1",
-            deepseekModel = "deepseek-flash",
+            deepseekModel = "deepseek-chat",
             geminiApiKey = "AIzaSyTestKey9999",
             geminiModel = "gemini-3.8-flash",
             openaiApiKey = "sk-test-openai-key-8888",
@@ -186,7 +186,7 @@ class AiClientTest {
         assertEquals(AiProvider.DIRECT_DEEPSEEK, loaded.provider)
         assertEquals("sk-deepseek-test-9999", loaded.deepseekApiKey)
         assertEquals("https://api.deepseek.com/v1", loaded.deepseekBaseUrl)
-        assertEquals("deepseek-flash", loaded.deepseekModel)
+        assertEquals("deepseek-chat", loaded.deepseekModel)
         assertEquals("AIzaSyTestKey9999", loaded.geminiApiKey)
         assertEquals("gemini-3.8-flash", loaded.geminiModel)
         assertEquals("sk-test-openai-key-8888", loaded.openaiApiKey)

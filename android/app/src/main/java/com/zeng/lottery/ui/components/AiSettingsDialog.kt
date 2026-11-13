@@ -72,7 +72,7 @@ fun AiSettingsDialog(
     var selectedProvider by remember { mutableStateOf(currentConfig.provider) }
     var deepseekKey by remember { mutableStateOf(currentConfig.deepseekApiKey ?: "") }
     var deepseekBaseUrl by remember { mutableStateOf(currentConfig.deepseekBaseUrl ?: "https://api.deepseek.com/v1") }
-    var deepseekModel by remember { mutableStateOf(currentConfig.deepseekModel ?: "deepseek-flash") }
+    var deepseekModel by remember { mutableStateOf(currentConfig.deepseekModel ?: "deepseek-chat") }
 
     var geminiKey by remember { mutableStateOf(currentConfig.geminiApiKey ?: "") }
     var geminiModel by remember { mutableStateOf(currentConfig.geminiModel ?: "gemini-3.8-flash") }
@@ -266,8 +266,8 @@ fun AiSettingsDialog(
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             val deepseekModels = listOf(
-                                Pair("deepseek-flash (极速/思考/1M)", "deepseek-flash"),
-                                Pair("deepseek-v4-pro (旗舰深度推理/1M)", "deepseek-v4-pro")
+                                Pair("deepseek-chat (官方推荐 · V3极速)", "deepseek-chat"),
+                                Pair("deepseek-reasoner (深度推理 · R1)", "deepseek-reasoner")
                             )
                             deepseekModels.forEach { (label, modelCode) ->
                                 SuggestionChip(
@@ -291,7 +291,7 @@ fun AiSettingsDialog(
                                 try { deepseekModel = input } catch (_: Throwable) {}
                             },
                             label = { Text("Model Name") },
-                            placeholder = { Text("deepseek-flash") },
+                            placeholder = { Text("deepseek-chat") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
@@ -501,7 +501,7 @@ fun AiSettingsDialog(
                                 try { openaiModel = input } catch (_: Throwable) {}
                             },
                             label = { Text("Model Name") },
-                            placeholder = { Text("gpt-4o-mini / deepseek-flash") },
+                            placeholder = { Text("gpt-4o-mini / deepseek-chat") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
@@ -520,7 +520,7 @@ fun AiSettingsDialog(
                     try {
                         val cleanDeepseekKey = (deepseekKey ?: "").trim().replace("\r", "").replace("\n", "")
                         val cleanDeepseekUrl = (deepseekBaseUrl ?: "").trim().replace("\r", "").replace("\n", "").ifBlank { "https://api.deepseek.com/v1" }
-                        val cleanDeepseekModel = (deepseekModel ?: "").trim().replace("\r", "").replace("\n", "").ifBlank { "deepseek-flash" }
+                        val cleanDeepseekModel = (deepseekModel ?: "").trim().replace("\r", "").replace("\n", "").ifBlank { "deepseek-chat" }
 
                         val cleanGeminiKey = (geminiKey ?: "").trim().replace("\r", "").replace("\n", "")
                         val cleanGeminiModel = (geminiModel ?: "").trim().replace("\r", "").replace("\n", "").ifBlank { "gemini-3.8-flash" }

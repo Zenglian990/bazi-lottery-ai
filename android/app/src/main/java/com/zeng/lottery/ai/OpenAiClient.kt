@@ -68,7 +68,7 @@ class OpenAiClient(private val okHttpClient: OkHttpClient) {
             addProperty("model", targetModel)
             addProperty("stream", true)
             addProperty("temperature", 0.7)
-            addProperty("max_tokens", 1024)
+            addProperty("max_tokens", 4096)
 
             val messagesArray = JsonArray()
             messagesArray.add(JsonObject().apply {

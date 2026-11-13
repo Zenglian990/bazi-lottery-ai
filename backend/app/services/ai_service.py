@@ -353,11 +353,11 @@ async def _call_gemini_api(
         ],
         "generationConfig": {
             "temperature": 0.7,
-            "maxOutputTokens": 1024,
+            "maxOutputTokens": 4096,
         },
     }
 
-    async with httpx.AsyncClient(timeout=15.0) as client:
+    async with httpx.AsyncClient(timeout=60.0) as client:
         resp = await client.post(url, json=payload)
         resp.raise_for_status()
         data = resp.json()
@@ -392,14 +392,14 @@ async def _call_openai_api(
             {"role": "user", "content": user_text},
         ],
         "temperature": 0.7,
-        "max_tokens": 1024,
+        "max_tokens": 4096,
     }
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
     }
 
-    async with httpx.AsyncClient(timeout=15.0) as client:
+    async with httpx.AsyncClient(timeout=90.0) as client:
         resp = await client.post(endpoint, json=payload, headers=headers)
         resp.raise_for_status()
         data = resp.json()
@@ -436,7 +436,7 @@ async def generate_divination_text(request: BaziDivinationRequest) -> Dict[str, 
 
     if provider in ("deepseek", "auto") and deepseek_key:
         try:
-            target_model = model or settings.DEEPSEEK_MODEL or "deepseek-flash"
+            target_model = model or settings.DEEPSEEK_MODEL or "deepseek-chat"
             text = await _call_openai_api(request, deepseek_key, deepseek_base, target_model)
             compliant_text = _ensure_disclaimer_compliance(text)
             return {"text": compliant_text, "provider": "deepseek", "model": target_model}
@@ -499,7 +499,7 @@ async def stream_divination_chunks(request: BaziDivinationRequest) -> AsyncGener
     if provider in ("deepseek", "auto") and deepseek_key:
         clean_base = deepseek_base.rstrip("/")
         endpoint = f"{clean_base}/v1/chat/completions" if not clean_base.endswith("/v1") else f"{clean_base}/chat/completions"
-        target_model = request.model or settings.DEEPSEEK_MODEL or "deepseek-flash"
+        target_model = request.model or settings.DEEPSEEK_MODEL or "deepseek-chat"
         payload = {
             "model": target_model,
             "messages": [
@@ -508,7 +508,7 @@ async def stream_divination_chunks(request: BaziDivinationRequest) -> AsyncGener
             ],
             "stream": True,
             "temperature": 0.7,
-            "max_tokens": 1024,
+            "max_tokens": 4096,
         }
         headers = {
             "Authorization": f"Bearer {deepseek_key}",
@@ -516,7 +516,7 @@ async def stream_divination_chunks(request: BaziDivinationRequest) -> AsyncGener
             "Accept": "text/event-stream",
         }
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
+            async with httpx.AsyncClient(timeout=90.0) as client:
                 async with client.stream("POST", endpoint, json=payload, headers=headers) as response:
                     if response.status_code == 200:
                         emitted_any = False
@@ -549,10 +549,10 @@ async def stream_divination_chunks(request: BaziDivinationRequest) -> AsyncGener
         user_text = build_user_prompt(request)
         payload = {
             "contents": [{"parts": [{"text": f"{system_text}\n\n{user_text}"}]}],
-            "generationConfig": {"temperature": 0.7, "maxOutputTokens": 1024},
+            "generationConfig": {"temperature": 0.7, "maxOutputTokens": 4096},
         }
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
+            async with httpx.AsyncClient(timeout=60.0) as client:
                 async with client.stream("POST", url, json=payload) as response:
                     if response.status_code == 200:
                         emitted_any = False
@@ -589,7 +589,7 @@ async def stream_divination_chunks(request: BaziDivinationRequest) -> AsyncGener
             ],
             "stream": True,
             "temperature": 0.7,
-            "max_tokens": 1024,
+            "max_tokens": 4096,
         }
         headers = {
             "Authorization": f"Bearer {openai_key}",
@@ -597,7 +597,7 @@ async def stream_divination_chunks(request: BaziDivinationRequest) -> AsyncGener
             "Accept": "text/event-stream",
         }
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
+            async with httpx.AsyncClient(timeout=90.0) as client:
                 async with client.stream("POST", endpoint, json=payload, headers=headers) as response:
                     if response.status_code == 200:
                         emitted_any = False
