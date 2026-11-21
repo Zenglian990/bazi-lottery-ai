@@ -1,5 +1,4 @@
 .gcloudignore
-.gcloudignore
 .git
 .gitignore
 .github/
@@ -11,7 +10,9 @@ __pycache__/
 *.pyo
 android/
 release/
-data/
+/data/
+!backend/app/data/
+!backend/app/data/classics_corpus.json
 tests_e2e/
 backend/tests/
 .gradle/
