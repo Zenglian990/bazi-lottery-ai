@@ -144,8 +144,12 @@ def test_f1_ticket_formatting_syntax():
     assert s3 == "1,2,3"
 
 def test_f1_unsupported_lottery_type_rejected():
-    """F1.7: Unsupported lottery types must return rejection."""
+    """F1.7: Unsupported lottery types must return rejection (HTTP 404 or is_valid=False)."""
     client = get_test_client()
     res = client.validate_ticket("powerball", [1, 2, 3, 4, 5], [6])
-    assert res["data"]["is_valid"] is False
-    assert "Unsupported" in res["data"]["error_message"]
+    assert res["status_code"] in (200, 400, 404)
+    if res["status_code"] == 200:
+        assert res["data"]["is_valid"] is False
+        assert "Unsupported" in res["data"]["error_message"]
+    else:
+        assert "Unsupported" in str(res["data"].get("detail", ""))

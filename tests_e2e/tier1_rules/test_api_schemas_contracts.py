@@ -110,7 +110,8 @@ def test_contract_ai_divination_schema():
     payload = {
         "birth_datetime": "1990-08-15T08:30:00",
         "lottery_type": "ssq",
-        "recommended_numbers": {"red": ["03", "06", "11", "18", "21", "28"], "blue": ["09"]},
+        "provider": "fallback",
+        "recommended_numbers": {"primary_numbers": ["03", "06", "11", "18", "21", "28"], "secondary_numbers": ["09"]},
     }
     resp = client.post_divination(payload)
     assert resp["status_code"] == 200

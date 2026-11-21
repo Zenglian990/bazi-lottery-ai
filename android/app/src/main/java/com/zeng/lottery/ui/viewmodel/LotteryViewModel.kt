@@ -5,39 +5,48 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.zeng.lottery.BuildConfig
 import com.zeng.lottery.ai.AiConfig
 import com.zeng.lottery.ai.AiDivinationManager
 import com.zeng.lottery.ai.KeyStoreManager
 import com.zeng.lottery.data.api.ApiClient
 import com.zeng.lottery.data.local.BaziEngine
-import com.zeng.lottery.data.local.OfflineLotteryEngine
+import com.zeng.lottery.data.local.PrizeCheckResult
+import com.zeng.lottery.data.local.PrizeChecker
 import com.zeng.lottery.data.local.SavedTicket
 import com.zeng.lottery.data.local.UserPickHistoryStore
 import com.zeng.lottery.data.local.UserPreferencesManager
 import com.zeng.lottery.data.model.BaziDestiny
 import com.zeng.lottery.data.model.BaziRecommendationResponse
-import com.zeng.lottery.data.model.RecommendationItem
 import com.zeng.lottery.data.model.DrawItem
 import com.zeng.lottery.data.model.LotteryStats
 import com.zeng.lottery.data.model.LotteryType
-import com.zeng.lottery.data.repository.LotteryRepository
 import com.zeng.lottery.data.model.LunarDate
+import com.zeng.lottery.data.model.RecommendationItem
+import com.zeng.lottery.data.model.SavedBirthProfile
+import com.zeng.lottery.data.model.TodayFortuneResponse
+import com.zeng.lottery.data.repository.LotteryRepository
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import java.time.LocalDateTime
+import java.util.concurrent.ConcurrentHashMap
 
 class LotteryViewModel @JvmOverloads constructor(
     application: Application,
     private val preferencesManager: UserPreferencesManager = UserPreferencesManager(
-        try { application.applicationContext ?: application } catch (e: Throwable) { null }
+        try { application.applicationContext ?: application } catch (_: Throwable) { null }
     ),
     private val historyStore: UserPickHistoryStore = UserPickHistoryStore(
-        try { application.applicationContext ?: application } catch (e: Throwable) { null }
+        try { application.applicationContext ?: application } catch (_: Throwable) { null }
     )
 ) : AndroidViewModel(application) {
 
@@ -48,19 +57,18 @@ class LotteryViewModel @JvmOverloads constructor(
 
     private val safeContext: Context? = try {
         application.applicationContext ?: application
-    } catch (e: Throwable) {
+    } catch (_: Throwable) {
         null
     }
 
     private val prefs: SharedPreferences? = try {
         safeContext?.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             ?: application.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-    } catch (e: Throwable) {
+    } catch (_: Throwable) {
         null
     }
 
     private val repository = LotteryRepository(safeContext)
-    private val offlineEngine = OfflineLotteryEngine(safeContext)
     private val aiDivinationManager = AiDivinationManager()
 
     private var divinationJob: Job? = null
@@ -68,11 +76,16 @@ class LotteryViewModel @JvmOverloads constructor(
     private var refreshJob: Job? = null
     private var selectJob: Job? = null
     private var destinyJob: Job? = null
+    private var statsJob: Job? = null
+    private var nameDebounceJob: Job? = null
+
+    // 跨彩种最近开奖缓存，支持收藏列表多彩种一键自动对奖
+    private val latestDrawsByType = ConcurrentHashMap<LotteryType, List<DrawItem>>()
 
     private val _userName = MutableStateFlow(preferencesManager.getUserName())
     val userName: StateFlow<String> = _userName.asStateFlow()
     val effectiveUserName: String
-        get() = if (_userName.value.isBlank()) "缘主" else _userName.value.trim()
+        get() = if (_userName.value.isBlank()) "缘主" else _userName.value.trim().take(20)
 
     private val _betCount = MutableStateFlow(preferencesManager.getBetCount())
     val betCount: StateFlow<Int> = _betCount.asStateFlow()
@@ -92,8 +105,20 @@ class LotteryViewModel @JvmOverloads constructor(
     private val _isMale = MutableStateFlow(preferencesManager.getGender())
     val isMale: StateFlow<Boolean> = _isMale.asStateFlow()
 
+    private val _birthLongitude = MutableStateFlow(preferencesManager.getBirthLongitude())
+    val birthLongitude: StateFlow<Double> = _birthLongitude.asStateFlow()
+
+    private val _isDarkTheme = MutableStateFlow(preferencesManager.getDarkTheme())
+    val isDarkTheme: StateFlow<Boolean> = _isDarkTheme.asStateFlow()
+
+    private val _birthProfiles = MutableStateFlow(preferencesManager.getBirthProfiles())
+    val birthProfiles: StateFlow<List<SavedBirthProfile>> = _birthProfiles.asStateFlow()
+
     private val _destiny = MutableStateFlow<BaziDestiny?>(null)
     val destiny: StateFlow<BaziDestiny?> = _destiny.asStateFlow()
+
+    private val _todayFortune = MutableStateFlow<TodayFortuneResponse?>(null)
+    val todayFortune: StateFlow<TodayFortuneResponse?> = _todayFortune.asStateFlow()
 
     private val _stats = MutableStateFlow<LotteryStats?>(null)
     val stats: StateFlow<LotteryStats?> = _stats.asStateFlow()
@@ -106,6 +131,44 @@ class LotteryViewModel @JvmOverloads constructor(
 
     private val _selectedStrategy = MutableStateFlow(preferencesManager.getSelectedStrategy())
     val selectedStrategy: StateFlow<String> = _selectedStrategy.asStateFlow()
+
+    // 高级选号条件（自定义三元权重 + 定胆/杀号）
+    private val _useCustomWeights = MutableStateFlow(false)
+    val useCustomWeights: StateFlow<Boolean> = _useCustomWeights.asStateFlow()
+
+    private val _customWBazi = MutableStateFlow(0.45f)
+    val customWBazi: StateFlow<Float> = _customWBazi.asStateFlow()
+
+    private val _customWFreq = MutableStateFlow(0.35f)
+    val customWFreq: StateFlow<Float> = _customWFreq.asStateFlow()
+
+    private val _customWOmission = MutableStateFlow(0.20f)
+    val customWOmission: StateFlow<Float> = _customWOmission.asStateFlow()
+
+    private val _lockedPrimary = MutableStateFlow<Set<String>>(emptySet())
+    val lockedPrimary: StateFlow<Set<String>> = _lockedPrimary.asStateFlow()
+
+    private val _excludedPrimary = MutableStateFlow<Set<String>>(emptySet())
+    val excludedPrimary: StateFlow<Set<String>> = _excludedPrimary.asStateFlow()
+
+    private val _lockedSecondary = MutableStateFlow<Set<String>>(emptySet())
+    val lockedSecondary: StateFlow<Set<String>> = _lockedSecondary.asStateFlow()
+
+    private val _excludedSecondary = MutableStateFlow<Set<String>>(emptySet())
+    val excludedSecondary: StateFlow<Set<String>> = _excludedSecondary.asStateFlow()
+
+    // 拆分独立 Loading 状态，同时保留聚合 isLoading 向后兼容
+    private val _isRecommending = MutableStateFlow(false)
+    val isRecommending: StateFlow<Boolean> = _isRecommending.asStateFlow()
+
+    private val _isStatsLoading = MutableStateFlow(false)
+    val isStatsLoading: StateFlow<Boolean> = _isStatsLoading.asStateFlow()
+
+    private val _isDestinyLoading = MutableStateFlow(false)
+    val isDestinyLoading: StateFlow<Boolean> = _isDestinyLoading.asStateFlow()
+
+    private val _isSyncingCloud = MutableStateFlow(false)
+    val isSyncingCloud: StateFlow<Boolean> = _isSyncingCloud.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -124,6 +187,12 @@ class LotteryViewModel @JvmOverloads constructor(
     private val _aiDivinationText = MutableStateFlow("")
     val aiDivinationText: StateFlow<String> = _aiDivinationText.asStateFlow()
 
+    private val _aiReasoningText = MutableStateFlow("")
+    val aiReasoningText: StateFlow<String> = _aiReasoningText.asStateFlow()
+
+    private val _divinationBetIndex = MutableStateFlow(0)
+    val divinationBetIndex: StateFlow<Int> = _divinationBetIndex.asStateFlow()
+
     private val _isAiStreaming = MutableStateFlow(false)
     val isAiStreaming: StateFlow<Boolean> = _isAiStreaming.asStateFlow()
 
@@ -139,66 +208,100 @@ class LotteryViewModel @JvmOverloads constructor(
     private val _savedTickets = MutableStateFlow<List<SavedTicket>>(emptyList())
     val savedTickets: StateFlow<List<SavedTicket>> = _savedTickets.asStateFlow()
 
+    private fun updateAggregateLoading() {
+        _isLoading.value = _isRecommending.value || _isStatsLoading.value || _isDestinyLoading.value || _isSyncingCloud.value
+    }
+
     private fun isNetworkAvailable(): Boolean {
-        val ctx = safeContext ?: try { getApplication<Application>()?.applicationContext ?: getApplication<Application>() } catch (e: Throwable) { null }
+        val ctx = safeContext ?: try {
+            getApplication<Application>()?.applicationContext ?: getApplication<Application>()
+        } catch (_: Throwable) {
+            null
+        }
         if (ctx == null) return true
         return try {
             val cm = ctx.getSystemService(Context.CONNECTIVITY_SERVICE) as? android.net.ConnectivityManager
             val net = cm?.activeNetwork
             val caps = cm?.getNetworkCapabilities(net)
             caps?.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
-        } catch (e: Throwable) {
+        } catch (_: Throwable) {
             true
         }
     }
 
+    private fun activeWeightTriple(): Triple<Float?, Float?, Float?> {
+        return if (_useCustomWeights.value) {
+            Triple(_customWBazi.value, _customWFreq.value, _customWOmission.value)
+        } else {
+            Triple(null, null, null)
+        }
+    }
+
+    private fun cancelPendingDataJobs() {
+        rerollJob?.cancel()
+        selectJob?.cancel()
+        destinyJob?.cancel()
+        refreshJob?.cancel()
+    }
+
+    private fun invalidateAiDivination() {
+        cancelDivination()
+        _aiDivinationText.value = ""
+        _aiReasoningText.value = ""
+        _aiError.value = null
+        _divinationBetIndex.value = 0
+    }
+
     init {
-        // Prime saved tickets history synchronously
         _savedTickets.value = historyStore.getAllTickets()
 
-        // Automatic migration away from legacy 10.0.2.2 emulator loopback to official Cloud Run
+        // 尊重用户手动配置的自定义服务器地址（仅当未保存过时默认官方云端地址）
         val savedUrl = try {
             prefs?.getString(KEY_SERVER_URL, null)
-        } catch (e: Throwable) {
+        } catch (_: Throwable) {
             null
         }
-        val initialUrl = if (savedUrl.isNullOrBlank() || savedUrl.contains("10.0.2.2")) {
+        val initialUrl = if (savedUrl.isNullOrBlank()) {
             ApiClient.PRODUCTION_CLOUD_URL
         } else {
             savedUrl
         }
         ApiClient.setBaseUrl(initialUrl)
-        try {
-            prefs?.edit()?.putString(KEY_SERVER_URL, initialUrl)?.apply()
-        } catch (e: Throwable) {
-            // Defensive swallow: never crash cold start on SharedPreferences write issues
-        }
         _serverUrl.value = ApiClient.getBaseUrl()
 
-        // Eagerly prime UI within 5ms from offline engine to prevent any 0-draw or blank card states
-        val initialDestiny = repository.getOfflineDestinyFromLunar(_lunarDate.value, _isMale.value, effectiveUserName)
+        // 冷启动同步极速预热（<5ms），避免首帧空白
+        val initLottery = _selectedLottery.value
+        val initialDestiny = repository.getOfflineDestinyFromLunar(
+            _lunarDate.value, _isMale.value, effectiveUserName, longitude = _birthLongitude.value
+        )
         _destiny.value = initialDestiny
-        _stats.value = repository.getOfflineStats(_selectedLottery.value)
-        _historyDraws.value = repository.getOfflineHistoryDraws(_selectedLottery.value, 50)
+        _todayFortune.value = BaziEngine.computeTodayFortuneOffline(initialDestiny, effectiveUserName)
+        _stats.value = repository.getOfflineStats(initLottery)
+        val initDraws = repository.getOfflineHistoryDraws(initLottery, 50)
+        _historyDraws.value = initDraws
+        latestDrawsByType[initLottery] = initDraws
         _recommendation.value = repository.getOfflineRecommendations(
             destiny = initialDestiny,
-            lotteryType = _selectedLottery.value,
+            lotteryType = initLottery,
             count = _betCount.value,
             strategy = _selectedStrategy.value,
             userName = effectiveUserName
         )
 
-        // Then non-blocking cloud sync in background
         syncFromCloud()
     }
 
     fun setUserName(name: String) {
         _userName.value = name
         preferencesManager.saveUserName(name)
-        try {
-            prefs?.edit()?.putString("user_name", name)?.apply()
-        } catch (e: Throwable) {
-            // Defensive swallow
+        invalidateAiDivination()
+
+        nameDebounceJob?.cancel()
+        if (name.isNotBlank()) {
+            nameDebounceJob = viewModelScope.launch {
+                delay(350L)
+                refreshDestinyAndRecommend()
+            }
         }
     }
 
@@ -217,6 +320,7 @@ class LotteryViewModel @JvmOverloads constructor(
         _lunarDate.value = date
         _birthDateTime.value = BaziEngine.lunarToSolar(date)
         preferencesManager.saveLunarDate(date)
+        invalidateAiDivination()
         refreshDestinyAndRecommend()
     }
 
@@ -232,6 +336,7 @@ class LotteryViewModel @JvmOverloads constructor(
         val lunar = BaziEngine.solarToLunar(dt)
         _lunarDate.value = lunar
         preferencesManager.saveLunarDate(lunar)
+        invalidateAiDivination()
         refreshDestinyAndRecommend()
     }
 
@@ -244,55 +349,209 @@ class LotteryViewModel @JvmOverloads constructor(
     fun setGender(male: Boolean) {
         _isMale.value = male
         preferencesManager.saveGender(male)
+        invalidateAiDivination()
         refreshDestinyAndRecommend()
     }
 
+    fun setBirthLongitude(longitude: Double) {
+        val clamped = longitude.coerceIn(-180.0, 180.0)
+        _birthLongitude.value = clamped
+        preferencesManager.saveBirthLongitude(clamped)
+        invalidateAiDivination()
+        refreshDestinyAndRecommend()
+    }
+
+    fun toggleTheme() {
+        val next = !_isDarkTheme.value
+        _isDarkTheme.value = next
+        preferencesManager.saveDarkTheme(next)
+    }
+
+    // ============ 多亲友生辰档案管理 ============
+
+    fun saveCurrentAsProfile(label: String) {
+        val cleanLabel = label.trim().take(12).ifBlank { effectiveUserName }
+        val profile = SavedBirthProfile(
+            label = cleanLabel,
+            userName = effectiveUserName,
+            lunarDate = _lunarDate.value,
+            isMale = _isMale.value,
+            longitude = _birthLongitude.value
+        )
+        _birthProfiles.value = preferencesManager.upsertBirthProfile(profile)
+        _toastMessage.value = "已保存生辰档案【$cleanLabel】"
+    }
+
+    fun applyBirthProfile(profile: SavedBirthProfile) {
+        _userName.value = profile.userName
+        preferencesManager.saveUserName(profile.userName)
+        _isMale.value = profile.isMale
+        preferencesManager.saveGender(profile.isMale)
+        _birthLongitude.value = profile.longitude
+        preferencesManager.saveBirthLongitude(profile.longitude)
+        _lunarDate.value = profile.lunarDate
+        _birthDateTime.value = BaziEngine.lunarToSolar(profile.lunarDate)
+        preferencesManager.saveLunarDate(profile.lunarDate)
+        invalidateAiDivination()
+        refreshDestinyAndRecommend()
+        _toastMessage.value = "已切换至档案【${profile.label}】"
+    }
+
+    fun deleteBirthProfile(profileId: String) {
+        _birthProfiles.value = preferencesManager.deleteBirthProfile(profileId)
+        _toastMessage.value = "已移除该生辰档案"
+    }
+
+    // ============ 高级选号条件（自定义权重 + 定胆/杀号） ============
+
+    fun setUseCustomWeights(enabled: Boolean) {
+        _useCustomWeights.value = enabled
+        reroll()
+    }
+
+    fun updateCustomWeights(bazi: Float, freq: Float, omission: Float) {
+        _customWBazi.value = bazi.coerceIn(0f, 1f)
+        _customWFreq.value = freq.coerceIn(0f, 1f)
+        _customWOmission.value = omission.coerceIn(0f, 1f)
+    }
+
+    fun togglePrimaryNumberConstraint(ball: String) {
+        // 三态循环：默认 -> 定胆(绿/金锁) -> 杀号(灰/红叉) -> 默认
+        val curLocked = _lockedPrimary.value
+        val curExcluded = _excludedPrimary.value
+        val maxLock = (_selectedLottery.value.primaryCount - 1).coerceAtLeast(1)
+        when {
+            ball in curLocked -> {
+                _lockedPrimary.value = curLocked - ball
+                _excludedPrimary.value = curExcluded + ball
+            }
+            ball in curExcluded -> {
+                _excludedPrimary.value = curExcluded - ball
+            }
+            else -> {
+                if (curLocked.size < maxLock) {
+                    _lockedPrimary.value = curLocked + ball
+                } else {
+                    _excludedPrimary.value = curExcluded + ball
+                }
+            }
+        }
+    }
+
+    fun toggleSecondaryNumberConstraint(ball: String) {
+        val curLocked = _lockedSecondary.value
+        val curExcluded = _excludedSecondary.value
+        val maxLock = _selectedLottery.value.secondaryCount.coerceAtLeast(1)
+        when {
+            ball in curLocked -> {
+                _lockedSecondary.value = curLocked - ball
+                _excludedSecondary.value = curExcluded + ball
+            }
+            ball in curExcluded -> {
+                _excludedSecondary.value = curExcluded - ball
+            }
+            else -> {
+                if (curLocked.size < maxLock) {
+                    _lockedSecondary.value = curLocked + ball
+                } else {
+                    _excludedSecondary.value = curExcluded + ball
+                }
+            }
+        }
+    }
+
+    fun clearNumberConstraints() {
+        _lockedPrimary.value = emptySet()
+        _excludedPrimary.value = emptySet()
+        _lockedSecondary.value = emptySet()
+        _excludedSecondary.value = emptySet()
+    }
+
     fun selectLottery(type: LotteryType) {
+        val changed = _selectedLottery.value != type
         _selectedLottery.value = type
         preferencesManager.saveSelectedLottery(type)
-        // Immediately show offline stats, history & recommendations for instant responsiveness
-        val currentDestiny = _destiny.value ?: repository.getOfflineDestinyFromLunar(_lunarDate.value, _isMale.value, effectiveUserName)
+        if (changed) {
+            clearNumberConstraints()
+            invalidateAiDivination()
+        }
+
+        val (wb, wf, wo) = activeWeightTriple()
+        val currentDestiny = _destiny.value ?: repository.getOfflineDestinyFromLunar(
+            _lunarDate.value, _isMale.value, effectiveUserName, longitude = _birthLongitude.value
+        )
         _stats.value = repository.getOfflineStats(type)
-        _historyDraws.value = repository.getOfflineHistoryDraws(type, 50)
+        val offlineHist = repository.getOfflineHistoryDraws(type, 50)
+        _historyDraws.value = offlineHist
+        latestDrawsByType[type] = offlineHist
         _recommendation.value = repository.getOfflineRecommendations(
             destiny = currentDestiny,
             lotteryType = type,
             count = _betCount.value,
             strategy = _selectedStrategy.value,
-            userName = effectiveUserName
+            userName = effectiveUserName,
+            wBazi = wb,
+            wFreq = wf,
+            wOmission = wo,
+            lockedPrimary = _lockedPrimary.value.toList(),
+            excludedPrimary = _excludedPrimary.value.toList(),
+            lockedSecondary = _lockedSecondary.value.toList(),
+            excludedSecondary = _excludedSecondary.value.toList()
         )
 
         if (!isNetworkAvailable()) {
-            _isLoading.value = false
+            _isRecommending.value = false
+            _isStatsLoading.value = false
+            updateAggregateLoading()
             return
         }
 
-        selectJob?.cancel()
+        cancelPendingDataJobs()
         selectJob = viewModelScope.launch {
-            _isLoading.value = true
+            _isRecommending.value = true
+            _isStatsLoading.value = true
+            updateAggregateLoading()
             try {
                 withTimeout(15000L) {
-                    _stats.value = repository.getStats(type)
+                    val remoteStats = repository.getStats(type)
+                    if (_selectedLottery.value != type) return@withTimeout
+                    _stats.value = remoteStats
+
                     val remoteHist = repository.getHistoryDraws(type, 50)
+                    if (_selectedLottery.value != type) return@withTimeout
                     if (remoteHist.isNotEmpty()) {
                         _historyDraws.value = remoteHist
+                        latestDrawsByType[type] = remoteHist
                     }
-                    _recommendation.value = repository.getRecommendations(
+
+                    val remoteRec = repository.getRecommendations(
                         destiny = currentDestiny,
                         lotteryType = type,
                         count = _betCount.value,
                         strategy = _selectedStrategy.value,
                         userName = effectiveUserName,
                         lunarDate = _lunarDate.value,
-                        isMale = _isMale.value
+                        isMale = _isMale.value,
+                        longitude = _birthLongitude.value.toFloat(),
+                        wBazi = wb,
+                        wFreq = wf,
+                        wOmission = wo,
+                        lockedPrimary = _lockedPrimary.value.toList(),
+                        excludedPrimary = _excludedPrimary.value.toList(),
+                        lockedSecondary = _lockedSecondary.value.toList(),
+                        excludedSecondary = _excludedSecondary.value.toList()
                     )
+                    if (_selectedLottery.value != type) return@withTimeout
+                    _recommendation.value = remoteRec
                 }
-            } catch (e: kotlinx.coroutines.CancellationException) {
+            } catch (_: CancellationException) {
                 return@launch
-            } catch (e: Exception) {
-                // Keep offline values on network error or timeout
+            } catch (_: Exception) {
+                // 保持离线极速计算结果
             } finally {
-                _isLoading.value = false
+                _isRecommending.value = false
+                _isStatsLoading.value = false
+                updateAggregateLoading()
             }
         }
     }
@@ -304,245 +563,399 @@ class LotteryViewModel @JvmOverloads constructor(
     }
 
     fun reroll() {
-        // Immediate local reroll
-        val currentDestiny = _destiny.value ?: repository.getOfflineDestinyFromLunar(_lunarDate.value, _isMale.value, effectiveUserName)
+        invalidateAiDivination()
+        val targetType = _selectedLottery.value
+        val (wb, wf, wo) = activeWeightTriple()
+        val lockedP = _lockedPrimary.value.toList()
+        val excludedP = _excludedPrimary.value.toList()
+        val lockedS = _lockedSecondary.value.toList()
+        val excludedS = _excludedSecondary.value.toList()
+
+        val currentDestiny = _destiny.value ?: repository.getOfflineDestinyFromLunar(
+            _lunarDate.value, _isMale.value, effectiveUserName, longitude = _birthLongitude.value
+        )
         _recommendation.value = repository.getOfflineRecommendations(
             destiny = currentDestiny,
-            lotteryType = _selectedLottery.value,
+            lotteryType = targetType,
             count = _betCount.value,
             strategy = _selectedStrategy.value,
-            userName = effectiveUserName
+            userName = effectiveUserName,
+            wBazi = wb,
+            wFreq = wf,
+            wOmission = wo,
+            lockedPrimary = lockedP,
+            excludedPrimary = excludedP,
+            lockedSecondary = lockedS,
+            excludedSecondary = excludedS
         )
 
         if (!isNetworkAvailable()) {
             _toastMessage.value = "当前处于离线模式，已启动离线纯算引擎极速推演"
-            _isLoading.value = false
+            _isRecommending.value = false
+            updateAggregateLoading()
             return
         }
 
         rerollJob?.cancel()
         rerollJob = viewModelScope.launch {
-            _isLoading.value = true
+            _isRecommending.value = true
+            updateAggregateLoading()
             try {
                 withTimeout(15000L) {
                     val rec = repository.getRecommendations(
                         destiny = currentDestiny,
-                        lotteryType = _selectedLottery.value,
+                        lotteryType = targetType,
                         count = _betCount.value,
                         strategy = _selectedStrategy.value,
                         userName = effectiveUserName,
                         lunarDate = _lunarDate.value,
-                        isMale = _isMale.value
+                        isMale = _isMale.value,
+                        longitude = _birthLongitude.value.toFloat(),
+                        wBazi = wb,
+                        wFreq = wf,
+                        wOmission = wo,
+                        lockedPrimary = lockedP,
+                        excludedPrimary = excludedP,
+                        lockedSecondary = lockedS,
+                        excludedSecondary = excludedS
                     )
-                    _recommendation.value = rec
+                    if (_selectedLottery.value == targetType) {
+                        _recommendation.value = rec
+                    }
                     if (repository.isOffline.value) {
                         _toastMessage.value = "云端响应离线，已启动离线纯算推演引擎为您选号"
                     }
                 }
-            } catch (e: TimeoutCancellationException) {
+            } catch (_: TimeoutCancellationException) {
                 _toastMessage.value = "云端响应超时，已为您无缝切换至离线纯算引擎极速推演"
-            } catch (e: kotlinx.coroutines.CancellationException) {
+            } catch (_: CancellationException) {
                 return@launch
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 _toastMessage.value = "网络连接异常，已启动离线易道推演引擎为您选号"
             } finally {
-                _isLoading.value = false
+                _isRecommending.value = false
+                updateAggregateLoading()
             }
         }
     }
 
     fun refreshStats(onComplete: ((Boolean) -> Unit)? = null) {
-        viewModelScope.launch {
-            _isLoading.value = true
+        val targetType = _selectedLottery.value
+        statsJob?.cancel()
+        statsJob = viewModelScope.launch {
+            _isStatsLoading.value = true
+            updateAggregateLoading()
             var success = false
             try {
                 withTimeout(15000L) {
-                    val s = repository.getStats(_selectedLottery.value)
-                    _stats.value = s
-                    val remoteHist = repository.getHistoryDraws(_selectedLottery.value, 50)
+                    val s = repository.getStats(targetType)
+                    if (_selectedLottery.value == targetType) {
+                        _stats.value = s
+                    }
+                    val remoteHist = repository.getHistoryDraws(targetType, 50)
                     if (remoteHist.isNotEmpty()) {
-                        _historyDraws.value = remoteHist
+                        latestDrawsByType[targetType] = remoteHist
+                        if (_selectedLottery.value == targetType) {
+                            _historyDraws.value = remoteHist
+                        }
                     }
                     success = s.totalDraws > 0
                 }
-            } catch (e: kotlinx.coroutines.CancellationException) {
+            } catch (_: CancellationException) {
                 return@launch
-            } catch (e: Exception) {
-                _stats.value = repository.getOfflineStats(_selectedLottery.value)
-                _historyDraws.value = repository.getOfflineHistoryDraws(_selectedLottery.value, 50)
+            } catch (_: Exception) {
+                if (_selectedLottery.value == targetType) {
+                    _stats.value = repository.getOfflineStats(targetType)
+                    _historyDraws.value = repository.getOfflineHistoryDraws(targetType, 50)
+                }
                 success = true
             } finally {
-                _isLoading.value = false
+                _isStatsLoading.value = false
+                updateAggregateLoading()
                 onComplete?.invoke(success)
             }
         }
     }
 
-    fun updateServerUrl(url: String) {
-        ApiClient.setBaseUrl(url)
+    /**
+     * 自用云端全量同步：触发云端 /api/lottery/sync 抓取官网最新开奖并同步持久化至 GCS，再立即刷新走势与历史开奖。
+     */
+    fun triggerCloudSync(forceReload: Boolean = false) {
+        if (!isNetworkAvailable()) {
+            _toastMessage.value = "当前处于离线状态，无法触发云端抓取"
+            return
+        }
+        viewModelScope.launch {
+            _isSyncingCloud.value = true
+            updateAggregateLoading()
+            try {
+                val adminToken = BuildConfig.ADMIN_SYNC_TOKEN
+                if (adminToken.isNotBlank()) {
+                    val result = repository.triggerCloudSync("all", adminToken, forceReload)
+                    result.onSuccess { resp ->
+                        val total = resp.syncedCounts.values.sum()
+                        _toastMessage.value = when (resp.status) {
+                            "success" -> "云端抓取成功！已同步 $total 条最新官方开奖"
+                            "partial" -> "部分彩种同步完成（更新 $total 条），请留意详情"
+                            else -> "云端官网同步暂未成功：${resp.message.take(40)}"
+                        }
+                    }.onFailure { err ->
+                        _toastMessage.value = err.message ?: "云端同步失败"
+                    }
+                } else {
+                    _toastMessage.value = "正在刷新云端最新统计榜单…"
+                }
+                refreshStats()
+            } finally {
+                _isSyncingCloud.value = false
+                updateAggregateLoading()
+            }
+        }
+    }
+
+    fun testServerConnection(url: String, onResult: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            val (ok, msg) = withContext(Dispatchers.IO) {
+                ApiClient.pingServer(url)
+            }
+            onResult(ok, msg)
+        }
+    }
+
+    fun updateServerUrl(url: String): Boolean {
+        val (valid, normalizedOrErr) = ApiClient.validateServerUrl(url)
+        if (!valid) {
+            _toastMessage.value = normalizedOrErr
+            return false
+        }
+        ApiClient.setBaseUrl(normalizedOrErr)
         val current = ApiClient.getBaseUrl()
         _serverUrl.value = current
         try {
             prefs?.edit()?.putString(KEY_SERVER_URL, current)?.apply()
-        } catch (e: Throwable) {
-            // Ignore
+        } catch (_: Throwable) {
         }
         _toastMessage.value = "服务地址已更新: $current"
         refreshAll()
+        return true
     }
 
     private fun refreshDestinyAndRecommend() {
-        val d = repository.getOfflineDestinyFromLunar(_lunarDate.value, _isMale.value, effectiveUserName)
+        val targetType = _selectedLottery.value
+        val curLunar = _lunarDate.value
+        val curMale = _isMale.value
+        val curName = effectiveUserName
+        val curLon = _birthLongitude.value
+        val (wb, wf, wo) = activeWeightTriple()
+
+        val d = repository.getOfflineDestinyFromLunar(curLunar, curMale, curName, longitude = curLon)
         _destiny.value = d
+        _todayFortune.value = BaziEngine.computeTodayFortuneOffline(d, curName)
         _recommendation.value = repository.getOfflineRecommendations(
             destiny = d,
-            lotteryType = _selectedLottery.value,
+            lotteryType = targetType,
             count = _betCount.value,
             strategy = _selectedStrategy.value,
-            userName = effectiveUserName
+            userName = curName,
+            wBazi = wb,
+            wFreq = wf,
+            wOmission = wo,
+            lockedPrimary = _lockedPrimary.value.toList(),
+            excludedPrimary = _excludedPrimary.value.toList(),
+            lockedSecondary = _lockedSecondary.value.toList(),
+            excludedSecondary = _excludedSecondary.value.toList()
         )
 
         if (!isNetworkAvailable()) {
-            _isLoading.value = false
+            _isDestinyLoading.value = false
+            updateAggregateLoading()
             return
         }
 
         destinyJob?.cancel()
         destinyJob = viewModelScope.launch {
-            _isLoading.value = true
+            _isDestinyLoading.value = true
+            updateAggregateLoading()
             try {
                 withTimeout(15000L) {
-                    val remoteD = repository.getDestinyFromLunar(_lunarDate.value, _isMale.value, effectiveUserName)
+                    val remoteD = repository.getDestinyFromLunar(curLunar, curMale, curName, longitude = curLon)
                     _destiny.value = remoteD
-                    _recommendation.value = repository.getRecommendations(
+                    _todayFortune.value = repository.getTodayFortune(curLunar, remoteD, curMale, curName, curLon)
+                    val remoteRec = repository.getRecommendations(
                         destiny = remoteD,
-                        lotteryType = _selectedLottery.value,
+                        lotteryType = targetType,
                         count = _betCount.value,
                         strategy = _selectedStrategy.value,
-                        userName = effectiveUserName,
-                        lunarDate = _lunarDate.value,
-                        isMale = _isMale.value
+                        userName = curName,
+                        lunarDate = curLunar,
+                        isMale = curMale,
+                        longitude = curLon.toFloat(),
+                        wBazi = wb,
+                        wFreq = wf,
+                        wOmission = wo,
+                        lockedPrimary = _lockedPrimary.value.toList(),
+                        excludedPrimary = _excludedPrimary.value.toList(),
+                        lockedSecondary = _lockedSecondary.value.toList(),
+                        excludedSecondary = _excludedSecondary.value.toList()
                     )
+                    if (_selectedLottery.value == targetType) {
+                        _recommendation.value = remoteRec
+                    }
                 }
-            } catch (e: kotlinx.coroutines.CancellationException) {
+            } catch (_: CancellationException) {
                 return@launch
-            } catch (e: Exception) {
-                // Keep offline values on network error or timeout
+            } catch (_: Exception) {
+                // 保持端侧已算出的离线命盘
             } finally {
-                _isLoading.value = false
+                _isDestinyLoading.value = false
+                updateAggregateLoading()
             }
         }
     }
 
     private fun syncFromCloud() {
-        if (!isNetworkAvailable()) {
-            return
-        }
-        viewModelScope.launch {
+        if (!isNetworkAvailable()) return
+        val targetType = _selectedLottery.value
+        val curLunar = _lunarDate.value
+        val curMale = _isMale.value
+        val curName = effectiveUserName
+        val curLon = _birthLongitude.value
+
+        refreshJob?.cancel()
+        refreshJob = viewModelScope.launch {
             try {
                 repository.checkHealth()
-                val d = repository.getDestinyFromLunar(_lunarDate.value, _isMale.value, effectiveUserName)
+                val d = repository.getDestinyFromLunar(curLunar, curMale, curName, longitude = curLon)
                 _destiny.value = d
-                _stats.value = repository.getStats(_selectedLottery.value)
-                val remoteHist = repository.getHistoryDraws(_selectedLottery.value, 50)
-                if (remoteHist.isNotEmpty()) {
-                    _historyDraws.value = remoteHist
+                _todayFortune.value = repository.getTodayFortune(curLunar, d, curMale, curName, curLon)
+                val remoteStats = repository.getStats(targetType)
+                if (_selectedLottery.value == targetType) {
+                    _stats.value = remoteStats
                 }
-                _recommendation.value = repository.getRecommendations(
+                val remoteHist = repository.getHistoryDraws(targetType, 50)
+                if (remoteHist.isNotEmpty()) {
+                    latestDrawsByType[targetType] = remoteHist
+                    if (_selectedLottery.value == targetType) {
+                        _historyDraws.value = remoteHist
+                    }
+                }
+                val remoteRec = repository.getRecommendations(
                     destiny = d,
-                    lotteryType = _selectedLottery.value,
+                    lotteryType = targetType,
                     count = _betCount.value,
                     strategy = _selectedStrategy.value,
-                    userName = effectiveUserName,
-                    lunarDate = _lunarDate.value,
-                    isMale = _isMale.value
+                    userName = curName,
+                    lunarDate = curLunar,
+                    isMale = curMale,
+                    longitude = curLon.toFloat()
                 )
-            } catch (e: Exception) {
-                // Keep already primed local state
+                if (_selectedLottery.value == targetType) {
+                    _recommendation.value = remoteRec
+                }
+            } catch (_: CancellationException) {
+                return@launch
+            } catch (_: Exception) {
+                // 维持冷启动已预热的端侧数据
             }
         }
     }
 
     fun refreshAll() {
+        val targetType = _selectedLottery.value
+        val curLunar = _lunarDate.value
+        val curMale = _isMale.value
+        val curName = effectiveUserName
+        val curLon = _birthLongitude.value
+        val (wb, wf, wo) = activeWeightTriple()
+
         if (!isNetworkAvailable()) {
-            val d = _destiny.value ?: repository.getOfflineDestinyFromLunar(_lunarDate.value, _isMale.value, effectiveUserName)
+            val d = _destiny.value ?: repository.getOfflineDestinyFromLunar(curLunar, curMale, curName, curLon)
             _destiny.value = d
-            if (_stats.value == null) {
-                _stats.value = repository.getOfflineStats(_selectedLottery.value)
-            }
-            if (_historyDraws.value.isEmpty()) {
-                _historyDraws.value = repository.getOfflineHistoryDraws(_selectedLottery.value, 50)
-            }
+            _todayFortune.value = BaziEngine.computeTodayFortuneOffline(d, curName)
+            if (_stats.value == null) _stats.value = repository.getOfflineStats(targetType)
+            if (_historyDraws.value.isEmpty()) _historyDraws.value = repository.getOfflineHistoryDraws(targetType, 50)
             if (_recommendation.value == null) {
                 _recommendation.value = repository.getOfflineRecommendations(
-                    destiny = d,
-                    lotteryType = _selectedLottery.value,
-                    count = _betCount.value,
-                    strategy = _selectedStrategy.value,
-                    userName = effectiveUserName
+                    d, targetType, _betCount.value, _selectedStrategy.value, curName, wb, wf, wo
                 )
             }
-            _isLoading.value = false
+            _isDestinyLoading.value = false
+            _isStatsLoading.value = false
+            _isRecommending.value = false
+            updateAggregateLoading()
             return
         }
 
-        refreshJob?.cancel()
+        cancelPendingDataJobs()
         refreshJob = viewModelScope.launch {
-            _isLoading.value = true
+            _isDestinyLoading.value = true
+            _isStatsLoading.value = true
+            _isRecommending.value = true
+            updateAggregateLoading()
             try {
                 withTimeout(15000L) {
                     repository.checkHealth()
-                    val d = repository.getDestinyFromLunar(_lunarDate.value, _isMale.value, effectiveUserName)
+                    val d = repository.getDestinyFromLunar(curLunar, curMale, curName, longitude = curLon)
                     _destiny.value = d
-                    _stats.value = repository.getStats(_selectedLottery.value)
-                    val remoteHist = repository.getHistoryDraws(_selectedLottery.value, 50)
+                    _todayFortune.value = repository.getTodayFortune(curLunar, d, curMale, curName, curLon)
+                    val s = repository.getStats(targetType)
+                    if (_selectedLottery.value == targetType) _stats.value = s
+                    val remoteHist = repository.getHistoryDraws(targetType, 50)
                     if (remoteHist.isNotEmpty()) {
-                        _historyDraws.value = remoteHist
+                        latestDrawsByType[targetType] = remoteHist
+                        if (_selectedLottery.value == targetType) _historyDraws.value = remoteHist
                     }
-                    _recommendation.value = repository.getRecommendations(
+                    val rec = repository.getRecommendations(
                         destiny = d,
-                        lotteryType = _selectedLottery.value,
+                        lotteryType = targetType,
                         count = _betCount.value,
                         strategy = _selectedStrategy.value,
-                        userName = effectiveUserName,
-                        lunarDate = _lunarDate.value,
-                        isMale = _isMale.value
+                        userName = curName,
+                        lunarDate = curLunar,
+                        isMale = curMale,
+                        longitude = curLon.toFloat(),
+                        wBazi = wb,
+                        wFreq = wf,
+                        wOmission = wo,
+                        lockedPrimary = _lockedPrimary.value.toList(),
+                        excludedPrimary = _excludedPrimary.value.toList(),
+                        lockedSecondary = _lockedSecondary.value.toList(),
+                        excludedSecondary = _excludedSecondary.value.toList()
                     )
+                    if (_selectedLottery.value == targetType) _recommendation.value = rec
                 }
-            } catch (e: kotlinx.coroutines.CancellationException) {
+            } catch (_: CancellationException) {
                 return@launch
-            } catch (e: Exception) {
-                val d = _destiny.value ?: repository.getOfflineDestinyFromLunar(_lunarDate.value, _isMale.value, effectiveUserName)
+            } catch (_: Exception) {
+                val d = _destiny.value ?: repository.getOfflineDestinyFromLunar(curLunar, curMale, curName, curLon)
                 _destiny.value = d
-                if (_stats.value == null) {
-                    _stats.value = repository.getOfflineStats(_selectedLottery.value)
-                }
-                if (_historyDraws.value.isEmpty()) {
-                    _historyDraws.value = repository.getOfflineHistoryDraws(_selectedLottery.value, 50)
-                }
-                if (_recommendation.value == null) {
-                    _recommendation.value = repository.getOfflineRecommendations(
-                        destiny = d,
-                        lotteryType = _selectedLottery.value,
-                        count = _betCount.value,
-                        strategy = _selectedStrategy.value,
-                        userName = effectiveUserName
-                    )
-                }
+                if (_stats.value == null) _stats.value = repository.getOfflineStats(targetType)
+                if (_historyDraws.value.isEmpty()) _historyDraws.value = repository.getOfflineHistoryDraws(targetType, 50)
             } finally {
-                _isLoading.value = false
+                _isDestinyLoading.value = false
+                _isStatsLoading.value = false
+                _isRecommending.value = false
+                updateAggregateLoading()
             }
         }
     }
 
-    fun openDivinationSheet() {
+    // ============ AI 易道解盘控制 ============
+
+    fun openDivinationSheet(betIndex: Int = 0) {
+        val list = _recommendation.value?.recommendations.orEmpty()
+        val targetIdx = if (list.isNotEmpty()) betIndex.coerceIn(0, list.lastIndex) else 0
+        val indexChanged = targetIdx != _divinationBetIndex.value
+        _divinationBetIndex.value = targetIdx
         _showDivinationSheet.value = true
-        if (_aiDivinationText.value.isEmpty()) {
-            startDivination()
+        if (_aiDivinationText.value.isEmpty() || indexChanged) {
+            startDivination(targetIdx)
         }
     }
 
     fun closeDivinationSheet() {
+        // 关闭解盘面板时立即取消仍在传输中的流式请求，防止后台浪费付费 Token
+        cancelDivination()
         _showDivinationSheet.value = false
     }
 
@@ -556,11 +969,15 @@ class LotteryViewModel @JvmOverloads constructor(
 
     fun updateAiConfig(config: AiConfig) {
         try {
-            val ctx = safeContext ?: try { getApplication<Application>()?.applicationContext ?: getApplication<Application>() } catch (e: Throwable) { null }
+            val ctx = safeContext ?: try {
+                getApplication<Application>()?.applicationContext ?: getApplication<Application>()
+            } catch (_: Throwable) {
+                null
+            }
             KeyStoreManager.saveAiConfig(ctx, config)
             _aiConfig.value = config
             _toastMessage.value = "AI 解盘配置已加密保存"
-        } catch (e: Throwable) {
+        } catch (_: Throwable) {
             _aiConfig.value = config
         }
     }
@@ -571,13 +988,17 @@ class LotteryViewModel @JvmOverloads constructor(
         _isAiStreaming.value = false
     }
 
-    fun startDivination() {
+    fun startDivination(betIndex: Int = _divinationBetIndex.value) {
         cancelDivination()
+        val list = _recommendation.value?.recommendations.orEmpty()
+        val safeIndex = if (list.isNotEmpty()) betIndex.coerceIn(0, list.lastIndex) else 0
+        _divinationBetIndex.value = safeIndex
         _aiDivinationText.value = ""
+        _aiReasoningText.value = ""
         _aiError.value = null
         _isAiStreaming.value = true
 
-        val rec = _recommendation.value?.recommendations?.firstOrNull()
+        val rec = list.getOrNull(safeIndex)
         val primary = (rec?.primaryNumbers as? List<*>)?.mapNotNull { it?.toString() } ?: emptyList()
         val secondary = (rec?.secondaryNumbers as? List<*>)?.mapNotNull { it?.toString() } ?: emptyList()
         val currentDestiny = _destiny.value
@@ -588,7 +1009,11 @@ class LotteryViewModel @JvmOverloads constructor(
 
         divinationJob = viewModelScope.launch {
             try {
-                val ctx = safeContext ?: try { getApplication<Application>()?.applicationContext ?: getApplication<Application>() } catch (e: Throwable) { null }
+                val ctx = safeContext ?: try {
+                    getApplication<Application>()?.applicationContext ?: getApplication<Application>()
+                } catch (_: Throwable) {
+                    null
+                }
                 aiDivinationManager.streamDivination(
                     context = ctx,
                     lotteryType = currentLottery,
@@ -597,28 +1022,71 @@ class LotteryViewModel @JvmOverloads constructor(
                     destiny = currentDestiny,
                     birthDateTime = dt,
                     userName = effectiveName,
-                    configOverride = config
+                    configOverride = config,
+                    onReasoningDelta = { reasoningDelta ->
+                        _aiReasoningText.value += reasoningDelta
+                    },
+                    onFallback = { reason ->
+                        _aiError.value = reason
+                    }
                 ).collect { delta ->
                     _aiDivinationText.value += delta
                 }
+            } catch (_: CancellationException) {
+                return@launch
             } catch (e: Exception) {
-                _aiError.value = e.message
+                _aiError.value = e.message ?: "AI 解盘发生未知异常"
             } finally {
                 _isAiStreaming.value = false
             }
         }
     }
 
+    // ============ 历史收藏与一键自动对奖复盘 ============
+
+    fun checkTicketAgainstLatestDraw(ticket: SavedTicket): PrizeCheckResult? {
+        val draws = latestDrawsByType[ticket.lotteryType]
+            ?: repository.getOfflineHistoryDraws(ticket.lotteryType, 10).also {
+                if (it.isNotEmpty()) latestDrawsByType[ticket.lotteryType] = it
+            }
+        val latest = draws.firstOrNull() ?: return null
+        return PrizeChecker.checkTicket(
+            lotteryType = ticket.lotteryType,
+            ticketPrimary = ticket.primaryNumbers,
+            ticketSecondary = ticket.secondaryNumbers,
+            draw = latest
+        )
+    }
+
+    fun prefetchAllDrawsForPrizeCheck() {
+        if (!isNetworkAvailable()) return
+        viewModelScope.launch {
+            LotteryType.entries.forEach { type ->
+                try {
+                    val draws = repository.getHistoryDraws(type, 10)
+                    if (draws.isNotEmpty()) {
+                        latestDrawsByType[type] = draws
+                    }
+                } catch (_: Exception) {
+                }
+            }
+        }
+    }
+
     fun saveCurrentTicket(item: RecommendationItem, index: Int = 0) {
-        val priInts = (item.primaryNumbers as? List<*>)?.mapNotNull { (it as? Number)?.toInt() ?: it?.toString()?.toIntOrNull() } ?: emptyList()
-        val secInts = (item.secondaryNumbers as? List<*>)?.mapNotNull { (it as? Number)?.toInt() ?: it?.toString()?.toIntOrNull() } ?: emptyList()
+        val priInts = (item.primaryNumbers as? List<*>)?.mapNotNull {
+            (it as? Number)?.toInt() ?: it?.toString()?.toIntOrNull()
+        } ?: emptyList()
+        val secInts = (item.secondaryNumbers as? List<*>)?.mapNotNull {
+            (it as? Number)?.toInt() ?: it?.toString()?.toIntOrNull()
+        } ?: emptyList()
         val ticket = SavedTicket(
             lotteryType = _selectedLottery.value,
             userName = effectiveUserName,
             primaryNumbers = priInts,
             secondaryNumbers = secInts,
             strategy = _selectedStrategy.value,
-            rationale = item.scoreRationale ?: ""
+            rationale = item.scoreRationale
         )
         historyStore.saveTicket(ticket)
         _savedTickets.value = historyStore.getAllTickets()
@@ -630,16 +1098,20 @@ class LotteryViewModel @JvmOverloads constructor(
         val items = _recommendation.value?.recommendations ?: return
         if (items.isEmpty()) return
         val newTickets = items.mapNotNull { item ->
-            val pri = (item.primaryNumbers as? List<*>)?.mapNotNull { (it as? Number)?.toInt() ?: it?.toString()?.toIntOrNull() } ?: emptyList()
+            val pri = (item.primaryNumbers as? List<*>)?.mapNotNull {
+                (it as? Number)?.toInt() ?: it?.toString()?.toIntOrNull()
+            } ?: emptyList()
             if (pri.isEmpty()) return@mapNotNull null
-            val sec = (item.secondaryNumbers as? List<*>)?.mapNotNull { (it as? Number)?.toInt() ?: it?.toString()?.toIntOrNull() } ?: emptyList()
+            val sec = (item.secondaryNumbers as? List<*>)?.mapNotNull {
+                (it as? Number)?.toInt() ?: it?.toString()?.toIntOrNull()
+            } ?: emptyList()
             SavedTicket(
                 lotteryType = _selectedLottery.value,
                 userName = effectiveUserName,
                 primaryNumbers = pri,
                 secondaryNumbers = sec,
                 strategy = _selectedStrategy.value,
-                rationale = item.scoreRationale ?: ""
+                rationale = item.scoreRationale
             )
         }
         if (newTickets.isNotEmpty()) {

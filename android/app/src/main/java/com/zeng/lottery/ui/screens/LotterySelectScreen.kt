@@ -119,7 +119,8 @@ fun LotterySelectScreen(
                         text = "${selectedType.title} · ${selectedType.subtitle}",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = ImperialRed
+                        color = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.weight(1f)
                     )
                     Text(
                         text = schedule,

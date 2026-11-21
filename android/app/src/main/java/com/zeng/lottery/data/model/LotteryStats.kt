@@ -14,6 +14,8 @@ data class NumberStat(
     @SerializedName("frequency", alternate = ["total_count"])
     val frequency: Int = 0,
     val rate: Float = 0f,
+    @SerializedName("hit_rate")
+    val hitRate: Float = 0f,
     @SerializedName("is_hot")
     val isHot: Boolean = false,
     @SerializedName("is_cold")
@@ -23,7 +25,9 @@ data class NumberStat(
     @SerializedName("max_omission")
     val maxOmission: Int = 0,
     @SerializedName("avg_omission")
-    val avgOmission: Float = 0f
+    val avgOmission: Float = 0f,
+    @SerializedName("desire_index")
+    val desireIndex: Float = 0f
 )
 
 @JsonAdapter(LotteryStatsAdapter::class)
@@ -34,6 +38,8 @@ data class LotteryStats(
     val totalDraws: Int = 0,
     @SerializedName("last_issue", alternate = ["latest_issue"])
     val lastIssue: String = "",
+    @SerializedName("latest_draw_date")
+    val latestDrawDate: String = "",
     val stats: Map<String, Map<String, NumberStat>> = emptyMap()
 )
 
@@ -47,21 +53,22 @@ class LotteryStatsAdapter : JsonDeserializer<LotteryStats>, JsonSerializer<Lotte
             return LotteryStats()
         }
         val obj = json.asJsonObject
-        val lotteryType = obj.get("lottery_type")?.asString ?: ""
+        val lotteryType = obj.get("lottery_type")?.takeIf { !it.isJsonNull }?.asString ?: ""
         val totalDraws = when {
-            obj.has("total_draws") -> obj.get("total_draws").asInt
-            obj.has("draws_analyzed") -> obj.get("draws_analyzed").asInt
+            obj.has("total_draws") && !obj.get("total_draws").isJsonNull -> obj.get("total_draws").asInt
+            obj.has("draws_analyzed") && !obj.get("draws_analyzed").isJsonNull -> obj.get("draws_analyzed").asInt
             else -> 0
         }
         val lastIssue = when {
-            obj.has("last_issue") -> obj.get("last_issue").asString
-            obj.has("latest_issue") -> obj.get("latest_issue").asString
+            obj.has("last_issue") && !obj.get("last_issue").isJsonNull -> obj.get("last_issue").asString
+            obj.has("latest_issue") && !obj.get("latest_issue").isJsonNull -> obj.get("latest_issue").asString
             else -> ""
         }
+        val latestDrawDate = obj.get("latest_draw_date")?.takeIf { !it.isJsonNull }?.asString ?: ""
 
         val statsMap = mutableMapOf<String, Map<String, NumberStat>>()
 
-        // Case 1: Root contains "stats" map
+        // 兼容模式 1：根对象直接包含 "stats" 映射
         if (obj.has("stats") && obj.get("stats").isJsonObject) {
             val statsObj = obj.getAsJsonObject("stats")
             for (zoneKey in statsObj.keySet()) {
@@ -72,8 +79,7 @@ class LotteryStatsAdapter : JsonDeserializer<LotteryStats>, JsonSerializer<Lotte
                     for (numKey in zoneObj.keySet()) {
                         val statElem = zoneObj.get(numKey)
                         if (statElem != null && statElem.isJsonObject) {
-                            val stat = parseNumberStat(statElem.asJsonObject)
-                            numberMap[numKey] = stat
+                            numberMap[numKey] = parseNumberStat(statElem.asJsonObject)
                         }
                     }
                     statsMap[zoneKey] = numberMap
@@ -81,22 +87,19 @@ class LotteryStatsAdapter : JsonDeserializer<LotteryStats>, JsonSerializer<Lotte
             }
         }
 
-        // Case 2: Root contains "primary_zone" and optional "secondary_zone"
+        // 兼容模式 2：FastAPI 返回的 primary_zone / secondary_zone 列表结构
         if (obj.has("primary_zone") && obj.get("primary_zone").isJsonObject) {
-            val priObj = obj.getAsJsonObject("primary_zone")
-            val priMap = parseZoneStats(priObj)
-            statsMap["primary"] = priMap
+            statsMap["primary"] = parseZoneStats(obj.getAsJsonObject("primary_zone"))
         }
         if (obj.has("secondary_zone") && obj.get("secondary_zone").isJsonObject) {
-            val secObj = obj.getAsJsonObject("secondary_zone")
-            val secMap = parseZoneStats(secObj)
-            statsMap["secondary"] = secMap
+            statsMap["secondary"] = parseZoneStats(obj.getAsJsonObject("secondary_zone"))
         }
 
         return LotteryStats(
             lotteryType = lotteryType,
             totalDraws = totalDraws,
             lastIssue = lastIssue,
+            latestDrawDate = latestDrawDate,
             stats = statsMap
         )
     }
@@ -108,7 +111,7 @@ class LotteryStatsAdapter : JsonDeserializer<LotteryStats>, JsonSerializer<Lotte
             for (elem in array) {
                 if (elem.isJsonObject) {
                     val item = elem.asJsonObject
-                    val number = item.get("number")?.asString ?: ""
+                    val number = item.get("number")?.takeIf { !it.isJsonNull }?.asString ?: ""
                     if (number.isNotBlank()) {
                         map[number] = parseNumberStat(item)
                     }
@@ -120,9 +123,9 @@ class LotteryStatsAdapter : JsonDeserializer<LotteryStats>, JsonSerializer<Lotte
 
     private fun parseNumberStat(item: JsonObject): NumberStat {
         val freq = when {
-            item.has("total_count") -> item.get("total_count").asInt
+            item.has("total_count") && !item.get("total_count").isJsonNull -> item.get("total_count").asInt
             item.has("frequency") && item.get("frequency").isJsonPrimitive &&
-                    item.getAsJsonPrimitive("frequency").isNumber -> {
+                item.getAsJsonPrimitive("frequency").isNumber -> {
                 val f = item.get("frequency").asFloat
                 if (f > 1.0f) f.toInt() else item.get("frequency").asInt
             }
@@ -130,31 +133,38 @@ class LotteryStatsAdapter : JsonDeserializer<LotteryStats>, JsonSerializer<Lotte
         }
 
         val rate = when {
-            item.has("rate") -> item.get("rate").asFloat
+            item.has("rate") && !item.get("rate").isJsonNull -> item.get("rate").asFloat
             item.has("frequency") && item.get("frequency").isJsonPrimitive &&
-                    item.getAsJsonPrimitive("frequency").isNumber -> {
+                item.getAsJsonPrimitive("frequency").isNumber -> {
                 val f = item.get("frequency").asFloat
                 if (f <= 1.0f) f else 0f
             }
             else -> 0f
         }
 
-        val hotStatus = item.get("hot_status")?.asString ?: ""
-        val isHot = item.get("is_hot")?.asBoolean ?: (hotStatus.equals("hot", ignoreCase = true))
-        val isCold = item.get("is_cold")?.asBoolean ?: (hotStatus.equals("cold", ignoreCase = true))
+        val hitRate = item.get("hit_rate")?.takeIf { !it.isJsonNull }?.asFloat ?: rate.coerceAtMost(1f)
+        val hotStatus = item.get("hot_status")?.takeIf { !it.isJsonNull }?.asString ?: ""
+        val isHot = item.get("is_hot")?.takeIf { !it.isJsonNull }?.asBoolean
+            ?: hotStatus.equals("hot", ignoreCase = true)
+        val isCold = item.get("is_cold")?.takeIf { !it.isJsonNull }?.asBoolean
+            ?: hotStatus.equals("cold", ignoreCase = true)
 
-        val currentOmission = item.get("current_omission")?.asInt ?: 0
-        val maxOmission = item.get("max_omission")?.asInt ?: 0
-        val avgOmission = item.get("avg_omission")?.asFloat ?: 0f
+        val currentOmission = item.get("current_omission")?.takeIf { !it.isJsonNull }?.asInt ?: 0
+        val maxOmission = item.get("max_omission")?.takeIf { !it.isJsonNull }?.asInt ?: 0
+        val avgOmission = item.get("avg_omission")?.takeIf { !it.isJsonNull }?.asFloat ?: 0f
+        val desireIndex = item.get("desire_index")?.takeIf { !it.isJsonNull }?.asFloat
+            ?: if (avgOmission > 0f) currentOmission.toFloat() / avgOmission else 0f
 
         return NumberStat(
             frequency = freq,
             rate = rate,
+            hitRate = hitRate,
             isHot = isHot,
             isCold = isCold,
             currentOmission = currentOmission,
             maxOmission = maxOmission,
-            avgOmission = avgOmission
+            avgOmission = avgOmission,
+            desireIndex = desireIndex
         )
     }
 
@@ -168,6 +178,7 @@ class LotteryStatsAdapter : JsonDeserializer<LotteryStats>, JsonSerializer<Lotte
         obj.addProperty("lottery_type", src.lotteryType)
         obj.addProperty("total_draws", src.totalDraws)
         obj.addProperty("last_issue", src.lastIssue)
+        obj.addProperty("latest_draw_date", src.latestDrawDate)
         context?.serialize(src.stats)?.let { obj.add("stats", it) }
         return obj
     }
@@ -199,7 +210,9 @@ data class HistoryResponse(
 data class HealthResponse(
     val status: String = "",
     val version: String = "",
-    val timestamp: String = ""
+    val timestamp: String = "",
+    @SerializedName("latest_draws")
+    val latestDraws: Map<String, Map<String, String>>? = null
 )
 
 data class LotteryRuleDetail(

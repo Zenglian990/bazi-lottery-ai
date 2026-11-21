@@ -41,9 +41,10 @@ def test_scenario_qxc_ai_divination():
     ai_resp = client.post_divination({
         "birth_datetime": birth_dt,
         "lottery_type": "qxc",
+        "provider": "fallback",
         "recommended_numbers": {
-            "front_six": norm_p,
-            "seventh_ball": norm_s,
+            "primary_numbers": norm_p,
+            "secondary_numbers": norm_s,
         },
         "bazi_summary": {
             "day_master": bazi["day_master"],

@@ -269,3 +269,124 @@ def get_total_draws_count(
             init_db(target_path, seed_if_empty=True)
             return _query_total_draws_count(target_path, lottery_type)
         raise
+
+
+def get_draws_with_total(
+    lottery_type: str,
+    limit: int = 100,
+    offset: int = 0,
+    db_path: Optional[Path] = None,
+) -> tuple[List[Dict[str, Any]], int]:
+    """在单次 SQLite 连接内同时读取分页开奖记录与总期数，减少连接开销。"""
+    target_path = Path(db_path or settings.DB_PATH)
+    resolved_key = str(target_path.resolve())
+    lt = lottery_type.lower()
+
+    def _run_once():
+        with get_db_connection(target_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT lottery_type, issue, draw_date, primary_numbers, secondary_numbers, sales_amount, pool_amount
+                FROM lottery_draws
+                WHERE lottery_type = ?
+                ORDER BY CAST(issue AS INTEGER) DESC
+                LIMIT ? OFFSET ?
+                """,
+                (lt, limit, offset),
+            )
+            rows = cursor.fetchall()
+            cursor.execute(
+                "SELECT COUNT(*) as cnt FROM lottery_draws WHERE lottery_type = ?",
+                (lt,),
+            )
+            total = int(cursor.fetchone()["cnt"])
+            return rows, total
+
+    try:
+        rows, total = _run_once()
+    except sqlite3.OperationalError as exc:
+        if "no such table" in str(exc).lower():
+            init_db(target_path, seed_if_empty=True)
+            rows, total = _run_once()
+        else:
+            raise
+
+    if not rows and offset == 0:
+        with _CHECKED_PATHS_LOCK:
+            already_checked = resolved_key in _CHECKED_EMPTY_PATHS
+        if not already_checked:
+            inserted = seed_database_if_empty(target_path)
+            with _CHECKED_PATHS_LOCK:
+                _CHECKED_EMPTY_PATHS.add(resolved_key)
+            if inserted > 0:
+                rows, total = _run_once()
+
+    results = []
+    for r in rows:
+        results.append({
+            "lottery_type": r["lottery_type"],
+            "issue": r["issue"],
+            "draw_date": r["draw_date"],
+            "primary_numbers": json.loads(r["primary_numbers"]) if r["primary_numbers"] else [],
+            "secondary_numbers": json.loads(r["secondary_numbers"]) if r["secondary_numbers"] else None,
+            "sales_amount": r["sales_amount"],
+            "pool_amount": r["pool_amount"],
+        })
+    return results, total
+
+
+def get_latest_draw_summary(db_path: Optional[Path] = None) -> Dict[str, Dict[str, Any]]:
+    """查询各彩种最新期号、最新开奖日期与滞后天数（用于健康检查与滞后告警）。"""
+    from datetime import date, datetime, timedelta, timezone
+
+    target_path = Path(db_path or settings.DB_PATH)
+    china_today = datetime.now(timezone(timedelta(hours=8))).date()
+    summary: Dict[str, Dict[str, Any]] = {}
+
+    def _query():
+        with get_db_connection(target_path) as conn:
+            cursor = conn.cursor()
+            for lt in settings.SUPPORTED_LOTTERIES:
+                cursor.execute(
+                    """
+                    SELECT issue, draw_date
+                    FROM lottery_draws
+                    WHERE lottery_type = ?
+                    ORDER BY CAST(issue AS INTEGER) DESC
+                    LIMIT 1
+                    """,
+                    (lt,),
+                )
+                row = cursor.fetchone()
+                if row:
+                    draw_date_str = str(row["draw_date"] or "")[:10]
+                    stale_days: Optional[int] = None
+                    if len(draw_date_str) == 10:
+                        try:
+                            d_obj = date.fromisoformat(draw_date_str)
+                            stale_days = max(0, (china_today - d_obj).days)
+                        except ValueError:
+                            stale_days = None
+                    summary[lt] = {
+                        "latest_issue": row["issue"],
+                        "latest_draw_date": draw_date_str,
+                        "stale_days": stale_days,
+                    }
+                else:
+                    summary[lt] = {
+                        "latest_issue": None,
+                        "latest_draw_date": None,
+                        "stale_days": None,
+                    }
+
+    try:
+        _query()
+    except sqlite3.OperationalError as exc:
+        if "no such table" in str(exc).lower():
+            init_db(target_path, seed_if_empty=True)
+            _query()
+        else:
+            raise
+
+    return summary

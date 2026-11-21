@@ -46,15 +46,15 @@ def _assert_public_ip(ip_obj: ipaddress._BaseAddress) -> None:
             raise ValueError("Access to restricted IP range is forbidden (SSRF prevention).")
 
 
-def _validate_safe_url(url: Optional[str]) -> Optional[str]:
-    """Validate user_base_url against SSRF including DNS resolution and IPv6/CGNAT checks."""
-    if not url:
-        return None
-    url = url.strip()
+def _validate_url_static(url: str) -> Tuple[str, str, int]:
+    """执行 URL 协议、主机名、端口与字面 IP 静态安全校验，返回 (url, hostname, port)。"""
     parsed = urlparse(url)
     scheme = (parsed.scheme or "").lower()
-    if scheme not in ("https", "http"):
-        raise ValueError("Invalid protocol scheme in base_url. Only https/http allowed.")
+    allowed_schemes = ("https",) if settings.IS_PRODUCTION else ("https", "http")
+    if scheme not in allowed_schemes:
+        if settings.IS_PRODUCTION and scheme == "http":
+            raise ValueError("Plaintext http:// base_url is forbidden in production (HTTPS required).")
+        raise ValueError("Invalid protocol scheme in base_url. Only https allowed.")
     if parsed.username or parsed.password:
         raise ValueError("Userinfo in base_url is forbidden.")
     if parsed.query or parsed.fragment:
@@ -89,7 +89,6 @@ def _validate_safe_url(url: Optional[str]) -> Optional[str]:
     elif port < 1 or port > 65535:
         raise ValueError("Port out of range in base_url")
 
-    # 1. 字面 IP 校验
     is_literal_ip = False
     try:
         ip_obj = ipaddress.ip_address(hostname)
@@ -99,14 +98,14 @@ def _validate_safe_url(url: Optional[str]) -> Optional[str]:
         if is_literal_ip or "forbidden" in str(ve).lower():
             raise
 
-    # 2. 全量 DNS 解析校验（防止 DNS Rebinding / 十进制八进制 IP 绕过）
-    try:
-        addr_infos = socket.getaddrinfo(hostname, port, type=socket.SOCK_STREAM)
-    except OSError as exc:
-        raise ValueError("Unable to resolve base_url host") from exc
+    return url, hostname, port
+
+
+def _verify_resolved_addrinfos(addr_infos: Any) -> List[str]:
+    """校验 DNS 返回的全部 IP 均为公网地址并返回安全 IP 列表。"""
     if not addr_infos:
         raise ValueError("Unable to resolve base_url host")
-
+    verified_ips: List[str] = []
     for info in addr_infos:
         sockaddr = info[4]
         if not sockaddr:
@@ -117,12 +116,44 @@ def _validate_safe_url(url: Optional[str]) -> Optional[str]:
         except ValueError as exc:
             raise ValueError("Invalid resolved IP address") from exc
         _assert_public_ip(resolved_ip)
+        if str(resolved_ip) not in verified_ips:
+            verified_ips.append(str(resolved_ip))
+    if not verified_ips:
+        raise ValueError("Unable to resolve valid public IP for base_url host")
+    return verified_ips
 
+
+def _validate_safe_url(url: Optional[str]) -> Optional[str]:
+    """同步安全校验（供非异步上下文或单元测试调用）。"""
+    if not url:
+        return None
+    url = url.strip()
+    url, hostname, port = _validate_url_static(url)
+    try:
+        addr_infos = socket.getaddrinfo(hostname, port, type=socket.SOCK_STREAM)
+    except OSError as exc:
+        raise ValueError("Unable to resolve base_url host") from exc
+    _verify_resolved_addrinfos(addr_infos)
     return url
 
 
+async def _validate_safe_url_async(url: Optional[str]) -> Optional[Tuple[str, List[str]]]:
+    """异步安全校验：使用事件循环线程池解析 DNS，不阻塞 FastAPI 并发事件循环，并返回核验通过的公网 IP 列表。"""
+    if not url:
+        return None
+    url = url.strip()
+    url, hostname, port = _validate_url_static(url)
+    loop = asyncio.get_running_loop()
+    try:
+        addr_infos = await loop.getaddrinfo(hostname, port, type=socket.SOCK_STREAM)
+    except OSError as exc:
+        raise ValueError("Unable to resolve base_url host") from exc
+    verified_ips = _verify_resolved_addrinfos(addr_infos)
+    return url, verified_ips
+
+
 def _safe_error_summary(exc: Exception) -> str:
-    """生成脱敏后的异常摘要，严禁打印完整 URL Query、Bearer Token 或用户密钥。"""
+    """生成脱敏后的异常摘要，严禁打印完整 URL Query、Bearer Token 或任意形态用户密钥。"""
     if isinstance(exc, httpx.HTTPStatusError):
         host = exc.request.url.host if exc.request and exc.request.url else "unknown"
         return f"HTTPStatusError(status={exc.response.status_code}, host={host})"
@@ -131,7 +162,7 @@ def _safe_error_summary(exc: Exception) -> str:
         return f"{type(exc).__name__}(host={host})"
     raw = f"{type(exc).__name__}: {str(exc)}"
     redacted = re.sub(
-        r"(key=|Bearer\s+|x-goog-api-key['\":\s]+|AIza|sk-)[A-Za-z0-9_\-.]{4,}",
+        r"(key=|api[_-]?key['\":\s=]+|token['\":\s=]+|Bearer\s+|x-goog-api-key['\":\s]+|AIza|sk-|ds-|gsk_)[A-Za-z0-9_\-.]{4,}",
         r"\1***",
         raw,
         flags=re.IGNORECASE,
@@ -177,6 +208,7 @@ def validate_divination_security(request: BaziDivinationRequest) -> Optional[str
     进入 SSE 流或 LLM 调用前执行集中安全校验，校验失败直接抛出 ValueError（由路由返回 HTTP 400）：
     - 若传入 user_base_url，必须同时传入 user_api_key 且 URL 通过 SSRF + DNS 校验；
     - 若传入 user_api_key，必须指定单一 provider（不得为 auto 或空）；
+    - provider='gemini' 固定使用 Google 官方域名，拒绝附带无效 user_base_url；
     - 绝不向任何 user_base_url 发送服务端 Key，也不静默忽略非法 user_base_url。
     """
     has_user_key = bool(request.user_api_key and request.user_api_key.strip())
@@ -189,10 +221,39 @@ def validate_divination_security(request: BaziDivinationRequest) -> Optional[str
     if has_user_key and provider_raw in ("", "auto"):
         raise ValueError("使用自定义 user_api_key 时必须明确指定单一 provider（deepseek/gemini/openai/fallback）")
 
+    if has_user_url and provider_raw == "gemini":
+        raise ValueError("Gemini 通道固定直连 Google 官方接口，不支持自定义 user_base_url")
+
     if has_user_url:
         return _validate_safe_url(request.user_base_url)
 
     return None
+
+
+async def validate_divination_security_async(request: BaziDivinationRequest) -> Optional[Tuple[str, List[str]]]:
+    """异步版集中安全校验，防止同步 DNS 解析阻塞事件循环。"""
+    has_user_key = bool(request.user_api_key and request.user_api_key.strip())
+    has_user_url = bool(request.user_base_url and request.user_base_url.strip())
+    provider_raw = (request.provider or "").strip().lower()
+
+    if has_user_url and not has_user_key:
+        raise ValueError("使用自定义 user_base_url 时必须同时提供 user_api_key")
+
+    if has_user_key and provider_raw in ("", "auto"):
+        raise ValueError("使用自定义 user_api_key 时必须明确指定单一 provider（deepseek/gemini/openai/fallback）")
+
+    if has_user_url and provider_raw == "gemini":
+        raise ValueError("Gemini 通道固定直连 Google 官方接口，不支持自定义 user_base_url")
+
+    if has_user_url:
+        return await _validate_safe_url_async(request.user_base_url)
+
+    return None
+
+
+async def _verify_url_before_connect(url: str) -> None:
+    """在发起上游连接前即时执行二次异步 DNS 校验，缩小并防堵 DNS Rebinding TOCTOU 窗口。"""
+    await _validate_safe_url_async(url)
 
 
 def _resolve_provider_configs(request: BaziDivinationRequest) -> Dict[str, Any]:
@@ -503,6 +564,14 @@ def build_user_prompt(request: BaziDivinationRequest) -> str:
     )
 
 
+_FORBIDDEN_PROMISE_RE = re.compile(r"(必中|稳赚|包中|保本|100%\s*中奖|稳赢)")
+
+
+def _sanitize_forbidden_promises(text: str) -> str:
+    """拦截并温和替换违规中奖承诺表述，防止模型输出诱导性话术。"""
+    return _FORBIDDEN_PROMISE_RE.sub("仅供参考", text)
+
+
 def _get_missing_compliance_suffix(accumulated_text: str) -> Optional[str]:
     """检查累计输出是否满足全部 4 个合规关键词与【理性倡议】段落，缺失时返回补充后缀。"""
     missing_kw = any(kw not in accumulated_text for kw in RESPONSIBLE_GAMING_KEYWORDS)
@@ -515,7 +584,8 @@ def _get_missing_compliance_suffix(accumulated_text: str) -> Optional[str]:
 
 
 def _ensure_disclaimer_compliance(text: str) -> str:
-    """Ensure the text strictly contains the 5th section and all responsible gaming keywords."""
+    """确保解盘文本无违规承诺词，且强制包含【理性倡议】及 4 项合规关键词。"""
+    text = _sanitize_forbidden_promises(text)
     suffix = _get_missing_compliance_suffix(text)
     if suffix:
         text = text.rstrip() + suffix
@@ -523,7 +593,7 @@ def _ensure_disclaimer_compliance(text: str) -> str:
     headers = ["【命盘乾坤】", "【数理玄机】", "【五行合局】", "【灵感吉言】", "【理性倡议】"]
     missing = [h for h in headers if h not in text]
     if missing:
-        logger.warning(f"LLM output missing required headers: {missing}, enforcing standard sections")
+        logger.warning("LLM output missing required headers: %s", missing)
         if "【理性倡议】" not in text:
             text = text.rstrip() + f"\n\n{RESPONSIBLE_GAMING_SECTION}"
 
@@ -606,6 +676,9 @@ async def _call_openai_api(
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
     }
+
+    if request.user_base_url:
+        await _verify_url_before_connect(endpoint)
 
     async with _acquire_http_client() as client:
         resp = await client.post(endpoint, json=payload, headers=headers)
@@ -701,6 +774,8 @@ async def stream_divination_chunks(request: BaziDivinationRequest) -> AsyncGener
             "Accept": "text/event-stream",
         }
         try:
+            if request.user_base_url:
+                await _verify_url_before_connect(endpoint)
             async with _acquire_http_client() as client:
                 async with client.stream("POST", endpoint, json=payload, headers=headers) as response:
                     if response.status_code == 200:
@@ -716,8 +791,9 @@ async def stream_divination_chunks(request: BaziDivinationRequest) -> AsyncGener
                                     choices = json_data.get("choices", [])
                                     if choices:
                                         delta_obj = choices[0].get("delta", {})
-                                        delta = delta_obj.get("content") or delta_obj.get("reasoning_content") or ""
+                                        delta = delta_obj.get("content") or ""
                                         if delta:
+                                            delta = _sanitize_forbidden_promises(delta)
                                             emitted_any = True
                                             accumulated_parts.append(delta)
                                             yield delta
@@ -801,6 +877,8 @@ async def stream_divination_chunks(request: BaziDivinationRequest) -> AsyncGener
             "Accept": "text/event-stream",
         }
         try:
+            if request.user_base_url:
+                await _verify_url_before_connect(endpoint)
             async with _acquire_http_client() as client:
                 async with client.stream("POST", endpoint, json=payload, headers=headers) as response:
                     if response.status_code == 200:
@@ -817,6 +895,7 @@ async def stream_divination_chunks(request: BaziDivinationRequest) -> AsyncGener
                                     if choices:
                                         delta = choices[0].get("delta", {}).get("content", "")
                                         if delta:
+                                            delta = _sanitize_forbidden_promises(delta)
                                             emitted_any = True
                                             accumulated_parts.append(delta)
                                             yield delta

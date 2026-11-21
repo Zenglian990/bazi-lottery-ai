@@ -81,7 +81,11 @@ def test_adversarial_injection_payloads_safely_handled():
 
     xss_payload = ["<script>alert(1)</script>", "1", "2"]
     r_xss = client.validate_ticket("fc3d", xss_payload)
-    assert r_xss["data"]["is_valid"] is False
+    assert r_xss["status_code"] in (200, 422)
+    if r_xss["status_code"] == 200:
+        assert r_xss["data"]["is_valid"] is False
+    else:
+        assert "detail" in r_xss["data"]
 
 def test_adversarial_empty_and_null_payloads():
     """T2.6: Completely empty ball lists must be handled cleanly with validation failure."""

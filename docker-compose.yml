@@ -2,18 +2,24 @@ services:
   backend:
     build:
       context: .
-      dockerfile: backend/Dockerfile
+      dockerfile: Dockerfile
     image: bazi-lottery-backend:latest
     container_name: bazi_lottery_backend
     restart: unless-stopped
     ports:
       - "8080:8080"
+    env_file:
+      - path: .env
+        required: false
     environment:
       - ENV=${ENV:-production}
       - PORT=8080
       - TZ=Asia/Shanghai
       - LOTTERY_DB_PATH=/app/data/lottery.db
+      - AUTO_SYNC_ON_STARTUP=${AUTO_SYNC_ON_STARTUP:-false}
+      - TRUST_X_FORWARDED_FOR=${TRUST_X_FORWARDED_FOR:-true}
       - ADMIN_TOKEN=${ADMIN_TOKEN:-}
+      - AI_SERVICE_TOKEN=${AI_SERVICE_TOKEN:-}
       - APP_HMAC_SECRET=${APP_HMAC_SECRET:-}
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
       - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.5-flash}
@@ -24,16 +30,21 @@ services:
       - OPENAI_BASE_URL=${OPENAI_BASE_URL:-https://api.openai.com/v1}
       - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
       - AI_DEFAULT_PROVIDER=${AI_DEFAULT_PROVIDER:-auto}
+      - GCS_STATE_BUCKET=${GCS_STATE_BUCKET:-}
+      - GCS_STATE_OBJECT=${GCS_STATE_OBJECT:-bazi-lottery/lottery.db}
     volumes:
-      - ./data:/app/data
+      - lottery_data:/app/data
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/health || exit 1"]
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/api/health', timeout=5).read()\" || exit 1"]
       interval: 30s
-      timeout: 10s
+      timeout: 8s
       retries: 3
       start_period: 15s
     networks:
       - lottery_network
+
+volumes:
+  lottery_data:
 
 networks:
   lottery_network:

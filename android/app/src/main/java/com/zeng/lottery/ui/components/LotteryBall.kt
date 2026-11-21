@@ -20,7 +20,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -33,6 +36,7 @@ import com.zeng.lottery.ui.theme.ElementFire
 import com.zeng.lottery.ui.theme.ElementMetal
 import com.zeng.lottery.ui.theme.ElementWater
 import com.zeng.lottery.ui.theme.ElementWood
+import com.zeng.lottery.ui.theme.FortuneGold
 import com.zeng.lottery.ui.theme.GoldBallBase
 import com.zeng.lottery.ui.theme.GoldBallHighlight
 import com.zeng.lottery.ui.theme.GoldBallShadow
@@ -55,16 +59,15 @@ fun LotteryBall(
     size: Dp = 44.dp,
     delayMs: Long = 0L,
     animate: Boolean = true,
+    highlighted: Boolean = false,
     modifier: Modifier = Modifier
 ) {
-    val scaleAnim = remember { Animatable(if (animate) 0.2f else 1f) }
-    val offsetYAnim = remember { Animatable(if (animate) -40f else 0f) }
+    val scaleAnim = remember(animate) { Animatable(if (animate) 0.25f else 1f) }
+    val offsetYAnim = remember(animate) { Animatable(if (animate) -28f else 0f) }
 
     if (animate) {
         LaunchedEffect(number, colorType) {
-            if (delayMs > 0) {
-                delay(delayMs)
-            }
+            if (delayMs > 0) delay(delayMs)
             scaleAnim.animateTo(
                 targetValue = 1f,
                 animationSpec = spring(
@@ -88,6 +91,12 @@ fun LotteryBall(
         BallColorType.RED -> Triple(RedBallHighlight, RedBallBase, RedBallShadow)
     }
 
+    val colorLabel = when (colorType) {
+        BallColorType.BLUE -> "蓝球"
+        BallColorType.GOLD -> "特别号"
+        BallColorType.RED -> "红球"
+    }
+
     val elementColor = when (wuxingElement) {
         "金", "metal" -> ElementMetal
         "木", "wood" -> ElementWood
@@ -97,9 +106,18 @@ fun LotteryBall(
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
 
+    val accessibilityLabel = buildString {
+        append(colorLabel).append(" ").append(number)
+        if (!wuxingElement.isNullOrBlank()) append("，五行属").append(wuxingElement)
+        if (highlighted) append("，已命中开奖号")
+    }
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
+            .semantics(mergeDescendants = true) {
+                contentDescription = accessibilityLabel
+            }
             .padding(horizontal = 3.dp, vertical = 2.dp)
             .graphicsLayer {
                 scaleX = scaleAnim.value
@@ -111,11 +129,9 @@ fun LotteryBall(
             modifier = Modifier.size(size),
             contentAlignment = Alignment.Center
         ) {
-            // 3D Spherical Canvas with Off-Center Radial Gradient
             Canvas(modifier = Modifier.matchParentSize()) {
                 val radius = size.toPx() / 2f
                 val centerOffset = Offset(radius, radius)
-                // Light source from top-left (35% into sphere)
                 val lightSource = Offset(radius * 0.65f, radius * 0.65f)
 
                 drawCircle(
@@ -128,7 +144,6 @@ fun LotteryBall(
                     center = centerOffset
                 )
 
-                // Subtle rim specular arc
                 drawCircle(
                     brush = Brush.radialGradient(
                         colors = listOf(Color.White.copy(alpha = 0.5f), Color.Transparent),
@@ -138,16 +153,25 @@ fun LotteryBall(
                     radius = radius * 0.35f,
                     center = Offset(radius * 0.65f, radius * 0.65f)
                 )
+
+                if (highlighted) {
+                    drawCircle(
+                        color = FortuneGold,
+                        radius = radius - 1.5.dp.toPx(),
+                        center = centerOffset,
+                        style = Stroke(width = 2.5.dp.toPx())
+                    )
+                }
             }
 
-            // Bold Number in Center
             Text(
                 text = number,
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = (size.value * 0.42f).sp
                 ),
-                color = Color.White
+                // 金球用深炭黑字保证高对比度，红/蓝球用纯白字
+                color = if (colorType == BallColorType.GOLD) Color(0xFF1A1200) else Color.White
             )
         }
 

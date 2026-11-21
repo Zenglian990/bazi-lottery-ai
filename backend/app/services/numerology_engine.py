@@ -1,37 +1,32 @@
 """Hetu numerology mapping, 5-tier lucky number pooling, and A-Res weighted lottery recommendation engine."""
+from datetime import datetime, timedelta, timezone
+import itertools
 import math
 import random
-from datetime import datetime
-from zoneinfo import ZoneInfo
-from typing import Dict, List, Tuple, Any, Optional
-from lunar_python import Solar, Lunar
+from typing import Any, Dict, List, Optional, Tuple
+from lunar_python import Solar
 
-CHINA_TZ = ZoneInfo("Asia/Shanghai")
-
-from backend.app.services.wuxing_engine import (
-    ELEMENT_NAMES_ZH,
-    ZH_TO_ELEMENT,
-    STEM_ELEMENTS,
-    BRANCH_HIDDEN_STEMS,
-    MOTHER_ELEMENT,
-)
-from backend.app.services.lottery_rules import get_lottery_rule
 from backend.app.db.database import get_draws
+from backend.app.services.lottery_rules import get_lottery_rule
 from backend.app.services.name_numerology import analyze_name_numerology
+from backend.app.services.wuxing_engine import (
+    BRANCH_HIDDEN_STEMS,
+    ELEMENT_NAMES_ZH,
+    MOTHER_ELEMENT,
+    STEM_ELEMENTS,
+    ZH_TO_ELEMENT,
+)
 from backend.app.services.yijing_rag_service import match_classics_evidence
 
-# Element normalization mapping between Chinese and English keys
+CHINA_TZ = timezone(timedelta(hours=8))
+
+# 中英文五行键归一化映射
 ZH_TO_EN_ELEMENT: Dict[str, str] = {
     "木": "wood", "火": "fire", "土": "earth", "金": "metal", "水": "water",
     "wood": "wood", "fire": "fire", "earth": "earth", "metal": "metal", "water": "water",
 }
 
-# Classical Hetu (河图) Ten Numbers Mapping: Tail Modulo 10 -> Element
-# 天一生水 地六成之 (1, 6 -> Water)
-# 地二生火 天七成之 (2, 7 -> Fire)
-# 天三生木 地八成之 (3, 8 -> Wood)
-# 地四生金 天九成之 (4, 9 -> Metal)
-# 天五生土 地十成之 (5, 0 -> Earth)
+# 经典河图五行尾数映射：1/6水、2/7火、3/8木、4/9金、5/0土
 HETU_TAIL_TO_ELEMENT: Dict[int, str] = {
     1: "water", 6: "water",
     2: "fire", 7: "fire",
@@ -48,16 +43,16 @@ ELEMENT_TO_TAILS: Dict[str, List[int]] = {
     "earth": [5, 0],
 }
 
-# 5-Tier Lucky Multipliers
+# 5 级八字用神梯队权重
 TIER_WEIGHTS = {
     "tier1_primary": 1.00,       # 核心第一用神
     "tier2_supporting": 0.80,    # 次吉生扶用神
-    "tier3_deficiency": 0.60,    # 缺失五行调候平衡
+    "tier3_deficiency": 0.60,    # 缺失五行调候平衡（非忌神）
     "tier4_neutral": 0.40,       # 中和平和数理
     "tier5_taboo": 0.15,         # 忌神避讳偏冷
 }
 
-# Strategy Presets (w_bazi, w_freq, w_omission, omission_mode)
+# 策略预设 (w_bazi, w_freq, w_omission, omission_mode)
 STRATEGY_PRESETS = {
     "bazi": (0.60, 0.25, 0.15, "balanced"),
     "bazi_priority": (0.60, 0.25, 0.15, "balanced"),
@@ -66,9 +61,7 @@ STRATEGY_PRESETS = {
     "cold_reversal": (0.25, 0.20, 0.55, "cold"),
 }
 
-# Bidirectional / Alias Strategy Mapping for Chinese & English Strategy Presets
 STRATEGY_ALIAS_MAP: Dict[str, str] = {
-    # Bazi / Numerology Priority
     "bazi": "bazi_priority",
     "bazi_priority": "bazi_priority",
     "bazi_pure": "bazi_priority",
@@ -76,19 +69,16 @@ STRATEGY_ALIAS_MAP: Dict[str, str] = {
     "八字优先": "bazi_priority",
     "命理优先": "bazi_priority",
     "八字命理": "bazi_priority",
-    # Balanced Big Data
     "balanced": "balanced",
     "稳健大数据": "balanced",
     "八字五行平衡": "balanced",
     "五行生克平衡": "balanced",
     "五行平衡": "balanced",
     "综合平衡": "balanced",
-    # Hot Number Chase
     "hot_chase": "hot_chase",
     "冷热追号": "hot_chase",
     "热号追随": "hot_chase",
     "热号优先": "hot_chase",
-    # Cold Reversal
     "cold_reversal": "cold_reversal",
     "极冷号反弹": "cold_reversal",
     "冷号反弹": "cold_reversal",
@@ -105,19 +95,18 @@ STRATEGY_CANONICAL_ZH: Dict[str, str] = {
 
 
 def get_hetu_element(number: int) -> str:
-    """Map any integer to its Hetu Five Element via last digit (mod 10)."""
+    """按河图尾数取模映射号码所属五行。"""
     tail = abs(number) % 10
     return HETU_TAIL_TO_ELEMENT[tail]
 
 
 def partition_numbers_by_element(min_val: int, max_val: int) -> Dict[str, List[int]]:
-    """Partition integer range [min_val, max_val] into 5 Wuxing subsets."""
+    """将号码区间 [min_val, max_val] 按河图五行划分至 5 个集合。"""
     partition: Dict[str, List[int]] = {
         "wood": [], "fire": [], "earth": [], "metal": [], "water": []
     }
     for n in range(min_val, max_val + 1):
-        elem = get_hetu_element(n)
-        partition[elem].append(n)
+        partition[get_hetu_element(n)].append(n)
     return partition
 
 
@@ -128,8 +117,8 @@ def compute_bazi_score(
     ji_shen: List[str],
 ) -> Tuple[float, str]:
     """
-    Calculate 5-tier Bazi score and tier classification for a candidate ball number.
-    Safely normalizes both Chinese ('金','木','水','火','土') and English ('metal','wood',...) keys.
+    计算候选号码的 5 级八字用神得分。
+    注意：忌神优先级高于缺行——忌神缺失为吉，绝不可反向升格为 Tier 3 补强。
     """
     elem = get_hetu_element(number)
     xi_norm = [ZH_TO_EN_ELEMENT.get(e, e) for e in xi_yong_shen]
@@ -141,32 +130,36 @@ def compute_bazi_score(
 
     if elem == primary_xi:
         return TIER_WEIGHTS["tier1_primary"], "Tier 1"
-    elif elem in secondary_xi:
+    if elem in secondary_xi:
         return TIER_WEIGHTS["tier2_supporting"], "Tier 2"
-    elif elem in lacking_norm:
-        return TIER_WEIGHTS["tier3_deficiency"], "Tier 3"
-    elif elem in ji_norm:
+    if elem in ji_norm:
         return TIER_WEIGHTS["tier5_taboo"], "Tier 5"
-    else:
-        return TIER_WEIGHTS["tier4_neutral"], "Tier 4"
+    if elem in lacking_norm:
+        return TIER_WEIGHTS["tier3_deficiency"], "Tier 3"
+    return TIER_WEIGHTS["tier4_neutral"], "Tier 4"
 
 
 def a_res_weighted_sample_without_replacement(
     candidates_with_weights: List[Tuple[int, float]],
     k: int,
+    rng: Optional[random.Random] = None,
 ) -> List[int]:
     """
-    Efraimidis-Spirakis (A-Res) Weighted Reservoir Sampling Without Replacement.
-    Guarantees exactly k distinct elements sampled proportional to weights, returned ascending sorted.
+    对数空间 Efraimidis-Spirakis (A-Res) 无放回加权蓄水池抽样。
+    使用 key = ln(u) / weight（与 u^(1/w) 严格单调等价）彻底消除低权重下的 IEEE 754 浮点下溢。
     """
     if len(candidates_with_weights) < k:
         raise ValueError(f"Candidate pool size ({len(candidates_with_weights)}) < requested count ({k})")
+    if k <= 0:
+        return []
 
-    keys = []
+    r = rng if rng is not None else random
+    keys: List[Tuple[float, int]] = []
     for item, w in candidates_with_weights:
         weight = max(float(w), 1e-6)
-        u = max(random.random(), 1e-12)
-        key = u ** (1.0 / weight)
+        # 严格限制 u ∈ (0, 1)，避免 ln(0) 负无穷或 ln(1)=0 导致平局
+        u = min(max(r.random(), 1e-12), 1.0 - 1e-12)
+        key = math.log(u) / weight
         keys.append((key, item))
 
     keys.sort(key=lambda x: x[0], reverse=True)
@@ -177,14 +170,15 @@ def a_res_weighted_sample_without_replacement(
 def weighted_choice_with_replacement(
     candidates_with_weights: List[Tuple[int, float]],
     k: int,
+    rng: Optional[random.Random] = None,
 ) -> List[int]:
-    """
-    Weighted choice with replacement for positional digit lotteries (e.g. FC3D, QXC front digits).
-    Preserves generation order (not sorted).
-    """
+    """支持有放回的位置独立加权抽样（适用于福彩 3D、七星彩前 6 位），保留生成顺序。"""
+    if k <= 0:
+        return []
+    r = rng if rng is not None else random
     items = [item for item, _ in candidates_with_weights]
     weights = [max(float(w), 1e-6) for _, w in candidates_with_weights]
-    return random.choices(items, weights=weights, k=k)
+    return r.choices(items, weights=weights, k=k)
 
 
 def resolve_strategy_weights(
@@ -193,10 +187,7 @@ def resolve_strategy_weights(
     w_freq: Optional[float] = None,
     w_omission: Optional[float] = None,
 ) -> Tuple[float, float, float, str]:
-    """
-    Resolve and normalize tri-factor weights (w_bazi, w_freq, w_omission) and omission mode.
-    Supports English strategy identifiers and Chinese strategy aliases.
-    """
+    """解析并归一化三元权重 (w_bazi, w_freq, w_omission) 与遗漏评分模式。"""
     raw_strategy = (strategy or "balanced").strip()
     canon_strategy = (
         STRATEGY_ALIAS_MAP.get(raw_strategy)
@@ -215,9 +206,7 @@ def resolve_strategy_weights(
         total = wb + wf + wo
         if total > 1e-6:
             return wb / total, wf / total, wo / total, om_mode
-        else:
-            # Fallback for all-zero weights: uniform weighting
-            return 0.3333, 0.3333, 0.3334, om_mode
+        return 0.3333, 0.3333, 0.3334, om_mode
 
     return default_wb, default_wf, default_wo, om_mode
 
@@ -226,11 +215,7 @@ def get_historical_feature_maps(
     lottery_type: str,
     zone_index: int = 0,
 ) -> Tuple[Dict[int, float], Dict[int, float]]:
-    """
-    Load recent 100 draws from SQLite database and compute:
-    1. Appearance counts C(n)
-    2. Current omission gaps G(n)
-    """
+    """读取最近 100 期历史开奖，统计频次 C(n) 与当前遗漏 G(n)。"""
     freq_map: Dict[int, float] = {}
     omission_map: Dict[int, float] = {}
 
@@ -242,7 +227,6 @@ def get_historical_feature_maps(
     if not draws:
         return freq_map, omission_map
 
-    # Extract zone balls per draw (newest is index 0)
     for idx, d in enumerate(draws):
         if isinstance(d, dict):
             raw_balls = d.get("primary_numbers", []) if zone_index == 0 else (d.get("secondary_numbers") or [])
@@ -260,13 +244,49 @@ def get_historical_feature_maps(
             if num not in omission_map:
                 omission_map[num] = idx
 
-    # If any number hasn't appeared in recent draws, current omission is at least total draws
     total_draws = len(draws)
     for num in freq_map:
         if num not in omission_map:
             omission_map[num] = total_draws
 
     return freq_map, omission_map
+
+
+def compute_liuri_resonance(
+    day_stem_elem: str,
+    day_branch_elem: str,
+    xi_yong_shen: List[str],
+    ji_shen: List[str],
+) -> Tuple[List[str], str, float]:
+    """
+    计算今日流日与原局喜忌的严谨共振关系：
+    - 仅当流日干支五行直接命中喜用神（且非忌神）判定为「大吉」(+20%)；
+    - 仅当流日干支生助喜用神且绝非原局忌神时，判定为「小吉」(+10%)；
+    - 无良性交集时返回空共振列表，绝不将忌神元素强行当作 +20% 共振元素。
+    """
+    xi_norm = {ZH_TO_EN_ELEMENT.get(e, e) for e in xi_yong_shen}
+    ji_norm = {ZH_TO_EN_ELEMENT.get(e, e) for e in ji_shen}
+    active_today = [day_stem_elem, day_branch_elem]
+
+    direct_hits: List[str] = []
+    for e in active_today:
+        if e in xi_norm and e not in ji_norm and e not in direct_hits:
+            direct_hits.append(e)
+
+    if direct_hits:
+        return direct_hits, "大吉", 1.20
+
+    # 次级生助：生喜用神且本身不为忌神（规避身弱时印星之母为官杀忌神的问题）
+    generating_safe = {MOTHER_ELEMENT.get(e, "") for e in xi_norm} - ji_norm - {""}
+    gen_hits: List[str] = []
+    for e in active_today:
+        if e in generating_safe and e not in gen_hits:
+            gen_hits.append(e)
+
+    if gen_hits:
+        return gen_hits, "吉", 1.10
+
+    return [], "平吉", 1.00
 
 
 def calculate_candidate_weights(
@@ -284,64 +304,61 @@ def calculate_candidate_weights(
     harmonious_elements: Optional[List[str]] = None,
     name_lucky_numbers: Optional[List[int]] = None,
     gender: Optional[str] = "male",
+    resonance_multiplier: float = 1.20,
 ) -> List[Tuple[int, float]]:
-    """
-    Compute hybrid tri-factor weights for all numbers in [min_val, max_val].
-    Includes today's LiuRi cosmic resonance (+20%) and personal name numerology bonuses.
-    """
+    """计算区间内所有候选号码的混合三元权重（八字用神 + 历史频次 + 遗漏态势 + 流日/姓名/乾坤微调）。"""
     freq_map, omission_map = get_historical_feature_maps(lottery_type, zone_index)
 
-    # Calculate min and max for normalization
     pool = list(range(min_val, max_val + 1))
     freqs = [freq_map.get(n, 0.0) for n in pool]
     min_f, max_f = min(freqs), max(freqs)
-    span_f = max(max_f - min_f, 1e-6)
+    span_f = max_f - min_f
 
-    # For numbers not observed in history draws, assign maximum reasonable omission
+    # 历史未现号码采用合理上界（避免极小样本硬赋 100 压扁已出号归一化分布）
     max_observed_omission = max(omission_map.values()) if omission_map else 0.0
-    default_omission = max(max_observed_omission, 100.0) if omission_map else 0.0
+    default_omission = max(max_observed_omission + 1.0, 1.0) if omission_map else 0.0
 
     omissions = [omission_map.get(n, default_omission) for n in pool]
     min_o, max_o = min(omissions), max(omissions)
-    span_o = max(max_o - min_o, 1e-6)
+    span_o = max_o - min_o
 
     norm_harmony = [ZH_TO_EN_ELEMENT.get(e, e) for e in (harmonious_elements or [])]
     lucky_set = set(name_lucky_numbers or [])
 
     candidates_with_weights: List[Tuple[int, float]] = []
     for n in pool:
-        # 1. Bazi Score
         bazi_score, _ = compute_bazi_score(n, xi_yong_shen, lacking_elements, ji_shen)
 
-        # 2. Freq Score (normalized 0.0 - 1.0)
         c_n = freq_map.get(n, 0.0)
-        freq_score = (c_n - min_f) / span_f if span_f > 0 else 0.5
+        freq_score = (c_n - min_f) / span_f if span_f > 1e-6 else 0.5
 
-        # 3. Omission Score (normalized according to omission_mode)
         g_n = omission_map.get(n, default_omission)
-        if omission_mode == "hot":
-            # smaller omission gets higher score
-            omission_score = (max_o - g_n) / span_o if span_o > 0 else 0.5
-        elif omission_mode == "cold":
-            # larger omission gets higher score (cold reversal)
-            omission_score = (g_n - min_o) / span_o if span_o > 0 else 0.5
-        else:
+        if span_o <= 1e-6:
             omission_score = 0.5
+        elif omission_mode == "hot":
+            # 热号追随：遗漏越小分越高
+            omission_score = (max_o - g_n) / span_o
+        elif omission_mode == "cold":
+            # 极冷号反弹：遗漏越大分越高
+            omission_score = (g_n - min_o) / span_o
+        else:
+            # 均衡/命理模式：采用温冷适中回归钟形曲线（偏离 0.55 中位越近得分越高），让遗漏权重真正产生区分度
+            norm_o = (g_n - min_o) / span_o
+            omission_score = max(0.15, 1.0 - abs(norm_o - 0.55) * 1.35)
 
-        # Combined weight
         weight = w_bazi * bazi_score + w_freq * freq_score + w_omission * omission_score
         weight = max(float(weight), 1e-4)
 
-        # 4. LiuRi Celestial Energy Resonance Boost (+20% for harmonious elements)
+        # 仅当流日确实存在良性共振元素时才加权
         n_elem = get_hetu_element(n)
-        if norm_harmony and n_elem in norm_harmony:
-            weight *= 1.20
+        if norm_harmony and n_elem in norm_harmony and resonance_multiplier > 1.0:
+            weight *= resonance_multiplier
 
-        # 5. Personal Name Numerology Bonus (+15% for name lucky numbers or tail matching)
+        # 姓名五格吉数微调（仅精准命中或核心尾数，避免全盘稀释）
         if lucky_set and (n in lucky_set or (n % 10 or 10) in lucky_set):
             weight *= 1.15
 
-        # 6. Gender Hetu Polarity (乾造奇数阳和 +10%, 坤造偶数阴柔 +10%)
+        # 乾坤奇偶微调
         is_male = (gender or "male").lower() in ("male", "m", "乾造", "乾", "男")
         if is_male and (n % 2 == 1):
             weight *= 1.10
@@ -354,11 +371,10 @@ def calculate_candidate_weights(
 
 
 def build_wuxing_distribution(numbers: List[int]) -> Dict[str, int]:
-    """Calculate counts of each of the 5 elements in the chosen numbers."""
+    """统计单注号码的河图五行分布。"""
     dist = {"wood": 0, "fire": 0, "earth": 0, "metal": 0, "water": 0}
     for n in numbers:
-        elem = get_hetu_element(n)
-        dist[elem] += 1
+        dist[get_hetu_element(n)] += 1
     return dist
 
 
@@ -373,7 +389,7 @@ def generate_score_rationale(
     user_name: Optional[str] = None,
     today_harmony_text: Optional[str] = None,
 ) -> str:
-    """Generate professional Chinese astrological & statistical rationale string."""
+    """生成中文化命理与数理加权选号依据说明。"""
     xi_norm = [ZH_TO_EN_ELEMENT.get(e, e) for e in xi_yong_shen]
     xi_zh = [ELEMENT_NAMES_ZH.get(e, e) for e in xi_norm]
     xi_tails = []
@@ -382,8 +398,6 @@ def generate_score_rationale(
         xi_tails.append(f"{zh_e}({'与'.join(tails)})")
 
     tails_text = "、".join(xi_tails) if xi_tails else "用神"
-
-    # Calculate match count with Xi Yong Shen
     matches = sum(1 for n in chosen_primary if get_hetu_element(n) in xi_norm)
     match_pct = round((matches / max(len(chosen_primary), 1)) * 100, 1)
 
@@ -394,19 +408,92 @@ def generate_score_rationale(
         "balanced": "大数据平衡稳健",
         "hot_chase": "乘胜追热连号",
         "cold_reversal": "大遗漏极冷翻转",
-    }.get(canon, {
-        "bazi": "命理吉数优先",
-        "bazi_priority": "命理吉数优先",
-        "balanced": "大数据平衡稳健",
-        "hot_chase": "乘胜追热连号",
-        "cold_reversal": "大遗漏极冷翻转",
-    }.get(strategy.lower(), strategy or "综合三元混合"))
+    }.get(canon, strategy or "综合三元混合")
 
     effective_name = user_name.strip() if (user_name and user_name.strip()) else "缘主"
     prefix = f"缘主【{effective_name}】"
     harmony_clause = f"，{today_harmony_text}" if today_harmony_text else ""
 
-    return f"{prefix}命中喜用神{tails_text}契合度 {match_pct}%{harmony_clause}，结合{strategy_desc}模型(八字:{w_bazi:.2f}, 频次:{w_freq:.2f}, 遗漏:{w_omission:.2f})加权生成"
+    return (
+        f"{prefix}命中喜用神{tails_text}契合度 {match_pct}%{harmony_clause}，"
+        f"结合{strategy_desc}模型(八字:{w_bazi:.2f}, 频次:{w_freq:.2f}, 遗漏:{w_omission:.2f})加权生成"
+    )
+
+
+def _apply_lock_exclude_filter(
+    weights: List[Tuple[int, float]],
+    required_count: int,
+    unique: bool,
+    locked: Optional[List[int]],
+    excluded: Optional[List[int]],
+) -> Tuple[List[int], List[Tuple[int, float]]]:
+    """应用定胆（必含）与杀号（排除）约束，保证剩余候选池始终合法可抽。"""
+    valid_pool = {item for item, _ in weights}
+    locked_clean: List[int] = []
+    for n in (locked or []):
+        if n in valid_pool and (not unique or n not in locked_clean):
+            locked_clean.append(n)
+    locked_clean = locked_clean[:required_count]
+
+    excluded_set = {n for n in (excluded or []) if n in valid_pool and n not in locked_clean}
+    if unique:
+        remaining_pool = [(item, w) for item, w in weights if item not in locked_clean and item not in excluded_set]
+        need = required_count - len(locked_clean)
+        if len(remaining_pool) < need:
+            # 若杀号过多导致候选池不足，自动回退排除集避免报错
+            remaining_pool = [(item, w) for item, w in weights if item not in locked_clean]
+    else:
+        remaining_pool = [(item, w) for item, w in weights if item not in excluded_set]
+        if not remaining_pool:
+            remaining_pool = list(weights)
+
+    return locked_clean, remaining_pool
+
+
+def _sample_zone_numbers(
+    weights: List[Tuple[int, float]],
+    required_count: int,
+    unique: bool,
+    sorted_output: bool,
+    deterministic: bool,
+    single_det_mode: bool,
+    rng: Optional[random.Random],
+    locked: Optional[List[int]] = None,
+    excluded: Optional[List[int]] = None,
+) -> List[int]:
+    """按彩种规则与定胆/杀号条件采样单个号码区，正确支持可重复位彩种与确定性模式。"""
+    locked_nums, pool_weights = _apply_lock_exclude_filter(
+        weights=weights,
+        required_count=required_count,
+        unique=unique,
+        locked=locked,
+        excluded=excluded,
+    )
+    need = required_count - len(locked_nums)
+    if need <= 0:
+        chosen = list(locked_nums[:required_count])
+    elif single_det_mode:
+        if unique:
+            sorted_w = sorted(pool_weights, key=lambda x: (-x[1], x[0]))
+            chosen = locked_nums + [x[0] for x in sorted_w[:need]]
+        else:
+            # 可重复位置彩种：在保持完全确定性的前提下允许高权数字在多位置重复（保留组三/豹子）
+            det_rng = random.Random(20260518 + required_count * 131)
+            chosen = locked_nums + weighted_choice_with_replacement(pool_weights, need, rng=det_rng)
+    elif deterministic:
+        if unique:
+            chosen = locked_nums + a_res_weighted_sample_without_replacement(pool_weights, need, rng=rng)
+        else:
+            chosen = locked_nums + weighted_choice_with_replacement(pool_weights, need, rng=rng)
+    else:
+        if unique:
+            chosen = locked_nums + a_res_weighted_sample_without_replacement(pool_weights, need, rng=rng)
+        else:
+            chosen = locked_nums + weighted_choice_with_replacement(pool_weights, need, rng=rng)
+
+    if sorted_output:
+        chosen.sort()
+    return chosen
 
 
 def recommend_lottery_tickets(
@@ -421,11 +508,16 @@ def recommend_lottery_tickets(
     user_name: Optional[str] = None,
     shichen: Optional[str] = None,
     gender: Optional[str] = "male",
+    locked_primary: Optional[List[int]] = None,
+    excluded_primary: Optional[List[int]] = None,
+    locked_secondary: Optional[List[int]] = None,
+    excluded_secondary: Optional[List[int]] = None,
 ) -> Dict[str, Any]:
     """
-    Main recommendation engine producing legal, ascending, non-duplicate ticket recommendations.
-    Supports multi-bet cross-ticket deduplication, today's LiuRi cosmic resonance (+20%),
-    Chinese name numerology, and unified copy text.
+    核心三元加权选号引擎：
+    - 对数空间 A-Res 抽样（无下溢反转）
+    - 多注跨票去重 + 退火兜底补齐（严防静默少注）
+    - 支持可重复位确定性选号、严谨流日共振、姓名五格及定胆/杀号过滤
     """
     rule = get_lottery_rule(lottery_type)
     if not rule:
@@ -445,9 +537,9 @@ def recommend_lottery_tickets(
         w_omission=w_omission,
     )
 
-    # 1. Today's LiuRi Celestial Energy Calculation
+    # 1. 今日流日气运与严谨共振计算
     now = datetime.now(CHINA_TZ)
-    solar_now = Solar.fromDate(now)
+    solar_now = Solar.fromYmdHms(now.year, now.month, now.day, now.hour, now.minute, now.second)
     lunar_now = solar_now.getLunar()
     ganzhi_year = lunar_now.getYearInGanZhi()
     ganzhi_month = lunar_now.getMonthInGanZhi()
@@ -459,21 +551,23 @@ def recommend_lottery_tickets(
     day_branch_hiddens = BRANCH_HIDDEN_STEMS.get(day_branch, [("戊", 1.0)])
     day_branch_elem = STEM_ELEMENTS.get(day_branch_hiddens[0][0], "earth")
 
-    # Harmonious elements with user's Xi Yong Shen
-    user_xi_norm = [ZH_TO_EN_ELEMENT.get(e, e) for e in xi_yong_shen]
-    active_today_elems = {day_stem_elem, day_branch_elem}
-    generating_elems = {MOTHER_ELEMENT.get(e, "") for e in user_xi_norm}
-
-    harmonious_elems = list(active_today_elems.intersection(user_xi_norm).union(
-        active_today_elems.intersection(generating_elems)
-    ))
-    if not harmonious_elems:
-        harmonious_elems = [day_stem_elem, day_branch_elem]
-
-    today_harmony_text = (
-        f"融合今日流日{ganzhi_day}({ELEMENT_NAMES_ZH.get(day_stem_elem)}{ELEMENT_NAMES_ZH.get(day_branch_elem)})"
-        f"气运共振(+20%)"
+    harmonious_elems, res_level, res_mult = compute_liuri_resonance(
+        day_stem_elem=day_stem_elem,
+        day_branch_elem=day_branch_elem,
+        xi_yong_shen=xi_yong_shen,
+        ji_shen=ji_shen,
     )
+
+    if harmonious_elems:
+        boost_pct = int(round((res_mult - 1.0) * 100))
+        harm_zh = "".join(ELEMENT_NAMES_ZH.get(e, e) for e in harmonious_elems)
+        today_harmony_text = (
+            f"融合今日流日{ganzhi_day}({harm_zh})气运共振(+{boost_pct}%)"
+        )
+    else:
+        today_harmony_text = (
+            f"今日流日{ganzhi_day}({ELEMENT_NAMES_ZH.get(day_stem_elem)}{ELEMENT_NAMES_ZH.get(day_branch_elem)})气运平稳"
+        )
 
     today_liuri_info = {
         "solar_date": solar_now.toYmd(),
@@ -484,16 +578,17 @@ def recommend_lottery_tickets(
         "xi_shen": lunar_now.getDayPositionXi(),
         "day_yi": lunar_now.getDayYi()[:5],
         "day_ji": lunar_now.getDayJi()[:5],
+        "resonance_level": res_level,
+        "resonance_multiplier": res_mult,
         "harmonious_elements": [ELEMENT_NAMES_ZH.get(e, e) for e in harmonious_elems],
     }
 
-    # 2. Chinese Name Numerology
+    # 2. 姓名五格吉数（过滤非中文或空返回）
     name_lucky_numbers = None
     if user_name:
         name_info = analyze_name_numerology(user_name)
-        name_lucky_numbers = name_info.get("name_lucky_numbers", [])
+        name_lucky_numbers = name_info.get("name_lucky_numbers") or None
 
-    # Primary zone candidates with weights
     p_weights = calculate_candidate_weights(
         min_val=p_rule.min_value,
         max_val=p_rule.max_value,
@@ -509,9 +604,9 @@ def recommend_lottery_tickets(
         harmonious_elements=harmonious_elems,
         name_lucky_numbers=name_lucky_numbers,
         gender=gender,
+        resonance_multiplier=res_mult,
     )
 
-    # Secondary zone candidates with weights if applicable
     s_weights = None
     if s_rule:
         s_weights = calculate_candidate_weights(
@@ -529,82 +624,33 @@ def recommend_lottery_tickets(
             harmonious_elements=harmonious_elems,
             name_lucky_numbers=name_lucky_numbers,
             gender=gender,
+            resonance_multiplier=res_mult,
         )
 
+    # 退火平滑权重，防止极端小样本导致去重碰撞耗尽静默截断
+    p_weights_annealed = [(item, max(w, 1e-4) ** 0.25 + 0.15) for item, w in p_weights]
+    s_weights_annealed = (
+        [(item, max(w, 1e-4) ** 0.25 + 0.15) for item, w in s_weights]
+        if s_weights is not None
+        else None
+    )
+    p_weights_uniform = [(item, 1.0) for item, _ in p_weights]
+    s_weights_uniform = [(item, 1.0) for item, _ in s_weights] if s_weights is not None else None
+
     seen_tickets = set()
-    recommendations = []
-    max_attempts = max(count * 60, 400)
+    recommendations: List[Dict[str, Any]] = []
+    primary_attempts = max(count * 40, 250)
+    annealed_attempts = max(count * 40, 250)
+    uniform_attempts = max(count * 60, 400)
+    total_budget = primary_attempts + annealed_attempts + uniform_attempts
     attempts = 0
 
-    while len(recommendations) < count and attempts < max_attempts:
-        attempts += 1
-
-        # Sample Primary Zone
-        if deterministic and count == 1:
-            # Deterministic single ticket: strictly top-ranked
-            sorted_p = sorted(p_weights, key=lambda x: x[1], reverse=True)
-            chosen_p = sorted([x[0] for x in sorted_p[:p_rule.count]])
-        elif deterministic and count > 1:
-            # Deterministic multi-ticket: deterministic pseudo-random reservoir
-            rng_p = random.Random(attempts * 10007 + int(resolved_wb * 100) + int(resolved_wf * 100))
-            keys = []
-            for item, w in p_weights:
-                weight = max(float(w), 1e-6)
-                u = max(rng_p.random(), 1e-12)
-                key = u ** (1.0 / weight)
-                keys.append((key, item))
-            keys.sort(key=lambda x: x[0], reverse=True)
-            if p_rule.unique:
-                chosen_p = sorted([item for _, item in keys[:p_rule.count]])
-            else:
-                chosen_p = [keys[i % len(keys)][1] for i in range(p_rule.count)]
-        else:
-            # Non-deterministic A-Res reservoir sampling
-            if p_rule.unique:
-                chosen_p = a_res_weighted_sample_without_replacement(p_weights, p_rule.count)
-            else:
-                chosen_p = weighted_choice_with_replacement(p_weights, p_rule.count)
-
-        if p_rule.sorted:
-            chosen_p.sort()
-
+    def _append_ticket(chosen_p: List[int], chosen_s: List[int]) -> bool:
         p_formatted = [p_rule.format_pattern % v for v in chosen_p]
-
-        # Sample Secondary Zone
-        s_formatted = None
-        chosen_s: List[int] = []
-        if s_rule and s_weights:
-            if deterministic and count == 1:
-                sorted_s = sorted(s_weights, key=lambda x: x[1], reverse=True)
-                chosen_s = sorted([x[0] for x in sorted_s[:s_rule.count]])
-            elif deterministic and count > 1:
-                rng_s = random.Random(attempts * 99991 + int(resolved_wo * 100))
-                keys_s = []
-                for item, w in s_weights:
-                    weight = max(float(w), 1e-6)
-                    u = max(rng_s.random(), 1e-12)
-                    key = u ** (1.0 / weight)
-                    keys_s.append((key, item))
-                keys_s.sort(key=lambda x: x[0], reverse=True)
-                if s_rule.unique:
-                    chosen_s = sorted([item for _, item in keys_s[:s_rule.count]])
-                else:
-                    chosen_s = [keys_s[i % len(keys_s)][1] for i in range(s_rule.count)]
-            else:
-                if s_rule.unique:
-                    chosen_s = a_res_weighted_sample_without_replacement(s_weights, s_rule.count)
-                else:
-                    chosen_s = weighted_choice_with_replacement(s_weights, s_rule.count)
-
-            if s_rule.sorted:
-                chosen_s.sort()
-
-            s_formatted = [s_rule.format_pattern % v for v in chosen_s]
-
-        # Cross-ticket deduplication
+        s_formatted = [s_rule.format_pattern % v for v in chosen_s] if (s_rule and chosen_s) else None
         ticket_key = (tuple(p_formatted), tuple(s_formatted) if s_formatted else ())
         if ticket_key in seen_tickets:
-            continue
+            return False
         seen_tickets.add(ticket_key)
 
         bet_idx = len(recommendations) + 1
@@ -612,11 +658,7 @@ def recommend_lottery_tickets(
         if s_formatted:
             formatted_ticket += " + " + " ".join(s_formatted)
 
-        # Ticket Wuxing Distribution
-        all_ticket_nums = chosen_p + chosen_s
-        wuxing_dist = build_wuxing_distribution(all_ticket_nums)
-
-        # Rationale string
+        wuxing_dist = build_wuxing_distribution(chosen_p + chosen_s)
         rationale = generate_score_rationale(
             lottery_type=rule.lottery_type.value,
             strategy=strategy or "balanced",
@@ -628,13 +670,11 @@ def recommend_lottery_tickets(
             user_name=user_name,
             today_harmony_text=today_harmony_text,
         )
-
         evidence = match_classics_evidence(
             primary_numbers=p_formatted,
             favorable_elements=xi_yong_shen,
             ticket_index=len(recommendations),
         )
-
         recommendations.append({
             "bet_index": bet_idx,
             "primary_numbers": p_formatted,
@@ -644,8 +684,99 @@ def recommend_lottery_tickets(
             "score_rationale": rationale,
             "classics_evidence": evidence.model_dump() if hasattr(evidence, "model_dump") else evidence.dict(),
         })
+        return True
 
-    # Assemble unified copy_text for one-click copying
+    while len(recommendations) < count and attempts < total_budget:
+        attempts += 1
+        if attempts <= primary_attempts:
+            cur_p_w, cur_s_w = p_weights, s_weights
+        elif attempts <= primary_attempts + annealed_attempts:
+            cur_p_w, cur_s_w = p_weights_annealed, s_weights_annealed
+        else:
+            cur_p_w, cur_s_w = p_weights_uniform, s_weights_uniform
+
+        rng_p = (
+            random.Random(attempts * 10007 + int(resolved_wb * 100) + int(resolved_wf * 100))
+            if deterministic
+            else None
+        )
+        rng_s = (
+            random.Random(attempts * 99991 + int(resolved_wo * 100))
+            if deterministic
+            else None
+        )
+
+        chosen_p = _sample_zone_numbers(
+            weights=cur_p_w,
+            required_count=p_rule.count,
+            unique=p_rule.unique,
+            sorted_output=p_rule.sorted,
+            deterministic=deterministic,
+            single_det_mode=bool(deterministic and count == 1 and attempts == 1),
+            rng=rng_p,
+            locked=locked_primary,
+            excluded=excluded_primary,
+        )
+        chosen_s: List[int] = []
+        if s_rule and cur_s_w is not None:
+            chosen_s = _sample_zone_numbers(
+                weights=cur_s_w,
+                required_count=s_rule.count,
+                unique=s_rule.unique,
+                sorted_output=s_rule.sorted,
+                deterministic=deterministic,
+                single_det_mode=bool(deterministic and count == 1 and attempts == 1),
+                rng=rng_s,
+                locked=locked_secondary,
+                excluded=excluded_secondary,
+            )
+
+        _append_ticket(chosen_p, chosen_s)
+
+    # 最终确定性枚举兜底（针对极窄组合空间仍未凑齐 count 时保证不静默少注）
+    if len(recommendations) < count:
+        p_locked, p_rem = _apply_lock_exclude_filter(
+            p_weights, p_rule.count, p_rule.unique, locked_primary, excluded_primary
+        )
+        p_items = [item for item, _ in sorted(p_rem, key=lambda x: -x[1])]
+        p_need = p_rule.count - len(p_locked)
+        p_iter = (
+            itertools.combinations(p_items, p_need)
+            if p_rule.unique
+            else itertools.product(p_items, repeat=p_need)
+        )
+        s_fallback_list: List[List[int]] = [[]]
+        if s_rule and s_weights:
+            s_locked, s_rem = _apply_lock_exclude_filter(
+                s_weights, s_rule.count, s_rule.unique, locked_secondary, excluded_secondary
+            )
+            s_items = [item for item, _ in sorted(s_rem, key=lambda x: -x[1])]
+            s_need = s_rule.count - len(s_locked)
+            s_raw = (
+                itertools.combinations(s_items, s_need)
+                if s_rule.unique
+                else itertools.product(s_items, repeat=s_need)
+            )
+            s_fallback_list = []
+            for comb in itertools.islice(s_raw, max(count, 20)):
+                cand_s = list(s_locked) + list(comb)
+                if s_rule.sorted:
+                    cand_s.sort()
+                s_fallback_list.append(cand_s)
+            if not s_fallback_list:
+                s_fallback_list = [[]]
+
+        for p_comb in p_iter:
+            if len(recommendations) >= count:
+                break
+            cand_p = list(p_locked) + list(p_comb)
+            if p_rule.sorted:
+                cand_p.sort()
+            for cand_s in s_fallback_list:
+                if len(recommendations) >= count:
+                    break
+                _append_ticket(cand_p, cand_s)
+
     effective_name = user_name.strip() if (user_name and user_name.strip()) else "缘主"
     lines = [f"【曾练彩票助手 - {effective_name}专属吉祥票】"]
     lines.append(f"彩种类型：{rule.chinese_name} ({len(recommendations)}注机选)")
@@ -656,7 +787,7 @@ def recommend_lottery_tickets(
     for rec in recommendations:
         lines.append(f"第{rec['bet_index']:02d}注: {rec['formatted_ticket']}")
     lines.append("-" * 38)
-    lines.append("祝您财星高照，吉祥如意！(彩票纯属概率游戏，请理性购彩)")
+    lines.append("祝您吉祥顺意！(彩票纯属概率游戏，请理性娱乐)")
     copy_text = "\n".join(lines)
 
     return {
@@ -670,6 +801,7 @@ def recommend_lottery_tickets(
             "day_master": bazi_analysis.get("day_master", ""),
             "day_master_element": bazi_analysis.get("day_master_element", ""),
             "strength": bazi_analysis.get("strength", ""),
+            "strength_level": bazi_analysis.get("strength_level", bazi_analysis.get("strength", "")),
             "xi_yong_shen": bazi_analysis.get("xi_yong_shen", []),
             "ji_shen": bazi_analysis.get("ji_shen", []),
             "lacking_elements": bazi_analysis.get("lacking_elements", []),

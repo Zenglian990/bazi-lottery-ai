@@ -1,25 +1,23 @@
 package com.zeng.lottery.ui.theme
 
 import android.app.Activity
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
     primary = FortuneGold,
-    onPrimary = DarkBackground,
+    onPrimary = Color(0xFF12141B),
     primaryContainer = FortuneGoldLight.copy(alpha = 0.2f),
     onPrimaryContainer = FortuneGoldLight,
-    secondary = ImperialRed,
-    onSecondary = Color.White,
-    secondaryContainer = ImperialRedDark.copy(alpha = 0.3f),
+    secondary = ImperialRedBright,
+    onSecondary = Color(0xFF1A0707),
+    secondaryContainer = ImperialRedDark.copy(alpha = 0.35f),
     onSecondaryContainer = Color(0xFFFFCDD2),
     tertiary = MysticIndigo,
     background = DarkBackground,
@@ -27,32 +25,32 @@ private val DarkColorScheme = darkColorScheme(
     surface = DarkSurface,
     onSurface = Color(0xFFF5F5F5),
     surfaceVariant = DarkSurfaceVariant,
-    onSurfaceVariant = Color(0xFFB0BEC5),
+    onSurfaceVariant = Color(0xFFB8C4CE),
     outline = DarkOutline
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = ImperialRed,
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFFFCDD2),
+    primaryContainer = Color(0xFFFFDAD6),
     onPrimaryContainer = ImperialRedDark,
-    secondary = FortuneGold,
-    onSecondary = DarkBackground,
-    secondaryContainer = FortuneGoldLight.copy(alpha = 0.3f),
-    onSecondaryContainer = Color(0xFF5D4037),
+    secondary = FortuneGoldDeep,
+    onSecondary = Color.White,
+    secondaryContainer = FortuneGoldLight.copy(alpha = 0.45f),
+    onSecondaryContainer = Color(0xFF4E342E),
     tertiary = MysticIndigo,
     background = LightBackground,
-    onBackground = Color(0xFF212121),
+    onBackground = Color(0xFF1E1B18),
     surface = LightSurface,
-    onSurface = Color(0xFF212121),
+    onSurface = Color(0xFF1E1B18),
     surfaceVariant = LightSurfaceVariant,
-    onSurfaceVariant = Color(0xFF546E7A),
+    onSurfaceVariant = Color(0xFF5A5248),
     outline = LightOutline
 )
 
 @Composable
 fun BaziLotteryTheme(
-    darkTheme: Boolean = true, // Default to mystic oriental dark mode
+    darkTheme: Boolean = true,
     content: @Composable () -> Unit
 ) {
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
@@ -61,8 +59,9 @@ fun BaziLotteryTheme(
         SideEffect {
             val window = (view.context as? Activity)?.window
             if (window != null) {
-                window.statusBarColor = colorScheme.background.toArgb()
-                WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+                val controller = WindowCompat.getInsetsController(window, view)
+                controller.isAppearanceLightStatusBars = !darkTheme
+                controller.isAppearanceLightNavigationBars = !darkTheme
             }
         }
     }

@@ -14,13 +14,12 @@ import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 /**
- * Secure AES-256 GCM KeyStore Manager for storing client-side API keys.
+ * 安全的 AES-256-GCM 密钥存储管理器，用于端侧加密保存用户直连大模型 API Key。
  *
- * 1. Primary Layer: Android KeyStore hardware/system backed AES-256-GCM ("AES/GCM/NoPadding").
- *    - Uses provider-generated IV to ensure full compatibility with AndroidKeyStore
- *      randomized encryption requirements.
- * 2. Unit-Test Layer: Standard JCE AES-256-GCM fallback when running in a pure JVM unit test
- *    environment where the AndroidKeyStore provider is unavailable.
+ * 1. Android 真机环境：严格依赖硬件/系统级 AndroidKeyStore 生成与保管主密钥，
+ *    不再回退任何硬编码静态密钥种子。
+ * 2. 纯 JVM 单元测试环境：无 AndroidKeyStore 时使用进程内随机生成的临时 256-bit 会话密钥，
+ *    既满足全套单元测试闭环，又确保 APK 字节码中零静态密钥硬编码。
  */
 object KeyStoreManager {
 
@@ -31,11 +30,11 @@ object KeyStoreManager {
     private const val IV_LENGTH = 12
     private const val PREFS_NAME = "lottery_ai_secure_prefs"
 
-    // In-memory fallback storage for pure JVM unit test execution
+    // 仅限纯 JVM 单元测试使用的内存存储与进程内随机临时密钥（不落盘、无硬编码）
     private val jvmTestPrefs = ConcurrentHashMap<String, String>()
-    private val jvmFallbackKey: SecretKey by lazy {
-        val raw = "ZengBaziLottery2026SecureKeySeed!".toByteArray(StandardCharsets.UTF_8).copyOf(32)
-        SecretKeySpec(raw, "AES")
+    private val jvmEphemeralTestKey: SecretKey by lazy {
+        val randomBytes = ByteArray(32).apply { SecureRandom().nextBytes(this) }
+        SecretKeySpec(randomBytes, "AES")
     }
 
     private val isAndroidKeyStoreAvailable: Boolean by lazy {
@@ -43,62 +42,69 @@ object KeyStoreManager {
             val ks = KeyStore.getInstance(ANDROID_KEYSTORE_PROVIDER)
             ks.load(null)
             true
-        } catch (e: Throwable) {
+        } catch (_: Throwable) {
             false
         }
     }
 
-    private fun getSecretKey(): SecretKey {
+    private fun generateAndroidKeyStoreKey(): SecretKey {
+        val keyGenerator = KeyGenerator.getInstance("AES", ANDROID_KEYSTORE_PROVIDER)
+        val specClass = Class.forName("android.security.keystore.KeyGenParameterSpec\$Builder")
+        val constructor = specClass.getConstructor(String::class.java, Int::class.javaPrimitiveType)
+        val purposes = 1 or 2 // PURPOSE_ENCRYPT | PURPOSE_DECRYPT
+        val builder = constructor.newInstance(KEY_ALIAS, purposes)
+
+        val setBlockModes = specClass.getMethod("setBlockModes", Array<String>::class.java)
+        setBlockModes.invoke(builder, arrayOf("GCM"))
+
+        val setEncryptionPaddings = specClass.getMethod("setEncryptionPaddings", Array<String>::class.java)
+        setEncryptionPaddings.invoke(builder, arrayOf("NoPadding"))
+
+        val setKeySize = specClass.getMethod("setKeySize", Int::class.javaPrimitiveType)
+        setKeySize.invoke(builder, 256)
+
+        val buildMethod = specClass.getMethod("build")
+        val keyGenSpec = buildMethod.invoke(builder)
+
+        val initMethod = KeyGenerator::class.java.getMethod(
+            "init",
+            java.security.spec.AlgorithmParameterSpec::class.java
+        )
+        initMethod.invoke(keyGenerator, keyGenSpec)
+        return keyGenerator.generateKey()
+    }
+
+    private fun getSecretKey(): SecretKey? {
         if (!isAndroidKeyStoreAvailable) {
-            return jvmFallbackKey
+            return jvmEphemeralTestKey
         }
         return try {
             val keyStore = KeyStore.getInstance(ANDROID_KEYSTORE_PROVIDER).apply { load(null) }
             if (!keyStore.containsAlias(KEY_ALIAS)) {
-                val keyGenerator = KeyGenerator.getInstance("AES", ANDROID_KEYSTORE_PROVIDER)
-                val specClass = Class.forName("android.security.keystore.KeyGenParameterSpec\$Builder")
-                val constructor = specClass.getConstructor(String::class.java, Int::class.javaPrimitiveType)
-                val purposes = 1 or 2 // PURPOSE_ENCRYPT | PURPOSE_DECRYPT
-                val builder = constructor.newInstance(KEY_ALIAS, purposes)
-
-                val setBlockModes = specClass.getMethod("setBlockModes", Array<String>::class.java)
-                setBlockModes.invoke(builder, arrayOf("GCM"))
-
-                val setEncryptionPaddings = specClass.getMethod("setEncryptionPaddings", Array<String>::class.java)
-                setEncryptionPaddings.invoke(builder, arrayOf("NoPadding"))
-
-                val setKeySize = specClass.getMethod("setKeySize", Int::class.javaPrimitiveType)
-                setKeySize.invoke(builder, 256)
-
-                val buildMethod = specClass.getMethod("build")
-                val keyGenSpec = buildMethod.invoke(builder)
-
-                val initMethod = KeyGenerator::class.java.getMethod("init", java.security.spec.AlgorithmParameterSpec::class.java)
-                initMethod.invoke(keyGenerator, keyGenSpec)
-                keyGenerator.generateKey()
+                generateAndroidKeyStoreKey()
             } else {
                 val entry = keyStore.getEntry(KEY_ALIAS, null)
                 if (entry is KeyStore.SecretKeyEntry) {
                     entry.secretKey
                 } else {
+                    // 清理异常条目并重新生成硬件密钥，绝不回退弱密钥
                     keyStore.deleteEntry(KEY_ALIAS)
-                    jvmFallbackKey
+                    generateAndroidKeyStoreKey()
                 }
             }
-        } catch (e: Throwable) {
-            jvmFallbackKey
+        } catch (_: Throwable) {
+            null
         }
     }
 
     /**
-     * Encrypt plain text using AES-256-GCM ("AES/GCM/NoPadding") backed by AndroidKeyStore
-     * (or JCE AES-256-GCM in pure JVM unit tests).
+     * 使用 AES-256-GCM 加密明文，输出 "base64(iv):base64(ciphertext)"。
      */
     fun encrypt(plainText: String): String {
         if (plainText.isEmpty()) return ""
+        val secretKey = getSecretKey() ?: return ""
         return try {
             val cipher = Cipher.getInstance(TRANSFORMATION)
-            val secretKey = getSecretKey()
             try {
                 cipher.init(Cipher.ENCRYPT_MODE, secretKey)
             } catch (_: Throwable) {
@@ -112,14 +118,14 @@ object KeyStoreManager {
             } else {
                 "${encodeBase64(iv)}:${encodeBase64(cipherBytes)}"
             }
-        } catch (e: Throwable) {
+        } catch (_: Throwable) {
             ""
         }
     }
 
     /**
-     * Decrypt AES-256-GCM payload ("base64(iv):base64(ciphertext)").
-     * Retains backward-compatible read support for legacy unencrypted plain strings without a colon.
+     * 解密 AES-256-GCM 密文载荷 ("base64(iv):base64(ciphertext)")。
+     * 为兼容旧版本升级，保留对无冒号历史明文字符串的安全读取。
      */
     fun decrypt(encryptedPayload: String): String {
         if (encryptedPayload.isBlank()) return ""
@@ -127,6 +133,7 @@ object KeyStoreManager {
         if (!trimmed.contains(":")) {
             return trimmed
         }
+        val secretKey = getSecretKey() ?: return ""
         return try {
             val parts = trimmed.split(":", limit = 2)
             if (parts.size != 2) return ""
@@ -138,10 +145,10 @@ object KeyStoreManager {
 
             val cipher = Cipher.getInstance(TRANSFORMATION)
             val spec = GCMParameterSpec(GCM_TAG_LENGTH, iv)
-            cipher.init(Cipher.DECRYPT_MODE, getSecretKey(), spec)
+            cipher.init(Cipher.DECRYPT_MODE, secretKey, spec)
             val plainBytes = cipher.doFinal(cipherBytes)
             String(plainBytes, StandardCharsets.UTF_8)
-        } catch (e: Throwable) {
+        } catch (_: Throwable) {
             ""
         }
     }
@@ -149,10 +156,10 @@ object KeyStoreManager {
     private fun encodeBase64(bytes: ByteArray): String {
         return try {
             Base64.encodeToString(bytes, Base64.NO_WRAP)
-        } catch (e: Throwable) {
+        } catch (_: Throwable) {
             try {
                 java.util.Base64.getEncoder().encodeToString(bytes)
-            } catch (e2: Throwable) {
+            } catch (_: Throwable) {
                 ""
             }
         }
@@ -161,52 +168,37 @@ object KeyStoreManager {
     private fun decodeBase64(str: String): ByteArray {
         return try {
             Base64.decode(str, Base64.NO_WRAP)
-        } catch (e: Throwable) {
+        } catch (_: Throwable) {
             try {
                 java.util.Base64.getDecoder().decode(str)
-            } catch (e2: Throwable) {
+            } catch (_: Throwable) {
                 ByteArray(0)
             }
         }
     }
 
     /**
-     * Mask API key for secure display in UI (e.g. sk-••••••••1234).
+     * 脱敏展示 API Key（如 sk-••••••••1234）。
      */
     fun maskApiKey(key: String?): String {
         if (key.isNullOrBlank()) return ""
         val trimmed = key.trim()
         if (trimmed.length <= 8) return "••••••••"
         return when {
-            trimmed.startsWith("sk-") -> {
-                val prefix = "sk-"
-                val suffix = trimmed.takeLast(4)
-                "$prefix••••••••$suffix"
-            }
-            trimmed.startsWith("AIza") -> {
-                val prefix = "AIza"
-                val suffix = trimmed.takeLast(4)
-                "$prefix••••••••$suffix"
-            }
-            else -> {
-                val prefix = trimmed.take(3)
-                val suffix = trimmed.takeLast(4)
-                "$prefix••••••••$suffix"
-            }
+            trimmed.startsWith("sk-") -> "sk-••••••••${trimmed.takeLast(4)}"
+            trimmed.startsWith("AIza") -> "AIza••••••••${trimmed.takeLast(4)}"
+            else -> "${trimmed.take(3)}••••••••${trimmed.takeLast(4)}"
         }
     }
 
     private fun getPrefs(context: Context?): SharedPreferences? {
         return try {
             context?.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        } catch (e: Throwable) {
+        } catch (_: Throwable) {
             null
         }
     }
 
-    /**
-     * Safely save a single API key to secure SharedPreferences.
-     */
     fun saveApiKey(context: Context?, keyName: String, apiKey: String) {
         try {
             val encrypted = encrypt(apiKey)
@@ -216,14 +208,11 @@ object KeyStoreManager {
             } else {
                 jvmTestPrefs["key_$keyName"] = encrypted
             }
-        } catch (e: Throwable) {
-            // Defensive swallow: never crash UI
+        } catch (_: Throwable) {
+            // 防御性捕获，不中断主界面
         }
     }
 
-    /**
-     * Safely retrieve a single API key from secure SharedPreferences.
-     */
     fun getApiKey(context: Context?, keyName: String): String {
         return try {
             val prefs = getPrefs(context)
@@ -233,7 +222,7 @@ object KeyStoreManager {
                 jvmTestPrefs["key_$keyName"] ?: ""
             }
             decrypt(enc)
-        } catch (e: Throwable) {
+        } catch (_: Throwable) {
             ""
         }
     }
@@ -268,8 +257,8 @@ object KeyStoreManager {
                 jvmTestPrefs["openai_base_url"] = config.openaiBaseUrl
                 jvmTestPrefs["openai_model"] = config.openaiModel
             }
-        } catch (e: Throwable) {
-            // Top-level defensive swallow: never crash
+        } catch (_: Throwable) {
+            // 防御性捕获
         }
     }
 
@@ -321,7 +310,7 @@ object KeyStoreManager {
                     openaiModel = openaiModel
                 )
             }
-        } catch (e: Throwable) {
+        } catch (_: Throwable) {
             AiConfig()
         }
     }

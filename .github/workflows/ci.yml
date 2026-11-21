@@ -1,0 +1,68 @@
+name: Full-Stack CI Quality Gate
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  backend-and-e2e:
+    name: Backend Unit & 5-Tier E2E Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt pytest httpx
+
+      - name: Run backend unit test suite
+        run: python -m pytest backend/tests -q
+
+      - name: Run E2E pytest suite (zero mock auth bypass)
+        run: python -m pytest tests_e2e -q
+
+      - name: Run 5-Tier E2E Quality Gate
+        run: python tests_e2e/run_all_e2e.py
+
+  android-unit-tests:
+    name: Android JVM Unit Tests
+    runs-on: ubuntu-latest
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Run Android JVM unit tests
+        run: |
+          chmod +x android/gradlew
+          cd android
+          ./gradlew testDebugUnitTest --no-daemon

@@ -4,6 +4,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -11,6 +12,8 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,15 +32,21 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -47,7 +56,11 @@ import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -58,30 +71,35 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zeng.lottery.ai.AiConfig
 import com.zeng.lottery.ai.AiProvider
-import com.zeng.lottery.ui.theme.DarkBackground
-import com.zeng.lottery.ui.theme.DarkSurface
 import com.zeng.lottery.ui.theme.FortuneGold
 import com.zeng.lottery.ui.theme.FortuneGoldLight
 import com.zeng.lottery.ui.theme.ImperialRed
 import com.zeng.lottery.ui.theme.MysticIndigo
 
 /**
- * Live streaming AI Divination BottomSheet with typewriter animation and 5-section cards.
+ * 易道大师实时流式 AI 解盘底部面板。
+ * 支持：多注切换解盘、透明降级原因横幅、DeepSeek 推理思考链折叠、自动滚底与随时停止生成。
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AiDivinationSheet(
     text: String,
+    reasoningText: String = "",
+    errorMessage: String? = null,
     isStreaming: Boolean,
     aiConfig: AiConfig,
+    totalBets: Int = 1,
+    selectedBetIndex: Int = 0,
+    onSelectBet: (Int) -> Unit = {},
+    onStopStreaming: () -> Unit = {},
     onDismiss: () -> Unit,
     onRedivine: () -> Unit,
     onOpenSettings: () -> Unit,
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 ) {
     val context = LocalContext.current
+    var showReasoning by rememberSaveable { mutableStateOf(false) }
 
-    // Pulsing golden cursor animation during streaming
     val infiniteTransition = rememberInfiniteTransition(label = "cursorBlink")
     val cursorAlpha by infiniteTransition.animateFloat(
         initialValue = 1f,
@@ -94,16 +112,16 @@ fun AiDivinationSheet(
     )
 
     val channelBadge = when (aiConfig.provider) {
-        AiProvider.BACKEND_RELAY -> "后端安全中继"
+        AiProvider.BACKEND_RELAY -> "云端安全中继 (HMAC 签名)"
         AiProvider.DIRECT_DEEPSEEK -> "DeepSeek: ${aiConfig.deepseekModel}"
         AiProvider.DIRECT_GEMINI -> "Gemini: ${aiConfig.geminiModel}"
-        AiProvider.DIRECT_OPENAI -> "OpenAI: ${aiConfig.openaiModel}"
+        AiProvider.DIRECT_OPENAI -> "OpenAI 兼容: ${aiConfig.openaiModel}"
     }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = DarkSurface,
+        containerColor = MaterialTheme.colorScheme.surface,
         dragHandle = null
     ) {
         Column(
@@ -112,13 +130,16 @@ fun AiDivinationSheet(
                 .fillMaxHeight(0.88f)
                 .padding(18.dp)
         ) {
-            // Header
+            // 顶栏
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
                     Icon(
                         imageVector = Icons.Default.AutoAwesome,
                         contentDescription = null,
@@ -147,36 +168,93 @@ fun AiDivinationSheet(
                         Icon(
                             imageVector = Icons.Default.Settings,
                             contentDescription = "AI通道设置",
-                            tint = FortuneGoldLight
+                            tint = FortuneGold
                         )
                     }
                     IconButton(onClick = onDismiss) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = "关闭",
+                            contentDescription = "关闭解盘面板",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            // 多注切换条（支持逐注深度解盘）
+            if (totalBets > 1) {
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    for (i in 0 until totalBets) {
+                        val label = if (i < 26) "第[${'A' + i}]注" else "第${i + 1}注"
+                        FilterChip(
+                            selected = selectedBetIndex == i,
+                            onClick = { onSelectBet(i) },
+                            label = { Text(label, fontSize = 11.sp) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = FortuneGold.copy(alpha = 0.25f),
+                                selectedLabelColor = FortuneGold
+                            )
+                        )
+                    }
+                }
+            }
 
-            // Main Content Area with Scroll
+            // 透明错误 / 本地兜底状态提醒横幅（绝不静默伪装云端成功）
+            if (!errorMessage.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(FortuneGold.copy(alpha = 0.14f), RoundedCornerShape(8.dp))
+                        .border(0.8.dp, FortuneGold.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                        .padding(horizontal = 10.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = "通道提示",
+                        tint = FortuneGold,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = errorMessage,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // 正文滚动容器（流式输出时自动平滑跟随滚底）
+            val scrollState = rememberScrollState()
+            LaunchedEffect(text.length, isStreaming) {
+                if (isStreaming && scrollState.maxValue > 0) {
+                    scrollState.animateScrollTo(scrollState.maxValue)
+                }
+            }
+
             Box(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
                     .background(
-                        color = DarkBackground,
+                        color = MaterialTheme.colorScheme.background,
                         shape = RoundedCornerShape(12.dp)
                     )
                     .border(1.dp, FortuneGold.copy(alpha = 0.25f), RoundedCornerShape(12.dp))
                     .padding(14.dp)
             ) {
-                val scrollState = rememberScrollState()
-
-                if (text.isEmpty() && isStreaming) {
+                if (text.isEmpty() && reasoningText.isEmpty() && isStreaming) {
                     Column(
                         modifier = Modifier.align(Alignment.Center),
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -190,7 +268,7 @@ fun AiDivinationSheet(
                         Text(
                             text = "正在感应干支气场，推演乾坤数理...",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = FortuneGoldLight
+                            color = FortuneGold
                         )
                     }
                 } else {
@@ -200,10 +278,54 @@ fun AiDivinationSheet(
                             .verticalScroll(scrollState),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        // Render sections
-                        RenderDivinationSections(text = text)
+                        // 可折叠深度推理思考链（DeepSeek R1 等推理模型专属）
+                        if (reasoningText.isNotBlank()) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(
+                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+                                        RoundedCornerShape(8.dp)
+                                    )
+                                    .padding(10.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { showReasoning = !showReasoning },
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "大师推演思路 (${reasoningText.length}字)",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = FortuneGold
+                                    )
+                                    Icon(
+                                        imageVector = if (showReasoning) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                        contentDescription = "展开或收起推演思路",
+                                        tint = FortuneGold,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                                AnimatedVisibility(visible = showReasoning) {
+                                    Text(
+                                        text = reasoningText,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontSize = 11.sp,
+                                        lineHeight = 16.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.padding(top = 6.dp)
+                                    )
+                                }
+                            }
+                        }
 
-                        // Golden pulsing cursor while streaming
+                        if (text.isNotEmpty()) {
+                            RenderDivinationSections(text = text)
+                        }
+
                         if (isStreaming) {
                             Text(
                                 text = " ▌",
@@ -217,9 +339,9 @@ fun AiDivinationSheet(
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Bottom Actions
+            // 底部操作栏：复制 / 停止生成或再求一卦
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -227,8 +349,7 @@ fun AiDivinationSheet(
                 OutlinedButton(
                     onClick = {
                         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        val clip = ClipData.newPlainText("易道解盘", text)
-                        clipboard.setPrimaryClip(clip)
+                        clipboard.setPrimaryClip(ClipData.newPlainText("易道解盘", text))
                         Toast.makeText(context, "解盘卦辞已复制至剪贴板", Toast.LENGTH_SHORT).show()
                     },
                     modifier = Modifier.weight(1f),
@@ -244,23 +365,42 @@ fun AiDivinationSheet(
                     Text("复制卦辞", fontSize = 13.sp)
                 }
 
-                Button(
-                    onClick = onRedivine,
-                    modifier = Modifier.weight(1f),
-                    enabled = !isStreaming,
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = ImperialRed,
-                        contentColor = Color.White
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = "再求一卦",
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("再求一卦", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                if (isStreaming) {
+                    Button(
+                        onClick = onStopStreaming,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = FortuneGold
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Stop,
+                            contentDescription = "停止生成",
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("停止生成", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    }
+                } else {
+                    Button(
+                        onClick = onRedivine,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = ImperialRed,
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "再求一卦",
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("再求一卦", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }
@@ -276,12 +416,9 @@ private fun RenderDivinationSections(text: String) {
         if (trimmed.isEmpty()) continue
 
         if (trimmed.startsWith("【理性倡议】")) {
-            // Statutory Responsible Gaming Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = FortuneGold.copy(alpha = 0.12f)
-                ),
+                colors = CardDefaults.cardColors(containerColor = FortuneGold.copy(alpha = 0.12f)),
                 shape = RoundedCornerShape(8.dp),
                 border = CardDefaults.outlinedCardBorder().copy(
                     brush = androidx.compose.ui.graphics.SolidColor(FortuneGold.copy(alpha = 0.45f))
@@ -316,7 +453,6 @@ private fun RenderDivinationSections(text: String) {
                 }
             }
         } else {
-            // Standard Divination Card
             val headerMatch = Regex("^【([^】]+)】").find(trimmed)
             val header = headerMatch?.value ?: ""
             val body = if (header.isNotEmpty()) trimmed.removePrefix(header).trim() else trimmed

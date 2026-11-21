@@ -135,21 +135,36 @@ def analyze_wuxing_energy(
     is_strong = self_party_score >= 55.0  # 55.0 / 110.0 = 50%
     strength = "身强" if is_strong else "身弱"
 
+    # 细分强弱等级（缓解 55.0 临界点阶跃感，同时兼容原有 strength 二值字段）
+    if self_party_score >= 70.0:
+        strength_level = "极强"
+    elif self_party_score >= 58.0:
+        strength_level = "身强"
+    elif self_party_score >= 52.0:
+        strength_level = "中和偏强" if is_strong else "中和偏弱"
+    elif self_party_score >= 40.0:
+        strength_level = "身弱"
+    else:
+        strength_level = "极弱"
+
     # Lacking elements: score < 5.0 points
     lacking_elements = [elem for elem, sc in scores.items() if sc < 5.0]
 
     # Xi Yong Shen and Ji Shen determination
+    # 按原局五行实际得分从弱到强动态排序喜用神，避免原局已过旺五行锁死第一用神
     child_element = GENERATING_CYCLE[day_master_element]
     wealth_element = WEALTH_CYCLE[day_master_element]
     officer_element = OFFICER_CYCLE[day_master_element]
 
     if is_strong:
-        # Strong day master favors draining and restraining: 食伤, 财星, 官杀
-        xi_yong_shen = [child_element, wealth_element, officer_element]
+        # 身强喜克泄耗：在食伤、财星、官杀中优先扶助原局较弱者，保持经典优先级作为平局打破
+        raw_xi = [child_element, wealth_element, officer_element]
+        xi_yong_shen = sorted(raw_xi, key=lambda e: (scores[e], raw_xi.index(e)))
         ji_shen = [mother_element, day_master_element]
     else:
-        # Weak day master favors supporting and boosting: 印枭, 比劫
-        xi_yong_shen = [mother_element, day_master_element]
+        # 身弱喜生扶：在印枭、比劫中优先补足较弱者
+        raw_xi = [mother_element, day_master_element]
+        xi_yong_shen = sorted(raw_xi, key=lambda e: (scores[e], raw_xi.index(e)))
         ji_shen = [officer_element, wealth_element, child_element]
 
     lacking_zh = [ELEMENT_NAMES_ZH.get(e, e) for e in lacking_elements]
@@ -164,6 +179,7 @@ def analyze_wuxing_energy(
         "day_master_element": day_master_element,
         "day_master_element_zh": ELEMENT_NAMES_ZH.get(day_master_element, day_master_element),
         "strength": strength,
+        "strength_level": strength_level,
         "strength_ratio": strength_ratio,
         "self_party_score": round(self_party_score, 2),
         "lacking_elements": lacking_zh,

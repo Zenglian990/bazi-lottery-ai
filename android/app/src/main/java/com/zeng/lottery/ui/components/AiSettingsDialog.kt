@@ -13,10 +13,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Visibility
@@ -39,7 +38,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,12 +53,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zeng.lottery.ai.AiConfig
 import com.zeng.lottery.ai.AiProvider
+import com.zeng.lottery.ai.OpenAiClient
 import com.zeng.lottery.ui.theme.FortuneGold
-import com.zeng.lottery.ui.theme.ImperialRed
 
 /**
- * AI Configuration Dialog for selecting AI provider (Backend Relay / DeepSeek / Direct Gemini / Direct OpenAI),
- * configuring endpoints, and securely managing API keys.
+ * AI 大模型通道配置对话框（支持后端安全中继、DeepSeek V3/R1、Gemini 2.5 与 OpenAI 兼容端点）。
+ * 全面改用 rememberSaveable 保态，并对直连 API Key 非空与 HTTPS 端点做强校验。
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -69,21 +68,24 @@ fun AiSettingsDialog(
     onSaveConfig: (AiConfig) -> Unit
 ) {
     val clipboardManager = LocalClipboardManager.current
-    var selectedProvider by remember { mutableStateOf(currentConfig.provider) }
-    var deepseekKey by remember { mutableStateOf(currentConfig.deepseekApiKey ?: "") }
-    var deepseekBaseUrl by remember { mutableStateOf(currentConfig.deepseekBaseUrl ?: "https://api.deepseek.com/v1") }
-    var deepseekModel by remember { mutableStateOf(currentConfig.deepseekModel ?: "deepseek-chat") }
+    var selectedProviderName by rememberSaveable { mutableStateOf(currentConfig.provider.name) }
+    val selectedProvider = AiProvider.fromName(selectedProviderName)
 
-    var geminiKey by remember { mutableStateOf(currentConfig.geminiApiKey ?: "") }
-    var geminiModel by remember { mutableStateOf(currentConfig.geminiModel ?: "gemini-2.5-flash") }
+    var deepseekKey by rememberSaveable { mutableStateOf(currentConfig.deepseekApiKey) }
+    var deepseekBaseUrl by rememberSaveable { mutableStateOf(currentConfig.deepseekBaseUrl.ifBlank { "https://api.deepseek.com/v1" }) }
+    var deepseekModel by rememberSaveable { mutableStateOf(currentConfig.deepseekModel.ifBlank { "deepseek-chat" }) }
 
-    var openaiKey by remember { mutableStateOf(currentConfig.openaiApiKey ?: "") }
-    var openaiBaseUrl by remember { mutableStateOf(currentConfig.openaiBaseUrl ?: "https://api.openai.com/v1") }
-    var openaiModel by remember { mutableStateOf(currentConfig.openaiModel ?: "gpt-4o-mini") }
+    var geminiKey by rememberSaveable { mutableStateOf(currentConfig.geminiApiKey) }
+    var geminiModel by rememberSaveable { mutableStateOf(currentConfig.geminiModel.ifBlank { "gemini-2.5-flash" }) }
 
-    var showDeepseekKey by remember { mutableStateOf(false) }
-    var showGeminiKey by remember { mutableStateOf(false) }
-    var showOpenAiKey by remember { mutableStateOf(false) }
+    var openaiKey by rememberSaveable { mutableStateOf(currentConfig.openaiApiKey) }
+    var openaiBaseUrl by rememberSaveable { mutableStateOf(currentConfig.openaiBaseUrl.ifBlank { "https://api.openai.com/v1" }) }
+    var openaiModel by rememberSaveable { mutableStateOf(currentConfig.openaiModel.ifBlank { "gpt-4o-mini" }) }
+
+    var showDeepseekKey by rememberSaveable { mutableStateOf(false) }
+    var showGeminiKey by rememberSaveable { mutableStateOf(false) }
+    var showOpenAiKey by rememberSaveable { mutableStateOf(false) }
+    var validationError by rememberSaveable { mutableStateOf<String?>(null) }
 
     val urlPresets = listOf(
         Pair("OpenAI", "https://api.openai.com/v1"),
@@ -124,18 +126,23 @@ fun AiSettingsDialog(
                     color = FortuneGold
                 )
 
-                // Provider Radio Options
                 AiProvider.entries.forEach { provider ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { selectedProvider = provider }
+                            .clickable {
+                                selectedProviderName = provider.name
+                                validationError = null
+                            }
                             .padding(vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         RadioButton(
                             selected = selectedProvider == provider,
-                            onClick = { selectedProvider = provider },
+                            onClick = {
+                                selectedProviderName = provider.name
+                                validationError = null
+                            },
                             colors = RadioButtonDefaults.colors(selectedColor = FortuneGold)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
@@ -146,57 +153,39 @@ fun AiSettingsDialog(
                                 fontWeight = if (selectedProvider == provider) FontWeight.Bold else FontWeight.Normal,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
-                            when (provider) {
-                                AiProvider.BACKEND_RELAY -> {
-                                    Text(
-                                        text = "免配置 Key，云端中继与易道大师五行推演",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontSize = 11.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                                AiProvider.DIRECT_DEEPSEEK -> {
-                                    Text(
-                                        text = "国内最强纯中文推理，支持 Flash 极速与 V4-Pro 旗舰深度推演 (1M上下文)",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontSize = 11.sp,
-                                        color = FortuneGold.copy(alpha = 0.85f)
-                                    )
-                                }
-                                AiProvider.DIRECT_GEMINI -> {
-                                    Text(
-                                        text = "Google 前沿旗舰，支持 Gemini 2.5 Flash / 2.5 Pro 极速推演",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontSize = 11.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                                AiProvider.DIRECT_OPENAI -> {
-                                    Text(
-                                        text = "支持 OpenAI、硅基流动、Groq 等兼容端点",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontSize = 11.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
+                            val desc = when (provider) {
+                                AiProvider.BACKEND_RELAY -> "免配置 Key，通过 HMAC-Nonce 防重放签名直连云端 Gemini 中继"
+                                AiProvider.DIRECT_DEEPSEEK -> "国内直连，支持 DeepSeek-V3 (deepseek-chat) 与 R1 深度推理 (deepseek-reasoner)"
+                                AiProvider.DIRECT_GEMINI -> "Google 直连，支持 Gemini 2.5 Flash / 2.5 Pro 极速流式解盘"
+                                AiProvider.DIRECT_OPENAI -> "支持 OpenAI、硅基流动、Groq 等 HTTPS OpenAI 兼容接口"
                             }
+                            Text(
+                                text = desc,
+                                style = MaterialTheme.typography.bodySmall,
+                                fontSize = 11.sp,
+                                color = if (provider == AiProvider.DIRECT_DEEPSEEK) FortuneGold.copy(alpha = 0.9f) else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(4.dp))
+                if (!validationError.isNullOrBlank()) {
+                    Text(
+                        text = validationError!!,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
 
-                // Provider specific input forms
                 when (selectedProvider) {
                     AiProvider.BACKEND_RELAY -> {
                         Card(
-                            colors = CardDefaults.cardColors(
-                                containerColor = FortuneGold.copy(alpha = 0.08f)
-                            ),
+                            colors = CardDefaults.cardColors(containerColor = FortuneGold.copy(alpha = 0.08f)),
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
-                                text = "✓ 已启用后端安全中继通道。内置智能容灾与易道彩经大师五行推演，开箱即用，无需配置 API Key。",
+                                text = "✓ 已启用云端安全中继通道。内置 HMAC-SHA256 一次性签名与易道典籍 RAG 检索，无需在手机端存放明文密钥。",
                                 style = MaterialTheme.typography.bodySmall,
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurface,
@@ -206,74 +195,36 @@ fun AiSettingsDialog(
                     }
 
                     AiProvider.DIRECT_DEEPSEEK -> {
-                        OutlinedTextField(
+                        ApiKeyField(
                             value = deepseekKey,
-                            onValueChange = { input ->
-                                try {
-                                    val clean = if (input.contains('\r') || input.contains('\n')) {
-                                        input.replace("\r", "").replace("\n", "")
-                                    } else {
-                                        input
-                                    }
-                                    deepseekKey = clean
-                                } catch (_: Throwable) {}
+                            onValueChange = {
+                                deepseekKey = it
+                                validationError = null
                             },
-                            label = { Text("DeepSeek API Key") },
-                            placeholder = { Text("sk-...") },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            visualTransformation = if (showDeepseekKey) VisualTransformation.None else PasswordVisualTransformation(),
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Ascii,
-                                autoCorrect = false,
-                                imeAction = ImeAction.Done
-                            ),
-                            trailingIcon = {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    IconButton(
-                                        onClick = {
-                                            try {
-                                                val clip = clipboardManager.getText()?.text
-                                                if (!clip.isNullOrBlank()) {
-                                                    deepseekKey = clip.trim().replace("\r", "").replace("\n", "")
-                                                }
-                                            } catch (_: Throwable) {}
-                                        }
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.ContentPaste,
-                                            contentDescription = "粘贴剪贴板",
-                                            tint = FortuneGold
-                                        )
-                                    }
-                                    IconButton(onClick = { showDeepseekKey = !showDeepseekKey }) {
-                                        Icon(
-                                            imageVector = if (showDeepseekKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                            contentDescription = "切换可见性"
-                                        )
-                                    }
+                            label = "DeepSeek API Key",
+                            placeholder = "sk-...",
+                            visible = showDeepseekKey,
+                            onToggleVisible = { showDeepseekKey = !showDeepseekKey },
+                            onPaste = {
+                                val clip = clipboardManager.getText()?.text?.trim()?.replace("\r", "")?.replace("\n", "")
+                                if (!clip.isNullOrBlank()) {
+                                    deepseekKey = clip
+                                    validationError = null
                                 }
                             }
                         )
 
-                        Text(
-                            text = "选择模型规格：",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Text("选择模型规格：", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
-                        FlowRow(
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            val deepseekModels = listOf(
-                                Pair("deepseek-chat (官方推荐 · V3极速)", "deepseek-chat"),
-                                Pair("deepseek-reasoner (深度推理 · R1)", "deepseek-reasoner")
-                            )
-                            deepseekModels.forEach { (label, modelCode) ->
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            listOf(
+                                Pair("DeepSeek-V3 (deepseek-chat)", "deepseek-chat"),
+                                Pair("DeepSeek-R1 推理 (deepseek-reasoner)", "deepseek-reasoner")
+                            ).forEach { (label, code) ->
                                 SuggestionChip(
-                                    onClick = { deepseekModel = modelCode },
+                                    onClick = { deepseekModel = code },
                                     label = { Text(label, fontSize = 11.sp) },
-                                    colors = if (deepseekModel == modelCode) {
+                                    colors = if (deepseekModel == code) {
                                         SuggestionChipDefaults.suggestionChipColors(
                                             containerColor = FortuneGold.copy(alpha = 0.2f),
                                             labelColor = FortuneGold
@@ -287,106 +238,57 @@ fun AiSettingsDialog(
 
                         OutlinedTextField(
                             value = deepseekModel,
-                            onValueChange = { input ->
-                                try { deepseekModel = input } catch (_: Throwable) {}
-                            },
+                            onValueChange = { deepseekModel = it },
                             label = { Text("Model Name") },
                             placeholder = { Text("deepseek-chat") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Ascii,
-                                autoCorrect = false,
-                                imeAction = ImeAction.Next
-                            )
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii, autoCorrect = false, imeAction = ImeAction.Next)
                         )
 
                         OutlinedTextField(
                             value = deepseekBaseUrl,
-                            onValueChange = { input ->
-                                try { deepseekBaseUrl = input } catch (_: Throwable) {}
+                            onValueChange = {
+                                deepseekBaseUrl = it
+                                validationError = null
                             },
-                            label = { Text("官方 API 端点") },
+                            label = { Text("API 端点 (仅限 HTTPS)") },
                             placeholder = { Text("https://api.deepseek.com/v1") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Uri,
-                                autoCorrect = false,
-                                imeAction = ImeAction.Done
-                            )
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, autoCorrect = false, imeAction = ImeAction.Done)
                         )
                     }
 
                     AiProvider.DIRECT_GEMINI -> {
-                        OutlinedTextField(
+                        ApiKeyField(
                             value = geminiKey,
-                            onValueChange = { input ->
-                                try {
-                                    val clean = if (input.contains('\r') || input.contains('\n')) {
-                                        input.replace("\r", "").replace("\n", "")
-                                    } else {
-                                        input
-                                    }
-                                    geminiKey = clean
-                                } catch (_: Throwable) {}
+                            onValueChange = {
+                                geminiKey = it
+                                validationError = null
                             },
-                            label = { Text("Google Gemini API Key") },
-                            placeholder = { Text("AIzaSy...") },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            visualTransformation = if (showGeminiKey) VisualTransformation.None else PasswordVisualTransformation(),
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Ascii,
-                                autoCorrect = false,
-                                imeAction = ImeAction.Done
-                            ),
-                            trailingIcon = {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    IconButton(
-                                        onClick = {
-                                            try {
-                                                val clip = clipboardManager.getText()?.text
-                                                if (!clip.isNullOrBlank()) {
-                                                    geminiKey = clip.trim().replace("\r", "").replace("\n", "")
-                                                }
-                                            } catch (_: Throwable) {}
-                                        }
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.ContentPaste,
-                                            contentDescription = "粘贴剪贴板",
-                                            tint = FortuneGold
-                                        )
-                                    }
-                                    IconButton(onClick = { showGeminiKey = !showGeminiKey }) {
-                                        Icon(
-                                            imageVector = if (showGeminiKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                            contentDescription = "切换可见性"
-                                        )
-                                    }
+                            label = "Google Gemini API Key",
+                            placeholder = "AIzaSy...",
+                            visible = showGeminiKey,
+                            onToggleVisible = { showGeminiKey = !showGeminiKey },
+                            onPaste = {
+                                val clip = clipboardManager.getText()?.text?.trim()?.replace("\r", "")?.replace("\n", "")
+                                if (!clip.isNullOrBlank()) {
+                                    geminiKey = clip
+                                    validationError = null
                                 }
                             }
                         )
 
-                        Text(
-                            text = "前沿模型快捷选择：",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-
-                        FlowRow(
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            val geminiModels = listOf(
-                                Pair("2.5 Flash (极速推荐)", "gemini-2.5-flash"),
-                                Pair("2.5 Pro (深度逻辑)", "gemini-2.5-pro")
-                            )
-                            geminiModels.forEach { (label, modelCode) ->
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            listOf(
+                                Pair("Gemini 2.5 Flash (推荐)", "gemini-2.5-flash"),
+                                Pair("Gemini 2.5 Pro (深度)", "gemini-2.5-pro")
+                            ).forEach { (label, code) ->
                                 SuggestionChip(
-                                    onClick = { geminiModel = modelCode },
+                                    onClick = { geminiModel = code },
                                     label = { Text(label, fontSize = 11.sp) },
-                                    colors = if (geminiModel == modelCode) {
+                                    colors = if (geminiModel == code) {
                                         SuggestionChipDefaults.suggestionChipColors(
                                             containerColor = FortuneGold.copy(alpha = 0.2f),
                                             labelColor = FortuneGold
@@ -400,95 +302,55 @@ fun AiSettingsDialog(
 
                         OutlinedTextField(
                             value = geminiModel,
-                            onValueChange = { input ->
-                                try { geminiModel = input } catch (_: Throwable) {}
-                            },
+                            onValueChange = { geminiModel = it },
                             label = { Text("Gemini Model") },
                             placeholder = { Text("gemini-2.5-flash") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Ascii,
-                                autoCorrect = false,
-                                imeAction = ImeAction.Done
-                            )
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii, autoCorrect = false, imeAction = ImeAction.Done)
                         )
                     }
 
                     AiProvider.DIRECT_OPENAI -> {
-                        OutlinedTextField(
+                        ApiKeyField(
                             value = openaiKey,
-                            onValueChange = { input ->
-                                try {
-                                    val clean = if (input.contains('\r') || input.contains('\n')) {
-                                        input.replace("\r", "").replace("\n", "")
-                                    } else {
-                                        input
-                                    }
-                                    openaiKey = clean
-                                } catch (_: Throwable) {}
+                            onValueChange = {
+                                openaiKey = it
+                                validationError = null
                             },
-                            label = { Text("API Key") },
-                            placeholder = { Text("sk-...") },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            visualTransformation = if (showOpenAiKey) VisualTransformation.None else PasswordVisualTransformation(),
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Ascii,
-                                autoCorrect = false,
-                                imeAction = ImeAction.Done
-                            ),
-                            trailingIcon = {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    IconButton(
-                                        onClick = {
-                                            try {
-                                                val clip = clipboardManager.getText()?.text
-                                                if (!clip.isNullOrBlank()) {
-                                                    openaiKey = clip.trim().replace("\r", "").replace("\n", "")
-                                                }
-                                            } catch (_: Throwable) {}
-                                        }
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.ContentPaste,
-                                            contentDescription = "粘贴剪贴板",
-                                            tint = FortuneGold
-                                        )
-                                    }
-                                    IconButton(onClick = { showOpenAiKey = !showOpenAiKey }) {
-                                        Icon(
-                                            imageVector = if (showOpenAiKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                            contentDescription = "切换可见性"
-                                        )
-                                    }
+                            label = "API Key",
+                            placeholder = "sk-...",
+                            visible = showOpenAiKey,
+                            onToggleVisible = { showOpenAiKey = !showOpenAiKey },
+                            onPaste = {
+                                val clip = clipboardManager.getText()?.text?.trim()?.replace("\r", "")?.replace("\n", "")
+                                if (!clip.isNullOrBlank()) {
+                                    openaiKey = clip
+                                    validationError = null
                                 }
                             }
                         )
 
                         OutlinedTextField(
                             value = openaiBaseUrl,
-                            onValueChange = { input ->
-                                try { openaiBaseUrl = input } catch (_: Throwable) {}
+                            onValueChange = {
+                                openaiBaseUrl = it
+                                validationError = null
                             },
-                            label = { Text("Base URL") },
+                            label = { Text("Base URL (仅限 HTTPS)") },
                             placeholder = { Text("https://api.openai.com/v1") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Uri,
-                                autoCorrect = false,
-                                imeAction = ImeAction.Next
-                            )
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, autoCorrect = false, imeAction = ImeAction.Next)
                         )
 
-                        // Base URL Presets
-                        FlowRow(
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             urlPresets.forEach { (name, url) ->
                                 SuggestionChip(
-                                    onClick = { openaiBaseUrl = url },
+                                    onClick = {
+                                        openaiBaseUrl = url
+                                        validationError = null
+                                    },
                                     label = { Text(name, fontSize = 11.sp) }
                                 )
                             }
@@ -496,18 +358,12 @@ fun AiSettingsDialog(
 
                         OutlinedTextField(
                             value = openaiModel,
-                            onValueChange = { input ->
-                                try { openaiModel = input } catch (_: Throwable) {}
-                            },
+                            onValueChange = { openaiModel = it },
                             label = { Text("Model Name") },
                             placeholder = { Text("gpt-4o-mini / deepseek-chat") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Ascii,
-                                autoCorrect = false,
-                                imeAction = ImeAction.Done
-                            )
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii, autoCorrect = false, imeAction = ImeAction.Done)
                         )
                     }
                 }
@@ -516,38 +372,67 @@ fun AiSettingsDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    try {
-                        val cleanDeepseekKey = (deepseekKey ?: "").trim().replace("\r", "").replace("\n", "")
-                        val cleanDeepseekUrl = (deepseekBaseUrl ?: "").trim().replace("\r", "").replace("\n", "").ifBlank { "https://api.deepseek.com/v1" }
-                        val cleanDeepseekModel = (deepseekModel ?: "").trim().replace("\r", "").replace("\n", "").ifBlank { "deepseek-chat" }
+                    val cleanDeepseekKey = deepseekKey.trim().replace("\r", "").replace("\n", "")
+                    val cleanDeepseekUrl = deepseekBaseUrl.trim().replace("\r", "").replace("\n", "").ifBlank { "https://api.deepseek.com/v1" }
+                    val cleanDeepseekModel = deepseekModel.trim().ifBlank { "deepseek-chat" }
 
-                        val cleanGeminiKey = (geminiKey ?: "").trim().replace("\r", "").replace("\n", "")
-                        val cleanGeminiModel = (geminiModel ?: "").trim().replace("\r", "").replace("\n", "").ifBlank { "gemini-2.5-flash" }
+                    val cleanGeminiKey = geminiKey.trim().replace("\r", "").replace("\n", "")
+                    val cleanGeminiModel = geminiModel.trim().ifBlank { "gemini-2.5-flash" }
 
-                        val cleanOpenaiKey = (openaiKey ?: "").trim().replace("\r", "").replace("\n", "")
-                        val cleanOpenaiUrl = (openaiBaseUrl ?: "").trim().replace("\r", "").replace("\n", "").ifBlank { "https://api.openai.com/v1" }
-                        val cleanOpenaiModel = (openaiModel ?: "").trim().replace("\r", "").replace("\n", "").ifBlank { "gpt-4o-mini" }
+                    val cleanOpenaiKey = openaiKey.trim().replace("\r", "").replace("\n", "")
+                    val cleanOpenaiUrl = openaiBaseUrl.trim().replace("\r", "").replace("\n", "").ifBlank { "https://api.openai.com/v1" }
+                    val cleanOpenaiModel = openaiModel.trim().ifBlank { "gpt-4o-mini" }
 
-                        val updated = AiConfig(
-                            provider = selectedProvider,
-                            deepseekApiKey = cleanDeepseekKey,
-                            deepseekBaseUrl = cleanDeepseekUrl,
-                            deepseekModel = cleanDeepseekModel,
-                            geminiApiKey = cleanGeminiKey,
-                            geminiModel = cleanGeminiModel,
-                            openaiApiKey = cleanOpenaiKey,
-                            openaiBaseUrl = cleanOpenaiUrl,
-                            openaiModel = cleanOpenaiModel
-                        )
-                        onSaveConfig(updated)
-                        onDismiss()
-                    } catch (e: Throwable) {
-                        onDismiss()
+                    // 保存前严格校验直连参数与 HTTPS 安全
+                    when (selectedProvider) {
+                        AiProvider.DIRECT_DEEPSEEK -> {
+                            if (cleanDeepseekKey.isBlank()) {
+                                validationError = "请填写 DeepSeek API Key，或切换回云端安全中继"
+                                return@Button
+                            }
+                            val (ok, msg) = OpenAiClient.validateDirectBaseUrl(cleanDeepseekUrl)
+                            if (!ok) {
+                                validationError = msg
+                                return@Button
+                            }
+                        }
+                        AiProvider.DIRECT_GEMINI -> {
+                            if (cleanGeminiKey.isBlank()) {
+                                validationError = "请填写 Google Gemini API Key，或切换回云端安全中继"
+                                return@Button
+                            }
+                        }
+                        AiProvider.DIRECT_OPENAI -> {
+                            if (cleanOpenaiKey.isBlank()) {
+                                validationError = "请填写 OpenAI 兼容 API Key，或切换回云端安全中继"
+                                return@Button
+                            }
+                            val (ok, msg) = OpenAiClient.validateDirectBaseUrl(cleanOpenaiUrl)
+                            if (!ok) {
+                                validationError = msg
+                                return@Button
+                            }
+                        }
+                        AiProvider.BACKEND_RELAY -> Unit
                     }
+
+                    val updated = AiConfig(
+                        provider = selectedProvider,
+                        deepseekApiKey = cleanDeepseekKey,
+                        deepseekBaseUrl = cleanDeepseekUrl,
+                        deepseekModel = cleanDeepseekModel,
+                        geminiApiKey = cleanGeminiKey,
+                        geminiModel = cleanGeminiModel,
+                        openaiApiKey = cleanOpenaiKey,
+                        openaiBaseUrl = cleanOpenaiUrl,
+                        openaiModel = cleanOpenaiModel
+                    )
+                    onSaveConfig(updated)
+                    onDismiss()
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = FortuneGold,
-                    contentColor = Color.Black
+                    contentColor = Color(0xFF1A1200)
                 )
             ) {
                 Text("保存配置", fontWeight = FontWeight.Bold)
@@ -556,6 +441,51 @@ fun AiSettingsDialog(
         dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text("取消")
+            }
+        }
+    )
+}
+
+@Composable
+private fun ApiKeyField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    placeholder: String,
+    visible: Boolean,
+    onToggleVisible: () -> Unit,
+    onPaste: () -> Unit
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = { input ->
+            onValueChange(input.replace("\r", "").replace("\n", ""))
+        },
+        label = { Text(label) },
+        placeholder = { Text(placeholder) },
+        modifier = Modifier.fillMaxWidth(),
+        singleLine = true,
+        visualTransformation = if (visible) VisualTransformation.None else PasswordVisualTransformation(),
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Ascii,
+            autoCorrect = false,
+            imeAction = ImeAction.Done
+        ),
+        trailingIcon = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onPaste) {
+                    Icon(
+                        imageVector = Icons.Default.ContentPaste,
+                        contentDescription = "粘贴剪贴板",
+                        tint = FortuneGold
+                    )
+                }
+                IconButton(onClick = onToggleVisible) {
+                    Icon(
+                        imageVector = if (visible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                        contentDescription = "切换可见性"
+                    )
+                }
             }
         }
     )

@@ -5,10 +5,16 @@ import com.zeng.lottery.data.model.BaziDestinyRequest
 import com.zeng.lottery.data.model.BaziRecommendationRequest
 import com.zeng.lottery.data.model.BaziRecommendationResponse
 import com.zeng.lottery.data.model.HealthResponse
+import com.zeng.lottery.data.model.HistoryResponse
 import com.zeng.lottery.data.model.LotteryRulesResponse
 import com.zeng.lottery.data.model.LotteryStats
+import com.zeng.lottery.data.model.SyncLotteryRequest
+import com.zeng.lottery.data.model.SyncLotteryResponse
+import com.zeng.lottery.data.model.TodayFortuneRequest
+import com.zeng.lottery.data.model.TodayFortuneResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -38,11 +44,20 @@ interface LotteryApiService {
         @Path("type") type: String,
         @Query("limit") limit: Int = 50,
         @Query("page") page: Int = 1
-    ): com.zeng.lottery.data.model.HistoryResponse
+    ): HistoryResponse
 
     @POST("/api/bazi/destiny")
     suspend fun calculateDestiny(@Body request: BaziDestinyRequest): BaziDestiny
 
     @POST("/api/bazi/recommend")
     suspend fun getRecommendation(@Body request: BaziRecommendationRequest): BaziRecommendationResponse
+
+    @POST("/api/bazi/today-fortune")
+    suspend fun getTodayFortune(@Body request: TodayFortuneRequest): TodayFortuneResponse
+
+    @POST("/api/lottery/sync")
+    suspend fun syncLotteryData(
+        @Header("Authorization") authHeader: String,
+        @Body request: SyncLotteryRequest
+    ): SyncLotteryResponse
 }

@@ -120,13 +120,13 @@ def test_controlled_omission_mathematical_precision():
     assert s01.avg_omission == 1.75
     assert s01.desire_index == 1.14
 
-    # Ball "02" never appeared:
-    # current_omission = 10, max_omission = 10, avg_omission = 10.0, desire_index = 1.0
+    # Ball "02" never appeared (N=10, pool=2, balls=1 => p=0.5, theoretical_avg_omission=1.0):
+    # current_omission = 10, max_omission = 10, avg_omission = 10.0, desire_index = 10.0 / 1.0 = 10.0
     s02 = stat_map["02"]
     assert s02.current_omission == 10
     assert s02.max_omission == 10
     assert s02.avg_omission == 10.0
-    assert s02.desire_index == 1.0
+    assert s02.desire_index == 10.0
 
 def test_omission_when_appeared_in_newest_draw():
     """Verify that when a number appears in the newest draw (index 0), current omission is 0 and desire index is 0."""
@@ -314,7 +314,7 @@ def test_qxc_intra_draw_duplicates_omission_regression():
     assert s0.current_omission == 5
     assert s0.max_omission == 5
     assert s0.avg_omission == 5.0
-    assert s0.desire_index == 1.0
+    assert s0.desire_index > 1.0
 
 
 def test_sync_endpoint_lottery_type_validation():

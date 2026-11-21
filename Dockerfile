@@ -1,4 +1,4 @@
-# Production Container Image for Bazi Lottery Backend
+# 生产级容器镜像（统一用于 Docker Compose 与 Google Cloud Run 部署）
 FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -7,12 +7,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     ENV=production \
     PORT=8080 \
     TZ=Asia/Shanghai \
-    LOTTERY_DB_PATH=/app/backend/app/db/lottery.db
+    LOTTERY_DB_PATH=/app/data/lottery.db
 
 WORKDIR /app
 
+# 仅安装最小系统时区数据（健康检查改用标准库 urllib，去除多余 curl 攻击面）
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
     tzdata \
     && rm -rf /var/lib/apt/lists/*
 
@@ -26,14 +26,14 @@ RUN groupadd --gid 10001 appuser \
 
 COPY --chown=appuser:appuser backend/ /app/backend/
 
-RUN chmod -R 755 /app/backend \
+RUN chmod -R a+rX /app/backend \
     && chown -R appuser:appuser /app/backend/app/db /app/data
 
 USER appuser
 
 EXPOSE 8080
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:${PORT:-8080}/api/health || exit 1
+HEALTHCHECK --interval=30s --timeout=8s --start-period=12s --retries=3 \
+    CMD python -c "import os, urllib.request; urllib.request.urlopen(f'http://127.0.0.1:{os.getenv(\"PORT\", \"8080\")}/api/health', timeout=5).read()" || exit 1
 
-CMD ["sh", "-c", "exec uvicorn backend.app.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
+CMD ["sh", "-c", "exec uvicorn backend.app.main:app --host 0.0.0.0 --port ${PORT:-8080} --proxy-headers --forwarded-allow-ips='*'"]

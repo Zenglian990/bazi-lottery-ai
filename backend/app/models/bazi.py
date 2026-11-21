@@ -27,8 +27,8 @@ class _BaseBaziInputModel(BaseModel):
         description="Birth datetime in ISO 8601 or YYYY-MM-DD HH:MM:SS format",
     )
     calendar_type: Optional[Literal["lunar", "solar"]] = Field(
-        default="lunar",
-        description="'lunar' (农历) or 'solar' (公历)",
+        default=None,
+        description="'lunar' (农历) or 'solar' (公历)；未显式指定时，有 lunar_* 则为 lunar，否则为 solar",
     )
     lunar_year: Optional[int] = Field(default=None, ge=1900, le=2100, description="农历年 (1900-2100)")
     lunar_month: Optional[int] = Field(default=None, ge=1, le=12, description="农历月 (1-12)")
@@ -52,6 +52,8 @@ class _BaseBaziInputModel(BaseModel):
         description="缘主姓名 (结合五格剖象与笔画数理)",
     )
     shichen: Optional[str] = Field(default=None, max_length=16, description="出生时辰 (如: 早子时, 晚子时, 丑时...)")
+    apply_eot: Optional[bool] = Field(default=None, description="是否叠加天文均时差(Equation of Time)校正真太阳时")
+    is_dst: bool = Field(default=False, description="是否1986-1991中国夏令时期间按夏令时表记录")
 
     @field_validator("birth_datetime", "lunar_hour", "shichen", mode="before")
     @classmethod
@@ -61,8 +63,19 @@ class _BaseBaziInputModel(BaseModel):
     @field_validator("calendar_type", mode="before")
     @classmethod
     def normalize_calendar_type(cls, v):
-        s = _check_clean_str(v, "calendar_type", default="lunar")
-        return s.lower() if s else "lunar"
+        s = _check_clean_str(v, "calendar_type", default=None)
+        return s.lower() if s else None
+
+    @model_validator(mode="after")
+    def infer_default_calendar_type(self) -> "_BaseBaziInputModel":
+        if self.calendar_type is None:
+            has_lunar = (
+                self.lunar_year is not None
+                and self.lunar_month is not None
+                and self.lunar_day is not None
+            )
+            self.calendar_type = "lunar" if has_lunar else "solar"
+        return self
 
     @field_validator("gender", mode="before")
     @classmethod
@@ -170,7 +183,11 @@ class BaziDestinyResponse(BaseModel):
     name_numerology: Optional[Dict[str, Any]] = Field(default=None, description="姓名五格数理分析")
     gender: Optional[str] = Field(default="male", description="性别: 'male'(乾造) 或 'female'(坤造)")
     dayun_forward: Optional[bool] = Field(default=True, description="大运顺逆 (阳男阴女顺行，阴男阳女逆行)")
+    dayun_start_age: Optional[int] = Field(default=None, description="起运岁数")
     dayun_list: Optional[List[str]] = Field(default_factory=list, description="前8步起运干支")
+    dayun_details: Optional[List[Dict[str, Any]]] = Field(default_factory=list, description="前8步大运详表(干支/起止岁数与年份)")
+    strength_level: Optional[str] = Field(default=None, description="细化强弱等级(极强/身强/中和偏强/中和偏弱/身弱/极弱)")
+    calendar_warnings: Optional[List[str]] = Field(default_factory=list, description="历法边界修正提示")
 
     @model_validator(mode="after")
     def populate_alias_and_chinese(self) -> "BaziDestinyResponse":
@@ -222,6 +239,10 @@ class BaziRecommendRequest(_BaseBaziInputModel):
     w_freq: Optional[float] = Field(default=None, ge=0.0, le=100.0, description="Weight for historical frequency")
     w_omission: Optional[float] = Field(default=None, ge=0.0, le=100.0, description="Weight for omission value")
     deterministic: Optional[bool] = Field(default=False, description="Deterministic top-ranked selection if True")
+    locked_primary: Optional[List[int]] = Field(default=None, max_length=10, description="主区定胆号码(必含)")
+    excluded_primary: Optional[List[int]] = Field(default=None, max_length=25, description="主区杀号号码(排除)")
+    locked_secondary: Optional[List[int]] = Field(default=None, max_length=5, description="副区定胆号码(必含)")
+    excluded_secondary: Optional[List[int]] = Field(default=None, max_length=12, description="副区杀号号码(排除)")
 
     @field_validator("lottery_type", mode="before")
     @classmethod

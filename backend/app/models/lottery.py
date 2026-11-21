@@ -55,6 +55,7 @@ class NumberStat(BaseModel):
     number: str = Field(..., description="Formatted ball number string")
     total_count: int = Field(..., description="Total occurrences across all analyzed draws")
     frequency: float = Field(..., description="Occurrence rate (total_count / N)")
+    hit_rate: Optional[float] = Field(default=None, description="Per-draw hit ratio (distinct_draws / N, always <= 1.0)")
     recent_count: int = Field(..., description="Occurrences within recent sliding window")
     expected_count: float = Field(..., description="Theoretical expected count in window")
     hot_status: str = Field(..., description="Classification: hot, warm, cold")

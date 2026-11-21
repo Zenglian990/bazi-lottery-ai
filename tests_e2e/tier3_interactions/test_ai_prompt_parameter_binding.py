@@ -32,6 +32,7 @@ def test_interaction_ai_divination_response_structure_5_parts():
     payload = {
         "birth_datetime": "1990-08-15T08:30:00",
         "lottery_type": "ssq",
+        "provider": "fallback",
         "recommended_numbers": {"primary_numbers": ["03", "06", "11", "18", "21", "28"], "secondary_numbers": ["09"]},
     }
     resp = client.post_divination(payload)
@@ -51,6 +52,7 @@ def test_interaction_responsible_gaming_disclaimer_enforcement():
     resp = client.post_divination({
         "birth_datetime": "1988-05-20T10:00:00",
         "lottery_type": "dlt",
+        "provider": "fallback",
         "recommended_numbers": {"primary_numbers": ["05", "10", "15", "20", "25"], "secondary_numbers": ["01", "06"]},
     })
     text = resp["data"]["divination_text"]
@@ -62,6 +64,7 @@ def test_interaction_cross_lottery_type_ai_divination_dispatch():
     for lt in ["ssq", "dlt", "fc3d", "qxc"]:
         resp = client.post_divination({
             "lottery_type": lt,
+            "provider": "fallback",
             "recommended_numbers": {"primary_numbers": ["01", "02", "03"]},
         })
         assert resp["status_code"] == 200

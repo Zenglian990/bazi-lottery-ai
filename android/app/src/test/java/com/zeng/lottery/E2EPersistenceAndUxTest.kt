@@ -243,21 +243,21 @@ class E2EPersistenceAndUxTest {
 
     @Test
     fun testTier2_B2_YearLimits_1930To2030() {
-        // Underflow: 1910 -> clamped to 1930
-        prefsManager.saveLunarDate(LunarDate(1910, 5, false, 10, 8, 0))
-        assertEquals(1930, prefsManager.getLunarDate().year)
+        // Underflow: 1880 -> clamped to 1900
+        prefsManager.saveLunarDate(LunarDate(1880, 5, false, 10, 8, 0))
+        assertEquals(1900, prefsManager.getLunarDate().year)
 
-        // Exact floor: 1930
-        prefsManager.saveLunarDate(LunarDate(1930, 1, false, 1, 0, 0))
-        assertEquals(1930, prefsManager.getLunarDate().year)
+        // Exact floor: 1900
+        prefsManager.saveLunarDate(LunarDate(1900, 1, false, 1, 0, 0))
+        assertEquals(1900, prefsManager.getLunarDate().year)
 
-        // Exact ceiling: 2030
-        prefsManager.saveLunarDate(LunarDate(2030, 12, false, 20, 23, 59))
-        assertEquals(2030, prefsManager.getLunarDate().year)
+        // Exact ceiling: 2100
+        prefsManager.saveLunarDate(LunarDate(2100, 12, false, 20, 23, 59))
+        assertEquals(2100, prefsManager.getLunarDate().year)
 
-        // Overflow: 2055 -> clamped to 2030
-        prefsManager.saveLunarDate(LunarDate(2055, 3, false, 5, 12, 0))
-        assertEquals(2030, prefsManager.getLunarDate().year)
+        // Overflow: 2155 -> clamped to 2100
+        prefsManager.saveLunarDate(LunarDate(2155, 3, false, 5, 12, 0))
+        assertEquals(2100, prefsManager.getLunarDate().year)
     }
 
     @Test

@@ -36,17 +36,17 @@ class UserPreferencesAdversarialTest {
     @Test
     fun testExtremeYearClampingBelowAndAbove() {
         val extremeYears = listOf(
-            0 to 1930,
-            -1990 to 1930,
-            1800 to 1930,
-            1929 to 1930,
-            1930 to 1930,
+            0 to 1900,
+            -1990 to 1900,
+            1800 to 1900,
+            1899 to 1900,
+            1900 to 1900,
             2000 to 2000,
-            2030 to 2030,
-            2031 to 2030,
-            2050 to 2030,
-            3000 to 2030,
-            99999 to 2030
+            2050 to 2050,
+            2100 to 2100,
+            2101 to 2100,
+            3000 to 2100,
+            99999 to 2100
         )
 
         for ((inputYear, expectedYear) in extremeYears) {
@@ -58,7 +58,7 @@ class UserPreferencesAdversarialTest {
             // Critically verify that BaziEngine astronomical conversion does not throw on clamped date
             val solar = BaziEngine.lunarToSolar(retrieved)
             assertNotNull("solar datetime must not be null for year $expectedYear", solar)
-            assertTrue("solar year should be within astronomical range", solar.year in 1930..2031)
+            assertTrue("solar year should be within astronomical range", solar.year in 1900..2101)
         }
     }
 
@@ -214,10 +214,10 @@ class UserPreferencesAdversarialTest {
                         val retrievedCount = prefsManager.getBetCount()
                         assertTrue(retrievedCount in 1..20)
 
-                        val year = 1920 + (j % 120)
+                        val year = 1880 + (j % 240)
                         prefsManager.saveLunarDate(LunarDate(year, 6, false, 15, 12, 0))
                         val retrievedDate = prefsManager.getLunarDate()
-                        assertTrue(retrievedDate.year in 1930..2030)
+                        assertTrue(retrievedDate.year in 1900..2100)
 
                         prefsManager.saveGender(j % 2 == 0)
                         val retrievedGender = prefsManager.getGender()

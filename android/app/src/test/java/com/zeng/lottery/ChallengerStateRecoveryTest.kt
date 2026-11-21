@@ -310,10 +310,10 @@ class ChallengerStateRecoveryTest {
                         val count = prefs.getBetCount()
                         assertTrue(count in 1..20)
 
-                        val y = 1910 + (i % 140)
+                        val y = 1880 + (i % 240)
                         prefs.saveLunarDate(LunarDate(y, 6, false, 15, 12, 0))
                         val date = prefs.getLunarDate()
-                        assertTrue(date.year in 1930..2030)
+                        assertTrue(date.year in 1900..2100)
 
                         prefs.saveGender(i % 2 == 1)
                         val g = prefs.getGender()

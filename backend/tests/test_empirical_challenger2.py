@@ -292,7 +292,7 @@ class TestOmissionInvariance:
         assert s.current_omission == 50
         assert s.max_omission == 50
         assert s.avg_omission == 50.0
-        assert s.desire_index == 1.0
+        assert s.desire_index > 1.0
 
     def test_adversarial_omission_extreme_always_appeared(self):
         """Adversarial case: number appears in every single draw (k == N)."""

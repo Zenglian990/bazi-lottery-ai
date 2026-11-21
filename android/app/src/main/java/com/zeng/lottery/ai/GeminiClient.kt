@@ -17,7 +17,7 @@ import okhttp3.sse.EventSources
 import java.io.IOException
 
 /**
- * Direct client for Google Gemini v1beta streamGenerateContent API via SSE.
+ * Google Gemini v1beta streamGenerateContent SSE 直连客户端。
  */
 class GeminiClient(private val okHttpClient: OkHttpClient) {
 
@@ -32,11 +32,19 @@ class GeminiClient(private val okHttpClient: OkHttpClient) {
                 val content = candidate.getAsJsonObject("content")
                 val parts = content?.getAsJsonArray("parts")
                 if (parts != null && parts.size() > 0) {
-                    return parts.get(0).asJsonObject.get("text")?.asString ?: ""
+                    val sb = StringBuilder()
+                    for (i in 0 until parts.size()) {
+                        val partObj = parts.get(i).asJsonObject
+                        val text = partObj.get("text")?.takeIf { !it.isJsonNull }?.asString
+                        if (!text.isNullOrEmpty()) {
+                            sb.append(text)
+                        }
+                    }
+                    return sb.toString()
                 }
             }
             ""
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             ""
         }
     }
@@ -58,7 +66,7 @@ class GeminiClient(private val okHttpClient: OkHttpClient) {
 
             val genConfig = JsonObject().apply {
                 addProperty("temperature", 0.7)
-                addProperty("maxOutputTokens", 1024)
+                addProperty("maxOutputTokens", 4096)
             }
             add("generationConfig", genConfig)
         }
@@ -84,7 +92,14 @@ class GeminiClient(private val okHttpClient: OkHttpClient) {
             }
 
             override fun onFailure(eventSource: EventSource, t: Throwable?, response: Response?) {
-                close(t ?: IOException("Gemini SSE error: ${response?.code}"))
+                val code = response?.code
+                val msg = when (code) {
+                    400 -> "Gemini 请求参数或模型名异常 (HTTP 400)"
+                    403 -> "Gemini API Key 权限不足或地区受限 (HTTP 403)"
+                    429 -> "Gemini API 频率超限 (HTTP 429)"
+                    else -> t?.message ?: "Gemini SSE 连接异常 (HTTP ${code ?: "未知"})"
+                }
+                close(IOException(msg, t))
             }
         }
 

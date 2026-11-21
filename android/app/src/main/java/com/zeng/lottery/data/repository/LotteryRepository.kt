@@ -9,16 +9,23 @@ import com.zeng.lottery.data.model.BaziDestiny
 import com.zeng.lottery.data.model.BaziDestinyRequest
 import com.zeng.lottery.data.model.BaziRecommendationRequest
 import com.zeng.lottery.data.model.BaziRecommendationResponse
+import com.zeng.lottery.data.model.DrawItem
 import com.zeng.lottery.data.model.HealthResponse
 import com.zeng.lottery.data.model.LotteryStats
 import com.zeng.lottery.data.model.LotteryType
+import com.zeng.lottery.data.model.LunarDate
+import com.zeng.lottery.data.model.SyncLotteryRequest
+import com.zeng.lottery.data.model.SyncLotteryResponse
+import com.zeng.lottery.data.model.TodayFortuneRequest
+import com.zeng.lottery.data.model.TodayFortuneResponse
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.withTimeout
+import retrofit2.HttpException
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-
-import kotlinx.coroutines.withTimeout
 
 class LotteryRepository(
     private val context: Context? = null,
@@ -28,6 +35,15 @@ class LotteryRepository(
     private val _isOffline = MutableStateFlow(false)
     val isOffline: StateFlow<Boolean> = _isOffline.asStateFlow()
 
+    private fun handleNetworkFailure(e: Exception) {
+        // HTTP 4xx 说明后端服务可达且在线，仅为客户端参数或鉴权错误，不应误标为离线
+        if (e is HttpException && e.code() in 400..499) {
+            _isOffline.value = false
+        } else {
+            _isOffline.value = true
+        }
+    }
+
     suspend fun checkHealth(): HealthResponse? {
         return try {
             withTimeout(15000L) {
@@ -35,10 +51,10 @@ class LotteryRepository(
                 _isOffline.value = false
                 res
             }
-        } catch (e: kotlinx.coroutines.CancellationException) {
+        } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            _isOffline.value = true
+            handleNetworkFailure(e)
             null
         }
     }
@@ -46,31 +62,34 @@ class LotteryRepository(
     suspend fun getDestiny(
         dateTime: LocalDateTime,
         isMale: Boolean = true,
-        calendarType: String = "solar"
+        calendarType: String = "solar",
+        longitude: Double = 120.0
     ): BaziDestiny {
         return try {
             val req = BaziDestinyRequest(
                 birthDatetime = dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")),
                 calendarType = calendarType,
-                gender = if (isMale) "male" else "female"
+                gender = if (isMale) "male" else "female",
+                longitude = longitude
             )
             withTimeout(15000L) {
                 val remote = apiService.calculateDestiny(req)
                 _isOffline.value = false
                 remote
             }
-        } catch (e: kotlinx.coroutines.CancellationException) {
+        } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            _isOffline.value = true
-            BaziEngine.analyzeDestiny(dateTime, isMale)
+            handleNetworkFailure(e)
+            BaziEngine.analyzeDestiny(dateTime, isMale, longitude = longitude)
         }
     }
 
     suspend fun getDestinyFromLunar(
-        lunarDate: com.zeng.lottery.data.model.LunarDate,
+        lunarDate: LunarDate,
         isMale: Boolean = true,
-        userName: String = "缘主"
+        userName: String = "缘主",
+        longitude: Double = 120.0
     ): BaziDestiny {
         return try {
             val solarDt = BaziEngine.lunarToSolar(lunarDate)
@@ -78,6 +97,7 @@ class LotteryRepository(
                 birthDatetime = solarDt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")),
                 calendarType = "lunar",
                 gender = if (isMale) "male" else "female",
+                longitude = longitude,
                 userName = userName,
                 shichen = lunarDate.shichenZh,
                 isLeapMonth = lunarDate.isLeap,
@@ -89,15 +109,47 @@ class LotteryRepository(
             withTimeout(15000L) {
                 val remote = apiService.calculateDestiny(req)
                 _isOffline.value = false
-                // Ensure lunarDatetime in remote response preserves standard formatted string
                 val finalLunarText = "${lunarDate.year}年 (${lunarDate.ganzhiYear}${lunarDate.zodiac}年) 农历${lunarDate.monthZh}${lunarDate.dayZh} ${lunarDate.shichenZh}"
                 remote.copy(lunarDatetime = finalLunarText, userName = userName)
             }
-        } catch (e: kotlinx.coroutines.CancellationException) {
+        } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            _isOffline.value = true
-            BaziEngine.analyzeDestinyFromLunar(lunarDate, isMale, userName)
+            handleNetworkFailure(e)
+            BaziEngine.analyzeDestinyFromLunar(lunarDate, isMale, userName, longitude = longitude)
+        }
+    }
+
+    suspend fun getTodayFortune(
+        lunarDate: LunarDate?,
+        destiny: BaziDestiny?,
+        isMale: Boolean = true,
+        userName: String = "缘主",
+        longitude: Double = 120.0
+    ): TodayFortuneResponse {
+        return try {
+            val req = TodayFortuneRequest(
+                calendarType = if (lunarDate != null) "lunar" else "solar",
+                longitude = longitude,
+                userName = userName,
+                shichen = lunarDate?.shichenZh ?: destiny?.shichen,
+                isLeapMonth = lunarDate?.isLeap ?: false,
+                lunarYear = lunarDate?.year,
+                lunarMonth = lunarDate?.month,
+                lunarDay = lunarDate?.day,
+                lunarHour = lunarDate?.shichenZh,
+                gender = if (isMale) "male" else "female"
+            )
+            withTimeout(12000L) {
+                val remote = apiService.getTodayFortune(req)
+                _isOffline.value = false
+                remote
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            handleNetworkFailure(e)
+            BaziEngine.computeTodayFortuneOffline(destiny, userName)
         }
     }
 
@@ -108,31 +160,74 @@ class LotteryRepository(
                 _isOffline.value = false
                 remote
             }
-        } catch (e: kotlinx.coroutines.CancellationException) {
+        } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            _isOffline.value = true
+            handleNetworkFailure(e)
             offlineEngine.computeStats(lotteryType)
         }
     }
 
-    suspend fun getHistoryDraws(lotteryType: LotteryType, limit: Int = 50): List<com.zeng.lottery.data.model.DrawItem> {
+    suspend fun getHistoryDraws(lotteryType: LotteryType, limit: Int = 50): List<DrawItem> {
         return try {
             withTimeout(15000L) {
                 val remote = apiService.getHistory(lotteryType.code, limit = limit)
                 _isOffline.value = false
-                if (remote.records.isNotEmpty()) remote.records else offlineEngine.getHistoryDraws(lotteryType, limit)
+                if (remote.records.isNotEmpty()) {
+                    // 联网拉取到最新开奖后立即写入磁盘持久化缓存，断网不回退旧期号
+                    offlineEngine.saveRemoteDrawsCache(lotteryType, remote.records)
+                    remote.records
+                } else {
+                    offlineEngine.getHistoryDraws(lotteryType, limit)
+                }
             }
-        } catch (e: kotlinx.coroutines.CancellationException) {
+        } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            _isOffline.value = true
+            handleNetworkFailure(e)
             offlineEngine.getHistoryDraws(lotteryType, limit)
         }
     }
 
-    fun getOfflineHistoryDraws(lotteryType: LotteryType, limit: Int = 50): List<com.zeng.lottery.data.model.DrawItem> {
+    fun getOfflineHistoryDraws(lotteryType: LotteryType, limit: Int = 50): List<DrawItem> {
         return offlineEngine.getHistoryDraws(lotteryType, limit)
+    }
+
+    /**
+     * 自用云端同步：使用 ADMIN_SYNC_TOKEN 触发后端抓取福彩/体彩最新开奖并持久化到 GCS。
+     */
+    suspend fun triggerCloudSync(
+        lotteryTypeCode: String = "all",
+        adminToken: String,
+        forceReload: Boolean = false
+    ): Result<SyncLotteryResponse> {
+        val token = adminToken.trim()
+        if (token.isBlank()) {
+            return Result.failure(IllegalStateException("未内置同步令牌，仅执行云端数据拉取刷新"))
+        }
+        return try {
+            withTimeout(25000L) {
+                val resp = apiService.syncLotteryData(
+                    authHeader = "Bearer $token",
+                    request = SyncLotteryRequest(lotteryType = lotteryTypeCode, forceReload = forceReload)
+                )
+                _isOffline.value = false
+                Result.success(resp)
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: HttpException) {
+            handleNetworkFailure(e)
+            val errMsg = when (e.code()) {
+                401, 403 -> "同步令牌鉴权未通过 (HTTP ${e.code()})"
+                429 -> "云端同步冷却中，请稍候再试 (HTTP 429)"
+                else -> "云端同步失败 (HTTP ${e.code()})"
+            }
+            Result.failure(IllegalStateException(errMsg, e))
+        } catch (e: Exception) {
+            handleNetworkFailure(e)
+            Result.failure(e)
+        }
     }
 
     suspend fun getRecommendations(
@@ -141,28 +236,36 @@ class LotteryRepository(
         count: Int = 1,
         strategy: String = "balanced",
         userName: String = "缘主",
-        lunarDate: com.zeng.lottery.data.model.LunarDate? = null,
+        lunarDate: LunarDate? = null,
         isMale: Boolean = true,
         longitude: Float = 120.0f,
         wBazi: Float? = null,
         wFreq: Float? = null,
-        wOmission: Float? = null
+        wOmission: Float? = null,
+        lockedPrimary: List<String> = emptyList(),
+        excludedPrimary: List<String> = emptyList(),
+        lockedSecondary: List<String> = emptyList(),
+        excludedSecondary: List<String> = emptyList()
     ): BaziRecommendationResponse {
         return try {
-            val dtStr = if (destiny.solarDatetime.isNotBlank()) {
-                destiny.solarDatetime.replace(" ", "T")
-            } else {
-                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"))
-            }
+            val useLunar = lunarDate != null
+            val dtStr = if (!useLunar) {
+                if (destiny.solarDatetime.isNotBlank()) {
+                    destiny.solarDatetime.replace(" ", "T")
+                } else {
+                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"))
+                }
+            } else null
+
             val effectiveGender = if (destiny.gender.isNotBlank()) destiny.gender else (if (isMale) "male" else "female")
             val req = BaziRecommendationRequest(
                 birthDatetime = dtStr,
-                calendarType = "solar",
+                calendarType = if (useLunar) "lunar" else "solar",
                 lotteryType = lotteryType.code,
                 count = count,
                 strategy = strategy,
                 userName = userName,
-                shichen = destiny.shichen,
+                shichen = lunarDate?.shichenZh ?: destiny.shichen,
                 lunarYear = lunarDate?.year,
                 lunarMonth = lunarDate?.month,
                 lunarDay = lunarDate?.day,
@@ -172,18 +275,35 @@ class LotteryRepository(
                 longitude = longitude,
                 wBazi = wBazi,
                 wFreq = wFreq,
-                wOmission = wOmission
+                wOmission = wOmission,
+                lockedPrimary = lockedPrimary.ifEmpty { null },
+                excludedPrimary = excludedPrimary.ifEmpty { null },
+                lockedSecondary = lockedSecondary.ifEmpty { null },
+                excludedSecondary = excludedSecondary.ifEmpty { null }
             )
             withTimeout(15000L) {
                 val remote = apiService.getRecommendation(req)
                 _isOffline.value = false
                 remote
             }
-        } catch (e: kotlinx.coroutines.CancellationException) {
+        } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            _isOffline.value = true
-            offlineEngine.generateRecommendation(destiny, lotteryType, count, strategy, userName)
+            handleNetworkFailure(e)
+            offlineEngine.generateRecommendation(
+                destiny = destiny,
+                lotteryType = lotteryType,
+                count = count,
+                strategy = strategy,
+                userName = userName,
+                wBaziOverride = wBazi,
+                wFreqOverride = wFreq,
+                wOmissionOverride = wOmission,
+                lockedPrimary = lockedPrimary,
+                excludedPrimary = excludedPrimary,
+                lockedSecondary = lockedSecondary,
+                excludedSecondary = excludedSecondary
+            )
         }
     }
 
@@ -191,12 +311,17 @@ class LotteryRepository(
         return offlineEngine.computeStats(lotteryType)
     }
 
-    fun getOfflineDestiny(dateTime: LocalDateTime, isMale: Boolean = true): BaziDestiny {
-        return BaziEngine.analyzeDestiny(dateTime, isMale)
+    fun getOfflineDestiny(dateTime: LocalDateTime, isMale: Boolean = true, longitude: Double = 120.0): BaziDestiny {
+        return BaziEngine.analyzeDestiny(dateTime, isMale, longitude = longitude)
     }
 
-    fun getOfflineDestinyFromLunar(lunarDate: com.zeng.lottery.data.model.LunarDate, isMale: Boolean = true, userName: String = "缘主"): BaziDestiny {
-        return BaziEngine.analyzeDestinyFromLunar(lunarDate, isMale, userName)
+    fun getOfflineDestinyFromLunar(
+        lunarDate: LunarDate,
+        isMale: Boolean = true,
+        userName: String = "缘主",
+        longitude: Double = 120.0
+    ): BaziDestiny {
+        return BaziEngine.analyzeDestinyFromLunar(lunarDate, isMale, userName, longitude = longitude)
     }
 
     fun getOfflineRecommendations(
@@ -204,8 +329,28 @@ class LotteryRepository(
         lotteryType: LotteryType,
         count: Int = 5,
         strategy: String = "balanced",
-        userName: String = "缘主"
+        userName: String = "缘主",
+        wBazi: Float? = null,
+        wFreq: Float? = null,
+        wOmission: Float? = null,
+        lockedPrimary: List<String> = emptyList(),
+        excludedPrimary: List<String> = emptyList(),
+        lockedSecondary: List<String> = emptyList(),
+        excludedSecondary: List<String> = emptyList()
     ): BaziRecommendationResponse {
-        return offlineEngine.generateRecommendation(destiny, lotteryType, count, strategy, userName)
+        return offlineEngine.generateRecommendation(
+            destiny = destiny,
+            lotteryType = lotteryType,
+            count = count,
+            strategy = strategy,
+            userName = userName,
+            wBaziOverride = wBazi,
+            wFreqOverride = wFreq,
+            wOmissionOverride = wOmission,
+            lockedPrimary = lockedPrimary,
+            excludedPrimary = excludedPrimary,
+            lockedSecondary = lockedSecondary,
+            excludedSecondary = excludedSecondary
+        )
     }
 }

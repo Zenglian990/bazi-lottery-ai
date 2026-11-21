@@ -2,12 +2,15 @@ package com.zeng.lottery.data.local
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.zeng.lottery.data.model.LotteryType
 import com.zeng.lottery.data.model.LunarDate
+import com.zeng.lottery.data.model.SavedBirthProfile
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Interface contract for persisting and retrieving user preferences.
+ * 用户偏好与生辰档案持久化契约。
  */
 interface UserPreferencesStore {
     fun saveLunarDate(date: LunarDate)
@@ -28,15 +31,14 @@ interface UserPreferencesStore {
 }
 
 /**
- * Manager for user preferences and state persistence.
- * Uses Android SharedPreferences for synchronous < 0.5ms cold-start access,
- * with concurrent in-memory fallback for JVM unit testing environments where
- * Android Context or SharedPreferences is unavailable.
+ * 同步轻量偏好管理器：支持 1900~2100 农历生辰、真太阳时经度、深浅主题与多亲友生辰档案。
  */
 class UserPreferencesManager(
     context: Context? = null,
     private val inMemoryFallback: ConcurrentHashMap<String, Any>? = null
 ) : UserPreferencesStore {
+
+    private val gson = Gson()
 
     companion object {
         const val PREFS_NAME = "lottery_app_settings"
@@ -53,8 +55,10 @@ class UserPreferencesManager(
         const val KEY_SELECTED_LOTTERY = "selected_lottery"
         const val KEY_SELECTED_STRATEGY = "selected_strategy"
         const val KEY_USER_NAME = "user_name"
+        const val KEY_BIRTH_LONGITUDE = "birth_longitude"
+        const val KEY_DARK_THEME = "dark_theme"
+        const val KEY_BIRTH_PROFILES = "saved_birth_profiles_v1"
 
-        // Default values
         val DEFAULT_LUNAR_DATE = LunarDate(1990, 6, false, 24, 8, 30)
         const val DEFAULT_IS_LUNAR = true
         const val DEFAULT_IS_MALE = true
@@ -62,13 +66,14 @@ class UserPreferencesManager(
         val DEFAULT_LOTTERY_TYPE = LotteryType.SSQ
         const val DEFAULT_STRATEGY = "命理吉数优先"
         const val DEFAULT_USER_NAME = "缘主"
+        const val DEFAULT_LONGITUDE = 120.0
+        const val DEFAULT_DARK_THEME = true
 
-        const val MIN_YEAR = 1930
-        const val MAX_YEAR = 2030
+        const val MIN_YEAR = 1900
+        const val MAX_YEAR = 2100
         const val MIN_BET_COUNT = 1
         const val MAX_BET_COUNT = 20
 
-        // Shared in-memory storage for JVM unit test execution across instances when Context is null
         private val jvmTestPrefs = ConcurrentHashMap<String, Any>()
 
         fun resetJvmTestPrefs() {
@@ -78,7 +83,7 @@ class UserPreferencesManager(
 
     private val prefs: SharedPreferences? = try {
         context?.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-    } catch (e: Throwable) {
+    } catch (_: Throwable) {
         null
     }
 
@@ -104,8 +109,7 @@ class UserPreferencesManager(
                 ?.putInt(KEY_LUNAR_HOUR, clampedHour)
                 ?.putInt(KEY_LUNAR_MINUTE, clampedMinute)
                 ?.apply()
-        } catch (e: Throwable) {
-            // Defensive fallback
+        } catch (_: Throwable) {
         }
         memoryStore[KEY_LUNAR_YEAR] = clampedYear
         memoryStore[KEY_LUNAR_MONTH] = clampedMonth
@@ -117,110 +121,52 @@ class UserPreferencesManager(
 
     override fun getLunarDate(): LunarDate {
         val hasSaved = try {
-            if (prefs != null && prefs.contains(KEY_LUNAR_YEAR)) {
-                true
-            } else {
-                memoryStore.containsKey(KEY_LUNAR_YEAR)
-            }
-        } catch (e: Throwable) {
+            (prefs != null && prefs.contains(KEY_LUNAR_YEAR)) || memoryStore.containsKey(KEY_LUNAR_YEAR)
+        } catch (_: Throwable) {
             memoryStore.containsKey(KEY_LUNAR_YEAR)
         }
+        if (!hasSaved) return DEFAULT_LUNAR_DATE
 
-        if (!hasSaved) {
-            return DEFAULT_LUNAR_DATE
-        }
-
-        val year = try {
-            if (prefs != null && prefs.contains(KEY_LUNAR_YEAR)) {
-                prefs.getInt(KEY_LUNAR_YEAR, DEFAULT_LUNAR_DATE.year)
-            } else {
-                (memoryStore[KEY_LUNAR_YEAR] as? Int) ?: DEFAULT_LUNAR_DATE.year
-            }
-        } catch (e: Throwable) {
-            (memoryStore[KEY_LUNAR_YEAR] as? Int) ?: DEFAULT_LUNAR_DATE.year
-        }
-        val month = try {
-            if (prefs != null && prefs.contains(KEY_LUNAR_MONTH)) {
-                prefs.getInt(KEY_LUNAR_MONTH, DEFAULT_LUNAR_DATE.month)
-            } else {
-                (memoryStore[KEY_LUNAR_MONTH] as? Int) ?: DEFAULT_LUNAR_DATE.month
-            }
-        } catch (e: Throwable) {
-            (memoryStore[KEY_LUNAR_MONTH] as? Int) ?: DEFAULT_LUNAR_DATE.month
-        }
-        val isLeap = try {
-            if (prefs != null && prefs.contains(KEY_LUNAR_IS_LEAP)) {
-                prefs.getBoolean(KEY_LUNAR_IS_LEAP, DEFAULT_LUNAR_DATE.isLeap)
-            } else {
-                (memoryStore[KEY_LUNAR_IS_LEAP] as? Boolean) ?: DEFAULT_LUNAR_DATE.isLeap
-            }
-        } catch (e: Throwable) {
-            (memoryStore[KEY_LUNAR_IS_LEAP] as? Boolean) ?: DEFAULT_LUNAR_DATE.isLeap
-        }
-        val day = try {
-            if (prefs != null && prefs.contains(KEY_LUNAR_DAY)) {
-                prefs.getInt(KEY_LUNAR_DAY, DEFAULT_LUNAR_DATE.day)
-            } else {
-                (memoryStore[KEY_LUNAR_DAY] as? Int) ?: DEFAULT_LUNAR_DATE.day
-            }
-        } catch (e: Throwable) {
-            (memoryStore[KEY_LUNAR_DAY] as? Int) ?: DEFAULT_LUNAR_DATE.day
-        }
-        val hour = try {
-            if (prefs != null && prefs.contains(KEY_LUNAR_HOUR)) {
-                prefs.getInt(KEY_LUNAR_HOUR, DEFAULT_LUNAR_DATE.hour)
-            } else {
-                (memoryStore[KEY_LUNAR_HOUR] as? Int) ?: DEFAULT_LUNAR_DATE.hour
-            }
-        } catch (e: Throwable) {
-            (memoryStore[KEY_LUNAR_HOUR] as? Int) ?: DEFAULT_LUNAR_DATE.hour
-        }
-        val minute = try {
-            if (prefs != null && prefs.contains(KEY_LUNAR_MINUTE)) {
-                prefs.getInt(KEY_LUNAR_MINUTE, DEFAULT_LUNAR_DATE.minute)
-            } else {
-                (memoryStore[KEY_LUNAR_MINUTE] as? Int) ?: DEFAULT_LUNAR_DATE.minute
-            }
-        } catch (e: Throwable) {
-            (memoryStore[KEY_LUNAR_MINUTE] as? Int) ?: DEFAULT_LUNAR_DATE.minute
+        fun readInt(key: String, def: Int): Int = try {
+            if (prefs != null && prefs.contains(key)) prefs.getInt(key, def)
+            else (memoryStore[key] as? Int) ?: def
+        } catch (_: Throwable) {
+            (memoryStore[key] as? Int) ?: def
         }
 
-        val clampedYear = year.coerceIn(MIN_YEAR, MAX_YEAR)
-        val clampedMonth = month.coerceIn(1, 12)
+        fun readBool(key: String, def: Boolean): Boolean = try {
+            if (prefs != null && prefs.contains(key)) prefs.getBoolean(key, def)
+            else (memoryStore[key] as? Boolean) ?: def
+        } catch (_: Throwable) {
+            (memoryStore[key] as? Boolean) ?: def
+        }
+
+        val clampedYear = readInt(KEY_LUNAR_YEAR, DEFAULT_LUNAR_DATE.year).coerceIn(MIN_YEAR, MAX_YEAR)
+        val clampedMonth = readInt(KEY_LUNAR_MONTH, DEFAULT_LUNAR_DATE.month).coerceIn(1, 12)
+        val isLeap = readBool(KEY_LUNAR_IS_LEAP, DEFAULT_LUNAR_DATE.isLeap)
         val leapMonth = BaziEngine.getLeapMonth(clampedYear)
         val effectiveIsLeap = isLeap && (leapMonth == clampedMonth && leapMonth > 0)
         val maxDays = BaziEngine.getDaysInLunarMonth(clampedYear, clampedMonth, effectiveIsLeap)
-        val clampedDay = day.coerceIn(1, maxDays)
-        val clampedHour = hour.coerceIn(0, 23)
-        val clampedMinute = minute.coerceIn(0, 59)
+        val clampedDay = readInt(KEY_LUNAR_DAY, DEFAULT_LUNAR_DATE.day).coerceIn(1, maxDays)
+        val clampedHour = readInt(KEY_LUNAR_HOUR, DEFAULT_LUNAR_DATE.hour).coerceIn(0, 23)
+        val clampedMinute = readInt(KEY_LUNAR_MINUTE, DEFAULT_LUNAR_DATE.minute).coerceIn(0, 59)
 
-        return LunarDate(
-            year = clampedYear,
-            month = clampedMonth,
-            isLeap = effectiveIsLeap,
-            day = clampedDay,
-            hour = clampedHour,
-            minute = clampedMinute
-        )
+        return LunarDate(clampedYear, clampedMonth, effectiveIsLeap, clampedDay, clampedHour, clampedMinute)
     }
 
     override fun saveGender(isMale: Boolean) {
         try {
             prefs?.edit()?.putBoolean(KEY_IS_MALE, isMale)?.apply()
-        } catch (e: Throwable) {
-            // Defensive fallback
+        } catch (_: Throwable) {
         }
         memoryStore[KEY_IS_MALE] = isMale
     }
 
     override fun getGender(): Boolean {
         return try {
-            if (prefs != null && prefs.contains(KEY_IS_MALE)) {
-                prefs.getBoolean(KEY_IS_MALE, DEFAULT_IS_MALE)
-            } else {
-                (memoryStore[KEY_IS_MALE] as? Boolean) ?: DEFAULT_IS_MALE
-            }
-        } catch (e: Throwable) {
+            if (prefs != null && prefs.contains(KEY_IS_MALE)) prefs.getBoolean(KEY_IS_MALE, DEFAULT_IS_MALE)
+            else (memoryStore[KEY_IS_MALE] as? Boolean) ?: DEFAULT_IS_MALE
+        } catch (_: Throwable) {
             (memoryStore[KEY_IS_MALE] as? Boolean) ?: DEFAULT_IS_MALE
         }
     }
@@ -229,20 +175,16 @@ class UserPreferencesManager(
         val clamped = count.coerceIn(MIN_BET_COUNT, MAX_BET_COUNT)
         try {
             prefs?.edit()?.putInt(KEY_BET_COUNT, clamped)?.apply()
-        } catch (e: Throwable) {
-            // Defensive fallback
+        } catch (_: Throwable) {
         }
         memoryStore[KEY_BET_COUNT] = clamped
     }
 
     override fun getBetCount(): Int {
         val raw = try {
-            if (prefs != null && prefs.contains(KEY_BET_COUNT)) {
-                prefs.getInt(KEY_BET_COUNT, DEFAULT_BET_COUNT)
-            } else {
-                (memoryStore[KEY_BET_COUNT] as? Int) ?: DEFAULT_BET_COUNT
-            }
-        } catch (e: Throwable) {
+            if (prefs != null && prefs.contains(KEY_BET_COUNT)) prefs.getInt(KEY_BET_COUNT, DEFAULT_BET_COUNT)
+            else (memoryStore[KEY_BET_COUNT] as? Int) ?: DEFAULT_BET_COUNT
+        } catch (_: Throwable) {
             (memoryStore[KEY_BET_COUNT] as? Int) ?: DEFAULT_BET_COUNT
         }
         return raw.coerceIn(MIN_BET_COUNT, MAX_BET_COUNT)
@@ -251,8 +193,7 @@ class UserPreferencesManager(
     override fun saveSelectedLottery(type: LotteryType) {
         try {
             prefs?.edit()?.putString(KEY_SELECTED_LOTTERY, type.code)?.apply()
-        } catch (e: Throwable) {
-            // Defensive fallback
+        } catch (_: Throwable) {
         }
         memoryStore[KEY_SELECTED_LOTTERY] = type.code
     }
@@ -264,7 +205,7 @@ class UserPreferencesManager(
             } else {
                 (memoryStore[KEY_SELECTED_LOTTERY] as? String) ?: DEFAULT_LOTTERY_TYPE.code
             }
-        } catch (e: Throwable) {
+        } catch (_: Throwable) {
             (memoryStore[KEY_SELECTED_LOTTERY] as? String) ?: DEFAULT_LOTTERY_TYPE.code
         }
         return LotteryType.fromCode(code)
@@ -274,8 +215,7 @@ class UserPreferencesManager(
         val cleanStrategy = if (strategy.isBlank()) DEFAULT_STRATEGY else strategy.trim()
         try {
             prefs?.edit()?.putString(KEY_SELECTED_STRATEGY, cleanStrategy)?.apply()
-        } catch (e: Throwable) {
-            // Defensive fallback
+        } catch (_: Throwable) {
         }
         memoryStore[KEY_SELECTED_STRATEGY] = cleanStrategy
     }
@@ -287,7 +227,7 @@ class UserPreferencesManager(
             } else {
                 (memoryStore[KEY_SELECTED_STRATEGY] as? String) ?: DEFAULT_STRATEGY
             }
-        } catch (e: Throwable) {
+        } catch (_: Throwable) {
             (memoryStore[KEY_SELECTED_STRATEGY] as? String) ?: DEFAULT_STRATEGY
         }
         return if (raw.isBlank()) DEFAULT_STRATEGY else raw.trim()
@@ -297,8 +237,7 @@ class UserPreferencesManager(
         val cleanName = if (name.isBlank()) DEFAULT_USER_NAME else name.trim()
         try {
             prefs?.edit()?.putString(KEY_USER_NAME, cleanName)?.apply()
-        } catch (e: Throwable) {
-            // Defensive fallback
+        } catch (_: Throwable) {
         }
         memoryStore[KEY_USER_NAME] = cleanName
     }
@@ -310,7 +249,7 @@ class UserPreferencesManager(
             } else {
                 (memoryStore[KEY_USER_NAME] as? String) ?: DEFAULT_USER_NAME
             }
-        } catch (e: Throwable) {
+        } catch (_: Throwable) {
             (memoryStore[KEY_USER_NAME] as? String) ?: DEFAULT_USER_NAME
         }
         return if (raw.isBlank()) DEFAULT_USER_NAME else raw.trim()
@@ -319,22 +258,106 @@ class UserPreferencesManager(
     override fun saveIsLunar(isLunar: Boolean) {
         try {
             prefs?.edit()?.putBoolean(KEY_IS_LUNAR, isLunar)?.apply()
-        } catch (e: Throwable) {
-            // Defensive fallback
+        } catch (_: Throwable) {
         }
         memoryStore[KEY_IS_LUNAR] = isLunar
     }
 
     override fun getIsLunar(): Boolean {
         return try {
-            if (prefs != null && prefs.contains(KEY_IS_LUNAR)) {
-                prefs.getBoolean(KEY_IS_LUNAR, DEFAULT_IS_LUNAR)
-            } else {
-                (memoryStore[KEY_IS_LUNAR] as? Boolean) ?: DEFAULT_IS_LUNAR
-            }
-        } catch (e: Throwable) {
+            if (prefs != null && prefs.contains(KEY_IS_LUNAR)) prefs.getBoolean(KEY_IS_LUNAR, DEFAULT_IS_LUNAR)
+            else (memoryStore[KEY_IS_LUNAR] as? Boolean) ?: DEFAULT_IS_LUNAR
+        } catch (_: Throwable) {
             (memoryStore[KEY_IS_LUNAR] as? Boolean) ?: DEFAULT_IS_LUNAR
         }
+    }
+
+    fun saveBirthLongitude(longitude: Double) {
+        val clamped = longitude.coerceIn(-180.0, 180.0)
+        try {
+            prefs?.edit()?.putFloat(KEY_BIRTH_LONGITUDE, clamped.toFloat())?.apply()
+        } catch (_: Throwable) {
+        }
+        memoryStore[KEY_BIRTH_LONGITUDE] = clamped
+    }
+
+    fun getBirthLongitude(): Double {
+        return try {
+            if (prefs != null && prefs.contains(KEY_BIRTH_LONGITUDE)) {
+                prefs.getFloat(KEY_BIRTH_LONGITUDE, DEFAULT_LONGITUDE.toFloat()).toDouble()
+            } else {
+                (memoryStore[KEY_BIRTH_LONGITUDE] as? Number)?.toDouble() ?: DEFAULT_LONGITUDE
+            }
+        } catch (_: Throwable) {
+            (memoryStore[KEY_BIRTH_LONGITUDE] as? Number)?.toDouble() ?: DEFAULT_LONGITUDE
+        }
+    }
+
+    fun saveDarkTheme(isDark: Boolean) {
+        try {
+            prefs?.edit()?.putBoolean(KEY_DARK_THEME, isDark)?.apply()
+        } catch (_: Throwable) {
+        }
+        memoryStore[KEY_DARK_THEME] = isDark
+    }
+
+    fun getDarkTheme(): Boolean {
+        return try {
+            if (prefs != null && prefs.contains(KEY_DARK_THEME)) {
+                prefs.getBoolean(KEY_DARK_THEME, DEFAULT_DARK_THEME)
+            } else {
+                (memoryStore[KEY_DARK_THEME] as? Boolean) ?: DEFAULT_DARK_THEME
+            }
+        } catch (_: Throwable) {
+            (memoryStore[KEY_DARK_THEME] as? Boolean) ?: DEFAULT_DARK_THEME
+        }
+    }
+
+    fun getBirthProfiles(): List<SavedBirthProfile> {
+        val raw = try {
+            if (prefs != null && prefs.contains(KEY_BIRTH_PROFILES)) {
+                prefs.getString(KEY_BIRTH_PROFILES, null)
+            } else {
+                memoryStore[KEY_BIRTH_PROFILES] as? String
+            }
+        } catch (_: Throwable) {
+            memoryStore[KEY_BIRTH_PROFILES] as? String
+        }
+        if (raw.isNullOrBlank()) return emptyList()
+        return try {
+            val type = object : TypeToken<List<SavedBirthProfile>>() {}.type
+            gson.fromJson<List<SavedBirthProfile>>(raw, type).orEmpty().filterNotNull()
+        } catch (_: Throwable) {
+            emptyList()
+        }
+    }
+
+    fun saveBirthProfiles(profiles: List<SavedBirthProfile>) {
+        val trimmed = profiles.take(12)
+        val json = gson.toJson(trimmed)
+        try {
+            prefs?.edit()?.putString(KEY_BIRTH_PROFILES, json)?.apply()
+        } catch (_: Throwable) {
+        }
+        memoryStore[KEY_BIRTH_PROFILES] = json
+    }
+
+    fun upsertBirthProfile(profile: SavedBirthProfile): List<SavedBirthProfile> {
+        val current = getBirthProfiles().toMutableList()
+        val idx = current.indexOfFirst { it.id == profile.id || it.label == profile.label }
+        if (idx >= 0) {
+            current[idx] = profile
+        } else {
+            current.add(0, profile)
+        }
+        saveBirthProfiles(current)
+        return current
+    }
+
+    fun deleteBirthProfile(profileId: String): List<SavedBirthProfile> {
+        val updated = getBirthProfiles().filterNot { it.id == profileId }
+        saveBirthProfiles(updated)
+        return updated
     }
 
     override fun clear() {
@@ -352,9 +375,9 @@ class UserPreferencesManager(
                 ?.remove(KEY_SELECTED_LOTTERY)
                 ?.remove(KEY_SELECTED_STRATEGY)
                 ?.remove(KEY_USER_NAME)
+                ?.remove(KEY_BIRTH_LONGITUDE)
                 ?.apply()
-        } catch (e: Throwable) {
-            // Defensive fallback
+        } catch (_: Throwable) {
         }
         memoryStore.remove(KEY_LUNAR_YEAR)
         memoryStore.remove(KEY_LUNAR_MONTH)
@@ -368,5 +391,6 @@ class UserPreferencesManager(
         memoryStore.remove(KEY_SELECTED_LOTTERY)
         memoryStore.remove(KEY_SELECTED_STRATEGY)
         memoryStore.remove(KEY_USER_NAME)
+        memoryStore.remove(KEY_BIRTH_LONGITUDE)
     }
 }

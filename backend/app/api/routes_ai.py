@@ -15,7 +15,7 @@ from backend.app.services.ai_service import (
     _safe_error_summary,
     generate_divination_text,
     stream_divination_chunks,
-    validate_divination_security,
+    validate_divination_security_async,
 )
 
 logger = logging.getLogger(__name__)
@@ -24,10 +24,11 @@ _AI_RATE_BUCKETS: dict[str, list[float]] = {}
 _AI_RATE_LOCK = threading.Lock()
 _AI_RATE_LIMIT = 30
 _AI_RATE_WINDOW = 60.0
+_AI_RATE_MAX_BUCKETS = 2000
 
 
 def require_ai_rate_limit(req: Request) -> None:
-    """基于可信客户端 IP 的线程安全滑动窗口限流（移除所有本地豁免）。"""
+    """基于可信客户端 IP 的线程安全滑动窗口限流（含防伪造 IP 字典膨胀硬上限保护）。"""
     client_ip = get_trusted_client_ip(req)
     now = time.monotonic()
     with _AI_RATE_LOCK:
@@ -38,6 +39,15 @@ def require_ai_rate_limit(req: Request) -> None:
             ]
             for k in stale_keys:
                 _AI_RATE_BUCKETS.pop(k, None)
+            if len(_AI_RATE_BUCKETS) >= _AI_RATE_MAX_BUCKETS:
+                # 仍超硬上限时按最旧活跃时间淘汰 25%，防止伪造随机 IP 打满内存
+                oldest = sorted(
+                    _AI_RATE_BUCKETS.items(),
+                    key=lambda item: item[1][-1] if item[1] else 0.0,
+                )[: _AI_RATE_MAX_BUCKETS // 4]
+                for k, _ in oldest:
+                    _AI_RATE_BUCKETS.pop(k, None)
+
         bucket = [t for t in _AI_RATE_BUCKETS.get(client_ip, []) if now - t < _AI_RATE_WINDOW]
         if len(bucket) >= _AI_RATE_LIMIT:
             raise HTTPException(
@@ -75,15 +85,14 @@ async def ai_divination(
         )
 
     try:
-        validate_divination_security(request)
+        await validate_divination_security_async(request)
     except ValueError as exc:
-        logger.warning(f"Divination security validation rejected: {_safe_error_summary(exc)}")
+        logger.warning("Divination security validation rejected: %s", _safe_error_summary(exc))
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="非法的自定义接口地址或参数配置",
         )
 
-    # Determine whether to stream based on request.stream or Accept header
     wants_sse = bool(request.stream) or req.headers.get("accept", "").startswith("text/event-stream")
 
     if not wants_sse:
@@ -102,11 +111,10 @@ async def ai_divination(
                 payload = json.dumps({"delta": chunk, "done": False}, ensure_ascii=False)
                 yield f"data: {payload}\n\n"
         except Exception as e:
-            logger.error(f"Error in SSE streaming generator: {_safe_error_summary(e)}")
+            logger.error("Error in SSE streaming generator: %s", _safe_error_summary(e))
             err_payload = json.dumps({"delta": "\n[解盘服务暂时波动，请稍后重试]", "done": False}, ensure_ascii=False)
             yield f"data: {err_payload}\n\n"
 
-        # Final terminal SSE event
         end_payload = json.dumps({"delta": "", "done": True}, ensure_ascii=False)
         yield f"data: {end_payload}\n\n"
 

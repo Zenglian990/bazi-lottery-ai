@@ -18,6 +18,7 @@ htmlcov/
 # Secrets / Local env
 .env
 .env.*
+!.env.example
 *.pem
 *.jks
 *.keystore

@@ -40,10 +40,15 @@ def analyze_zone_stats(
     W = min(window, N)
     pool_size = len(number_pool)
 
-    # Theoretical probability of each ball appearing in a draw
-    # e.g. for SSQ red: 6/33; for FC3D: 3/10
+    # 理论每期出现次数与单期命中期望，用于0次冷号欲出指数和冷热阈值判定
     theoretical_prob = min(1.0, balls_per_draw / pool_size) if pool_size > 0 else 0.0
     expected_recent_count = W * theoretical_prob
+    # 理论平均遗漏期数（用于从未出现过的超级冷号计算合理欲出指数，避免退化为 1.0 排在末尾）
+    theoretical_avg_omission = (
+        max(0.5, (1.0 - theoretical_prob) / theoretical_prob)
+        if 0.0 < theoretical_prob < 1.0
+        else 1.0
+    )
 
     # Track occurrences and appearance indices
     counts = defaultdict(int)
@@ -73,7 +78,8 @@ def analyze_zone_stats(
             curr_omission = N
             max_omission = N
             avg_omission = float(N)
-            desire_index = 1.0
+            # 0 次出现冷号使用当前遗漏相对理论平均遗漏的比值作为欲出指数，保证冷极号码位列榜首
+            desire_index = round(curr_omission / theoretical_avg_omission, 2)
         else:
             curr_omission = indices[0]
             # Build intervals: g_0, g_1, ..., g_k
@@ -99,6 +105,7 @@ def analyze_zone_stats(
             number=num,
             total_count=cnt,
             frequency=freq,
+            hit_rate=round(len(indices) / N, 4),
             recent_count=rec_cnt,
             expected_count=round(expected_recent_count, 2),
             hot_status=hot_status,
@@ -137,11 +144,13 @@ def calculate_lottery_stats(
             "number": s.number,
             "frequency": s.total_count,
             "rate": s.frequency,
+            "hit_rate": s.hit_rate,
             "is_hot": s.hot_status == "hot",
             "is_cold": s.hot_status == "cold",
             "current_omission": s.current_omission,
             "max_omission": s.max_omission,
             "avg_omission": s.avg_omission,
+            "desire_index": s.desire_index,
         }
         for s in pri_stats
     }
@@ -172,11 +181,13 @@ def calculate_lottery_stats(
                 "number": s.number,
                 "frequency": s.total_count,
                 "rate": s.frequency,
+                "hit_rate": s.hit_rate,
                 "is_hot": s.hot_status == "hot",
                 "is_cold": s.hot_status == "cold",
                 "current_omission": s.current_omission,
                 "max_omission": s.max_omission,
                 "avg_omission": s.avg_omission,
+                "desire_index": s.desire_index,
             }
             for s in sec_stats
         }
@@ -269,9 +280,8 @@ def get_statistical_weights(
     window: int = 30,
 ) -> Dict[str, float]:
     """
-    Calculate normalized statistical multiplier weights for each number.
-    W_stat(x) = 1.0 + 0.3 * NormFreq(x) + 0.4 * HeatScore(x) + 0.3 * DesireNorm(x)
-    Used by Milestone 2 Bazi and A-Res weighted recommender.
+    计算各候选号码的归一化统计乘子权重：
+    W_stat(x) = 1.0 + 0.25 * NormFreq(x) + HeatBoost(x) + 0.25 * DesireNorm(x)
     """
     overall = calculate_lottery_stats(lottery_type, draws, window=window)
     if not overall:

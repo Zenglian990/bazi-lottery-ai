@@ -104,15 +104,15 @@ class UserPreferencesTest {
 
     @Test
     fun testBoundaryClampingLunarDateYear() {
-        // Below 1930
-        prefsManager.saveLunarDate(LunarDate(1900, 5, false, 15, 10, 0))
+        // Below 1900
+        prefsManager.saveLunarDate(LunarDate(1850, 5, false, 15, 10, 0))
         val lowDate = prefsManager.getLunarDate()
-        assertEquals(1930, lowDate.year)
+        assertEquals(1900, lowDate.year)
 
-        // Above 2030
-        prefsManager.saveLunarDate(LunarDate(2050, 5, false, 15, 10, 0))
+        // Above 2100
+        prefsManager.saveLunarDate(LunarDate(2150, 5, false, 15, 10, 0))
         val highDate = prefsManager.getLunarDate()
-        assertEquals(2030, highDate.year)
+        assertEquals(2100, highDate.year)
 
         // Month clamping
         prefsManager.saveLunarDate(LunarDate(1995, 15, false, 10, 10, 0))

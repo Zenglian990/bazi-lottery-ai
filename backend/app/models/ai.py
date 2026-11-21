@@ -15,6 +15,8 @@ _USER_NAME_RE = re.compile(r"^[\u4e00-\u9fa5a-zA-Z0-9·.\s_-]{1,20}$")
 def _reject_control_chars(value: str, field_name: str) -> str:
     if _CONTROL_CHAR_RE.search(value):
         raise ValueError(f"{field_name} contains forbidden control characters")
+    if "<" in value or ">" in value:
+        raise ValueError(f"{field_name} contains forbidden angle brackets")
     return value
 
 

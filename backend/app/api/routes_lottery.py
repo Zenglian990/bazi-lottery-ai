@@ -5,8 +5,8 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
 
 from backend.app.core.config import settings
 from backend.app.core.security import require_admin_auth
-from backend.app.db.database import get_draws, get_total_draws_count
-from backend.app.db.sync_service import sync_lottery_data_async
+from backend.app.db.database import get_draws, get_draws_with_total, get_total_draws_count
+from backend.app.db.sync_service import sync_lottery_data_detailed_async
 from backend.app.models.lottery import (
     AllRulesResponse,
     DrawRecord,
@@ -66,9 +66,7 @@ def get_history(
         raise HTTPException(status_code=404, detail=f"Unsupported lottery type: '{lottery_type}'")
 
     offset = (page - 1) * limit
-    draws = get_draws(lottery_type, limit=limit, offset=offset)
-    total = get_total_draws_count(lottery_type)
-    total_int = total if isinstance(total, int) else 0
+    draws, total_int = get_draws_with_total(lottery_type, limit=limit, offset=offset)
 
     records = [
         DrawRecord(
@@ -200,7 +198,7 @@ async def sync_data(
     global _SYNC_LAST_TIME
     now = time.monotonic()
     with _SYNC_LOCK:
-        if now - _SYNC_LAST_TIME < _SYNC_COOLDOWN_SECONDS:
+        if not request.force_reload and (now - _SYNC_LAST_TIME < _SYNC_COOLDOWN_SECONDS):
             remaining = max(1, int(_SYNC_COOLDOWN_SECONDS - (now - _SYNC_LAST_TIME)))
             raise HTTPException(
                 status_code=429,
@@ -208,10 +206,22 @@ async def sync_data(
             )
         _SYNC_LAST_TIME = now
 
-    counts = await sync_lottery_data_async(lottery_type=l_type, limit=100)
+    counts, failed_details, gcs_uploaded = await sync_lottery_data_detailed_async(
+        lottery_type=l_type, limit=100
+    )
     total_synced = sum(counts.values())
+    if total_synced == 0 and failed_details:
+        sync_status = "failed"
+        msg = f"All lottery sync sources failed: {failed_details}"
+    elif failed_details:
+        sync_status = "partial"
+        msg = f"Sync partially completed (updated={total_synced}, failed={failed_details}, gcs={gcs_uploaded})"
+    else:
+        sync_status = "success"
+        msg = f"Sync completed successfully. Total records updated: {total_synced} (gcs={gcs_uploaded})"
+
     return SyncResponse(
-        status="success",
+        status=sync_status,
         synced_counts=counts,
-        message=f"Sync completed successfully. Total records updated: {total_synced}",
+        message=msg,
     )

@@ -1,92 +1,89 @@
-"""Opaque API Client for E2E testing.
-Handles auto-negotiation between:
-1. Live running HTTP backend server (http://127.0.0.1:8000 or API_BASE_URL)
-2. In-process ASGI FastAPI TestClient (httpx.Client(app=app))
-3. Direct service contract invocation if ASGI app is loading
-"""
-import os
-import json
-import logging
-from typing import Dict, Any, List, Optional, Union
-import httpx
+"""HTTP API Test Client wrapper for End-to-End testing.
 
-logger = logging.getLogger(__name__)
+严格透传 FastAPI 后端真实响应（移除所有吞错假 200 Mock 回退），
+并为需要 HMAC 鉴权的 AI 解盘接口自动构造合法带 Nonce 的测试签名。
+"""
+import hashlib
+import hmac
+import json
+import os
+import time
+import uuid
+from typing import Any, Dict, List, Optional
+
+import httpx
+from fastapi.testclient import TestClient
+
+from backend.app.core.config import settings
+from backend.app.main import app
+
 
 class ApiClient:
-    """Opaque client for interacting with the Bazi Lottery API."""
+    """Unified E2E HTTP client supporting in-process ASGI TestClient and live HTTP server."""
 
     def __init__(self, base_url: Optional[str] = None):
-        self.base_url = base_url or os.getenv("API_BASE_URL", "http://127.0.0.1:8000")
-        self._http_client: Optional[httpx.Client] = None
-        self._mode = "uninitialized"
-        self._init_client()
+        self.base_url = base_url or os.getenv("TEST_API_BASE_URL", "")
+        self.mode = "live" if self.base_url else "in-process"
+        if self.mode == "in-process":
+            # 为进程内 E2E 注入确定性测试 HMAC 密钥（不会修改生产环境配置）
+            if not settings.APP_HMAC_SECRET:
+                settings.APP_HMAC_SECRET = "e2e-in-process-hmac-secret-key"
+            self._client = TestClient(app, raise_server_exceptions=False)
+        else:
+            self._client = httpx.Client(base_url=self.base_url, timeout=15.0)
 
-    def _init_client(self):
-        """Detect live server or bind to ASGI FastAPI app."""
-        # Check if live HTTP server is running
-        try:
-            with httpx.Client(timeout=0.6) as probe_client:
-                r = probe_client.get(f"{self.base_url}/api/health")
-                if r.status_code == 200:
-                    self._http_client = httpx.Client(base_url=self.base_url, timeout=10.0)
-                    self._mode = "live_http"
-                    logger.info(f"ApiClient connected to live server at {self.base_url}")
-                    return
-        except Exception:
-            pass
-
-        # Try to import ASGI FastAPI app from backend and use TestClient
-        try:
-            from backend.app.main import app
-            from starlette.testclient import TestClient
-            self._test_client = TestClient(app)
-            self._mode = "in_process_asgi"
-            logger.info("ApiClient bound to in-process FastAPI app via TestClient")
-            return
-        except Exception as e:
-            logger.debug(f"ASGI app not directly importable: {e}")
-
-        # Fallback to pure HTTP client targeting base_url
-        self._http_client = httpx.Client(base_url=self.base_url, timeout=5.0)
-        self._mode = "unconnected_http"
-
-    @property
-    def mode(self) -> str:
-        return self._mode
+    def _build_ai_hmac_headers(self, method: str, path: str, body_bytes: bytes) -> Dict[str, str]:
+        secret = (settings.APP_HMAC_SECRET or os.getenv("APP_HMAC_SECRET", "")).strip()
+        if not secret:
+            return {"Content-Type": "application/json"}
+        ts = str(int(time.time()))
+        nonce = uuid.uuid4().hex
+        body_sha256 = hashlib.sha256(body_bytes).hexdigest()
+        canonical = f"{ts}:{nonce}:{method.upper()}:{path}:{body_sha256}"
+        sig = hmac.new(secret.encode("utf-8"), canonical.encode("utf-8"), hashlib.sha256).hexdigest()
+        return {
+            "Content-Type": "application/json",
+            "X-App-Timestamp": ts,
+            "X-App-Nonce": nonce,
+            "X-App-Signature": sig,
+        }
 
     def request(self, method: str, path: str, **kwargs) -> Any:
-        """Execute request via the underlying client."""
-        if self._mode == "in_process_asgi" and self._test_client:
-            return self._test_client.request(method, path, **kwargs)
-        url = path if path.startswith("http") else f"{self.base_url}{path}"
-        return self._http_client.request(method, url, **kwargs)
+        return self._client.request(method, path, **kwargs)
 
-    # --- Domain Endpoint Methods ---
+    def _safe_json(self, resp: Any) -> Any:
+        ct = resp.headers.get("content-type", "")
+        if "application/json" in ct:
+            try:
+                return resp.json()
+            except Exception:
+                return resp.text
+        return resp.text
 
     def get_health(self) -> Dict[str, Any]:
-        """GET /api/health"""
         resp = self.request("GET", "/api/health")
-        return {"status_code": resp.status_code, "data": resp.json() if resp.status_code == 200 else resp.text}
+        return {"status_code": resp.status_code, "data": self._safe_json(resp)}
 
-    def get_rules(self) -> Dict[str, Any]:
-        """GET /api/lottery/rules"""
-        resp = self.request("GET", "/api/lottery/rules")
-        return {"status_code": resp.status_code, "data": resp.json() if resp.status_code == 200 else resp.text}
+    def get_rules(self, lottery_type: Optional[str] = None) -> Dict[str, Any]:
+        path = f"/api/lottery/rules/{lottery_type}" if lottery_type else "/api/lottery/rules"
+        resp = self.request("GET", path)
+        return {"status_code": resp.status_code, "data": self._safe_json(resp)}
 
-    def get_stats(self, lottery_type: str) -> Dict[str, Any]:
-        """GET /api/lottery/stats/{lottery_type}"""
-        resp = self.request("GET", f"/api/lottery/stats/{lottery_type}")
-        return {"status_code": resp.status_code, "data": resp.json() if resp.status_code == 200 else resp.text}
+    def get_history(self, lottery_type: str, limit: int = 100, page: int = 1) -> Dict[str, Any]:
+        resp = self.request("GET", f"/api/lottery/history/{lottery_type}", params={"limit": limit, "page": page})
+        return {"status_code": resp.status_code, "data": self._safe_json(resp)}
+
+    def get_stats(self, lottery_type: str, limit: int = 100, window: int = 30) -> Dict[str, Any]:
+        resp = self.request("GET", f"/api/lottery/stats/{lottery_type}", params={"limit": limit, "window": window})
+        return {"status_code": resp.status_code, "data": self._safe_json(resp)}
 
     def get_hot_cold(self, lottery_type: str, window: int = 30) -> Dict[str, Any]:
-        """GET /api/lottery/hot-cold/{lottery_type}?window={window}"""
         resp = self.request("GET", f"/api/lottery/hot-cold/{lottery_type}", params={"window": window})
-        return {"status_code": resp.status_code, "data": resp.json() if resp.status_code == 200 else resp.text}
+        return {"status_code": resp.status_code, "data": self._safe_json(resp)}
 
     def get_omission(self, lottery_type: str) -> Dict[str, Any]:
-        """GET /api/lottery/omission/{lottery_type}"""
         resp = self.request("GET", f"/api/lottery/omission/{lottery_type}")
-        return {"status_code": resp.status_code, "data": resp.json() if resp.status_code == 200 else resp.text}
+        return {"status_code": resp.status_code, "data": self._safe_json(resp)}
 
     def validate_ticket(
         self,
@@ -94,149 +91,38 @@ class ApiClient:
         primary_numbers: List[Any],
         secondary_numbers: Optional[List[Any]] = None,
     ) -> Dict[str, Any]:
-        """POST /api/lottery/validate"""
-        payload = {
-            "lottery_type": lottery_type,
+        """POST /api/lottery/validate/{lottery_type}（真实透传后端 200/400/422 响应，无假 Mock 回退）。"""
+        req_body = {
             "primary_numbers": primary_numbers,
             "secondary_numbers": secondary_numbers,
         }
-        # First check if the service endpoint exists
-        try:
-            req_body = {
-                "primary_numbers": primary_numbers,
-                "secondary_numbers": secondary_numbers,
-            }
-            resp = self.request("POST", f"/api/lottery/validate/{lottery_type}", json=req_body)
-            if resp.status_code in (200, 400, 422):
-                return {"status_code": resp.status_code, "data": resp.json()}
-        except Exception:
-            pass
-
-        # If backend app hasn't wired /validate route yet, call service directly
-        from backend.app.services.lottery_rules import validate_ticket
-        is_valid, err, norm_p, norm_s, formatted = validate_ticket(lottery_type, primary_numbers, secondary_numbers)
-        return {
-            "status_code": 200 if is_valid else 400,
-            "data": {
-                "is_valid": is_valid,
-                "error_message": err,
-                "normalized_primary": norm_p,
-                "normalized_secondary": norm_s,
-                "formatted_string": formatted,
-            },
-        }
+        resp = self.request("POST", f"/api/lottery/validate/{lottery_type}", json=req_body)
+        return {"status_code": resp.status_code, "data": self._safe_json(resp)}
 
     def post_destiny(self, payload: Dict[str, Any]) -> Dict[str, Any]:
-        """POST /api/bazi/destiny"""
-        try:
-            resp = self.request("POST", "/api/bazi/destiny", json=payload)
-            if resp.status_code in (200, 400, 422):
-                return {"status_code": resp.status_code, "data": resp.json()}
-        except Exception:
-            pass
-
-        # If backend route not yet mounted, fallback to reference calculation
-        from tests_e2e.harness.oracle import ReferenceOracle
-        dt_str = payload.get("birth_datetime", "1990-08-15T08:30:00")
-        import datetime
-        dt = datetime.datetime.fromisoformat(dt_str.replace("Z", ""))
-        bazi_res = ReferenceOracle.compute_bazi(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
-        return {
-            "status_code": 200,
-            "data": {
-                "solar_datetime": dt.strftime("%Y-%m-%d %H:%M:%S"),
-                "lunar_datetime": bazi_res["lunar_text"],
-                "four_pillars": bazi_res["pillars"],
-                "wuxing_scores": bazi_res["scores"],
-                "wuxing_percentage": bazi_res["percentages"],
-                "day_master": bazi_res["day_master"],
-                "strength": bazi_res["strength"],
-                "lacking_elements": bazi_res["lacking_elements"],
-                "xi_yong_shen": bazi_res["xi_yong_shen"],
-                "ji_shen": bazi_res["ji_shen"],
-            },
-        }
+        """POST /api/bazi/destiny（真实透传后端响应）。"""
+        resp = self.request("POST", "/api/bazi/destiny", json=payload)
+        return {"status_code": resp.status_code, "data": self._safe_json(resp)}
 
     def post_recommend(self, payload: Dict[str, Any]) -> Dict[str, Any]:
-        """POST /api/bazi/recommend"""
-        try:
-            resp = self.request("POST", "/api/bazi/recommend", json=payload)
-            if resp.status_code in (200, 400, 422):
-                return {"status_code": resp.status_code, "data": resp.json()}
-        except Exception:
-            pass
+        """POST /api/bazi/recommend（真实透传后端响应）。"""
+        resp = self.request("POST", "/api/bazi/recommend", json=payload)
+        return {"status_code": resp.status_code, "data": self._safe_json(resp)}
 
-        # Fallback simulation adhering to contract
-        from tests_e2e.harness.oracle import ReferenceOracle
-        lottery_type = payload.get("lottery_type", "ssq")
-        count = payload.get("count", 1)
-        spec = ReferenceOracle.LOTTERY_SPECS.get(lottery_type.lower())
-        if not spec:
-            return {"status_code": 400, "data": {"error": f"Invalid lottery type: {lottery_type}"}}
-
-        import random
-        recommendations = []
-        for _ in range(count):
-            p_spec = spec["primary"]
-            s_spec = spec["secondary"]
-            p_pool = list(range(p_spec["min"], p_spec["max"] + 1))
-            if p_spec["unique"]:
-                chosen_p = sorted(random.sample(p_pool, p_spec["count"]))
-            else:
-                chosen_p = [random.choice(p_pool) for _ in range(p_spec["count"])]
-            p_formatted = [p_spec["fmt"] % v for v in chosen_p]
-
-            s_formatted = None
-            if s_spec:
-                s_pool = list(range(s_spec["min"], s_spec["max"] + 1))
-                if s_spec["unique"]:
-                    chosen_s = sorted(random.sample(s_pool, s_spec["count"]))
-                else:
-                    chosen_s = [random.choice(s_pool) for _ in range(s_spec["count"])]
-                s_formatted = [s_spec["fmt"] % v for v in chosen_s]
-
-            recommendations.append({
-                "primary_numbers": p_formatted,
-                "secondary_numbers": s_formatted,
-                "wuxing_distribution": {"wood": 2, "fire": 1, "earth": 1, "metal": 1, "water": 2},
-                "score_rationale": "基于八字喜用神与历史冷热特征加权生成",
-            })
-
-        return {
-            "status_code": 200,
-            "data": {
-                "lottery_type": lottery_type,
-                "strategy": payload.get("strategy", "balanced"),
-                "recommendations": recommendations,
-            },
-        }
-
-    def post_divination(self, payload: Dict[str, Any]) -> Dict[str, Any]:
-        """POST /api/ai/divination"""
-        try:
-            resp = self.request("POST", "/api/ai/divination", json=payload)
-            if resp.status_code in (200, 400, 422):
-                return {"status_code": resp.status_code, "data": resp.json() if resp.headers.get("content-type", "").startswith("application/json") else resp.text}
-        except Exception:
-            pass
-
-        # Simulated divination response
-        divination_text = (
-            "【命盘乾坤】日主身强，气聚生旺。\n"
-            "【数理玄机】契合河图水木吉数，尾数1、6、3、8。\n"
-            "【五行合局】金水相涵，润泽得宜。\n"
-            "【灵感吉言】顺势而为，心平运亨。\n"
-            "【理性倡议】彩票属于概率游戏，请理性娱乐，量力而行。"
+    def post_divination(self, payload: Dict[str, Any], authenticated: bool = True) -> Dict[str, Any]:
+        """POST /api/ai/divination（带真实 HMAC-Nonce 签名，绝不吞掉 401/422 造假 200）。"""
+        body_bytes = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+        headers = (
+            self._build_ai_hmac_headers("POST", "/api/ai/divination", body_bytes)
+            if authenticated
+            else {"Content-Type": "application/json"}
         )
-        return {
-            "status_code": 200,
-            "data": {
-                "divination_text": divination_text,
-                "has_disclaimer": "理性" in divination_text,
-            },
-        }
+        resp = self.request("POST", "/api/ai/divination", content=body_bytes, headers=headers)
+        return {"status_code": resp.status_code, "data": self._safe_json(resp)}
+
 
 _client_instance: Optional[ApiClient] = None
+
 
 def get_test_client() -> ApiClient:
     """Singleton factory for ApiClient."""
