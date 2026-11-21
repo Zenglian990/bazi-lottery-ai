@@ -12,7 +12,9 @@ venv
 env
 android/
 release/
-data/
+/data/
+!backend/app/data/
+!backend/app/data/classics_corpus.json
 tests_e2e/
 backend/tests/
 *.db
