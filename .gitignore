@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+*.sqlite3-journal
+
+# SQLite databases & WAL files
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
+# Secrets / Local env
+.env
+.env.*
+*.pem
+*.jks
+*.keystore
+keystore.properties
+
+# Android / Gradle
+.gradle/
+.kotlin/
+android/.gradle/
+android/.kotlin/
+android/app/build/
+android/build/
+local.properties
+.idea/
+*.iml
+.DS_Store
+
+# Release artifacts (managed via GitHub Releases)
+release/
+*.apk

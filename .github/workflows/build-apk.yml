@@ -1,0 +1,75 @@
+name: Build and Release Android APK
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'android/**'
+      - '.github/workflows/build-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x android/gradlew
+
+      - name: Run Unit Tests
+        run: |
+          cd android
+          ./gradlew testDebugUnitTest
+
+      - name: Build Release APK
+        run: |
+          cd android
+          ./gradlew assembleRelease
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZengLian-Lottery-v1.3.6
+          path: android/app/build/outputs/apk/release/*.apk
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main'
+        with:
+          tag_name: v1.3.6
+          name: "曾练彩票助手 v1.3.6 (Release)"
+          body: |
+            ## 曾练彩票助手 v1.3.6 正式发布
+
+            ### 核心更新与修复：
+            - **[BL-06] 跨端 AI 模型更新**：升级为 Google 官方 `gemini-2.5-flash`，移除 URL 明文传参，改用 Header 安全传输；
+            - **[BL-09] 时区与流日对齐**：后端全面锁定 `Asia/Shanghai`，消除凌晨 00:00~07:59 CST 流日黄历倒退 1 天与 8 小时流时偏差；
+            - **[BL-10] 解除离线短路死锁**：网络超时放宽至 15s 适配云端冷启动，移除 5 大核心入口 `isOffline` 永久离线拦截；
+            - **[BL-19] 移除主线程死循环**：剔除 `Looper.loop()` 异常吞没逻辑，全面规范异常捕获；
+            - **[BL-16/25/27] 契约与编译修复**：补齐性别极性加权与经度参数，支持中文策略名双向映射，修复 Kotlin 编译属性断裂。
+          files: android/app/build/outputs/apk/release/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
