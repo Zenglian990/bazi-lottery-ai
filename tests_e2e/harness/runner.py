@@ -12,7 +12,7 @@ import inspect
 import importlib
 import traceback
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 
 class TestResult:
     def __init__(self, name: str, module: str, tier: str, passed: bool, error: Optional[str] = None, duration: float = 0.0):
