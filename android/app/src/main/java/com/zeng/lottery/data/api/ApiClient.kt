@@ -2,12 +2,15 @@ package com.zeng.lottery.data.api
 
 import com.zeng.lottery.BuildConfig
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.Response
 import okhttp3.logging.HttpLoggingInterceptor
 import org.json.JSONObject
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 object ApiClient {
@@ -71,6 +74,41 @@ object ApiClient {
 
     private val dynamicInterceptor = DynamicBaseUrlInterceptor { customBaseUrl }
 
+    /**
+     * 针对 Cloud Run 冷启动（maxScale=1 缩容至 0 后唤醒）偶发的边缘 500/502/503/504 或短时超时，
+     * 对非写库请求执行一次短暂退避重试，避免隔夜首次打开 App 误判为离线。
+     */
+    private val coldStartRetryInterceptor = Interceptor { chain ->
+        val req = chain.request()
+        val path = req.url.encodedPath
+        val retryable = !path.endsWith("/api/lottery/sync") && !path.endsWith("/api/ai/divination")
+        var attempt = 0
+        var lastException: IOException? = null
+        while (attempt < 2) {
+            try {
+                val resp: Response = chain.proceed(req)
+                val transient5xx = resp.code == 500 || resp.code == 502 || resp.code == 503 || resp.code == 504
+                if (!transient5xx || !retryable || attempt >= 1) {
+                    return@Interceptor resp
+                }
+                resp.close()
+            } catch (e: IOException) {
+                lastException = e
+                if (!retryable || attempt >= 1) {
+                    throw e
+                }
+            }
+            attempt++
+            try {
+                Thread.sleep(1500L)
+            } catch (_: InterruptedException) {
+                Thread.currentThread().interrupt()
+                break
+            }
+        }
+        throw (lastException ?: IOException("Transient network error"))
+    }
+
     val okHttpClient: OkHttpClient by lazy {
         val logging = HttpLoggingInterceptor().apply {
             level = if (BuildConfig.DEBUG) {
@@ -82,45 +120,63 @@ object ApiClient {
 
         OkHttpClient.Builder()
             .addInterceptor(dynamicInterceptor)
+            .addInterceptor(coldStartRetryInterceptor)
             .addInterceptor(logging)
-            .connectTimeout(15, TimeUnit.SECONDS)
-            .readTimeout(15, TimeUnit.SECONDS)
-            .writeTimeout(15, TimeUnit.SECONDS)
+            .connectTimeout(20, TimeUnit.SECONDS)
+            .readTimeout(25, TimeUnit.SECONDS)
+            .writeTimeout(20, TimeUnit.SECONDS)
             .build()
     }
 
     /**
      * 对指定服务器地址执行真实 /api/health 连通性探测与延迟测量（阻塞 IO，需在 IO 调度器中调用）。
+     * 兼容 Cloud Run 缩容至 0 后的冷启动唤醒（18s 超时 + 瞬态 5xx/超时自动重试 1 次）。
      */
     fun pingServer(targetUrl: String): Pair<Boolean, String> {
         val (valid, normalizedOrErr) = validateServerUrl(targetUrl)
         if (!valid) return Pair(false, normalizedOrErr)
         val healthUrl = "${normalizedOrErr.trimEnd('/')}/api/health"
         val probeClient = OkHttpClient.Builder()
-            .connectTimeout(6, TimeUnit.SECONDS)
-            .readTimeout(6, TimeUnit.SECONDS)
+            .connectTimeout(18, TimeUnit.SECONDS)
+            .readTimeout(18, TimeUnit.SECONDS)
             .build()
         val startMs = System.currentTimeMillis()
-        return try {
-            val req = Request.Builder().url(healthUrl).get().build()
-            probeClient.newCall(req).execute().use { resp ->
+        var lastFailMsg = ""
+        for (attempt in 0..1) {
+            try {
+                val req = Request.Builder().url(healthUrl).get().build()
+                probeClient.newCall(req).execute().use { resp ->
+                    val elapsed = System.currentTimeMillis() - startMs
+                    if (resp.isSuccessful) {
+                        val body = resp.body?.string().orEmpty()
+                        val version = try {
+                            JSONObject(body).optString("version", "")
+                        } catch (_: Throwable) {
+                            ""
+                        }
+                        val verPart = if (version.isNotBlank()) " · v$version" else ""
+                        val coldTag = if (attempt > 0) " · 已唤醒" else ""
+                        return Pair(true, "连接正常 (${elapsed}ms$verPart$coldTag)")
+                    }
+                    lastFailMsg = "服务响应异常 (HTTP ${resp.code}, ${elapsed}ms)"
+                    if (resp.code !in listOf(500, 502, 503, 504)) {
+                        return Pair(false, lastFailMsg)
+                    }
+                }
+            } catch (e: Throwable) {
                 val elapsed = System.currentTimeMillis() - startMs
-                if (!resp.isSuccessful) {
-                    return Pair(false, "服务响应异常 (HTTP ${resp.code}, ${elapsed}ms)")
-                }
-                val body = resp.body?.string().orEmpty()
-                val version = try {
-                    JSONObject(body).optString("version", "")
-                } catch (_: Throwable) {
-                    ""
-                }
-                val verPart = if (version.isNotBlank()) " · v$version" else ""
-                Pair(true, "连接正常 (${elapsed}ms$verPart)")
+                lastFailMsg = "连接失败 (${elapsed}ms): ${e.message ?: e.javaClass.simpleName}"
             }
-        } catch (e: Throwable) {
-            val elapsed = System.currentTimeMillis() - startMs
-            Pair(false, "连接失败 (${elapsed}ms): ${e.message ?: e.javaClass.simpleName}")
+            if (attempt == 0) {
+                try {
+                    Thread.sleep(1200L)
+                } catch (_: InterruptedException) {
+                    Thread.currentThread().interrupt()
+                    break
+                }
+            }
         }
+        return Pair(false, lastFailMsg.ifBlank { "连接超时，请稍后再试" })
     }
 
     val apiService: LotteryApiService by lazy {

@@ -5,10 +5,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+
+/**
+ * 主题自适应金色强调色：暗黑主题使用亮玄金 (#FFB300)，浅色主题自动切换高对比度深赤金 (#8C5200)。
+ */
+val LocalAccentGold = compositionLocalOf { FortuneGold }
 
 private val DarkColorScheme = darkColorScheme(
     primary = FortuneGold,
@@ -66,9 +73,12 @@ fun BaziLotteryTheme(
         }
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    val accentGold = if (darkTheme) FortuneGold else FortuneGoldDeep
+    CompositionLocalProvider(LocalAccentGold provides accentGold) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }

@@ -111,11 +111,18 @@ class OpenAiClient(private val okHttpClient: OkHttpClient) {
         }
         val targetModel = model.ifBlank { "gpt-4o-mini" }
 
+        val isReasoningModel = targetModel.contains("reasoner", ignoreCase = true) ||
+            targetModel.startsWith("o1", ignoreCase = true) ||
+            targetModel.startsWith("o3", ignoreCase = true) ||
+            targetModel.startsWith("o4", ignoreCase = true)
+
         val jsonPayload = JsonObject().apply {
             addProperty("model", targetModel)
             addProperty("stream", true)
-            addProperty("temperature", 0.7)
-            addProperty("max_tokens", 4096)
+            if (!isReasoningModel) {
+                addProperty("temperature", 0.7)
+            }
+            addProperty("max_tokens", if (isReasoningModel) 8192 else 4096)
 
             val messagesArray = JsonArray()
             messagesArray.add(JsonObject().apply {

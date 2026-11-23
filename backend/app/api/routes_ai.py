@@ -15,6 +15,7 @@ from backend.app.services.ai_service import (
     _safe_error_summary,
     generate_divination_text,
     stream_divination_chunks,
+    stream_divination_events,
     validate_divination_security_async,
 )
 
@@ -107,8 +108,8 @@ async def ai_divination(
 
     async def sse_generator():
         try:
-            async for chunk in stream_divination_chunks(request):
-                payload = json.dumps({"delta": chunk, "done": False}, ensure_ascii=False)
+            async for event in stream_divination_events(request):
+                payload = json.dumps(event, ensure_ascii=False)
                 yield f"data: {payload}\n\n"
         except Exception as e:
             logger.error("Error in SSE streaming generator: %s", _safe_error_summary(e))

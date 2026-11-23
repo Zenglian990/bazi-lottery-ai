@@ -7,7 +7,7 @@ val ImperialRed = Color(0xFFD32F2F)
 val ImperialRedBright = Color(0xFFFF6E6E)  // 暗底高对比度朱砂亮红 (WCAG AA+)
 val ImperialRedDark = Color(0xFF9A0007)
 val FortuneGold = Color(0xFFFFB300)
-val FortuneGoldDeep = Color(0xFFB27300)    // 浅底高对比度赤金
+val FortuneGoldDeep = Color(0xFF8C5200)    // 宣纸浅底高对比度赤金 (WCAG AA+ 6.3:1)
 val FortuneGoldLight = Color(0xFFFFE082)
 val MysticIndigo = Color(0xFF3F51B5)
 

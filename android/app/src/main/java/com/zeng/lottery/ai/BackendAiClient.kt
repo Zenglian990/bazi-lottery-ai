@@ -35,6 +35,7 @@ class BackendAiClient(
 
     companion object {
         const val DIVINATION_PATH = "/api/ai/divination"
+        const val FALLBACK_META_TAG = "\u0002FALLBACK\u0003"
 
         private fun bytesToHex(bytes: ByteArray): String {
             val sb = StringBuilder(bytes.size * 2)
@@ -83,15 +84,29 @@ class BackendAiClient(
         }
     }
 
-    fun parseBackendDelta(data: String): Pair<String, Boolean> {
+    data class BackendSseEvent(
+        val delta: String = "",
+        val done: Boolean = false,
+        val provider: String = "",
+        val fallbackReason: String = ""
+    )
+
+    fun parseBackendEvent(data: String): BackendSseEvent {
         return try {
             val json = gson.fromJson(data, JsonObject::class.java)
-            val delta = json.get("delta")?.asString ?: ""
-            val done = json.get("done")?.asBoolean ?: false
-            Pair(delta, done)
+            val delta = json.get("delta")?.takeIf { !it.isJsonNull }?.asString ?: ""
+            val done = json.get("done")?.takeIf { !it.isJsonNull }?.asBoolean ?: false
+            val provider = json.get("provider")?.takeIf { !it.isJsonNull }?.asString ?: ""
+            val fallbackReason = json.get("fallback_reason")?.takeIf { !it.isJsonNull }?.asString ?: ""
+            BackendSseEvent(delta = delta, done = done, provider = provider, fallbackReason = fallbackReason)
         } catch (_: Exception) {
-            Pair("", false)
+            BackendSseEvent()
         }
+    }
+
+    fun parseBackendDelta(data: String): Pair<String, Boolean> {
+        val evt = parseBackendEvent(data)
+        return Pair(evt.delta, evt.done)
     }
 
     fun streamDivination(
@@ -168,11 +183,15 @@ class BackendAiClient(
 
         val listener = object : EventSourceListener() {
             override fun onEvent(eventSource: EventSource, id: String?, type: String?, data: String) {
-                val (delta, done) = parseBackendDelta(data)
-                if (delta.isNotEmpty()) {
-                    trySend(delta)
+                val evt = parseBackendEvent(data)
+                if (evt.provider.equals("fallback", ignoreCase = true) || evt.fallbackReason.isNotBlank()) {
+                    val reason = evt.fallbackReason.ifBlank { "云端上游大模型暂不可用，已切换云端典籍算法推演" }
+                    trySend(FALLBACK_META_TAG + reason)
                 }
-                if (done) {
+                if (evt.delta.isNotEmpty()) {
+                    trySend(evt.delta)
+                }
+                if (evt.done) {
                     close()
                 }
             }

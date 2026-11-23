@@ -25,8 +25,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.zeng.lottery.ui.theme.FortuneGold
 import com.zeng.lottery.ui.theme.ImperialRed
+import com.zeng.lottery.ui.theme.LocalAccentGold
 
 data class ShichenItem(
     val name: String,
@@ -59,6 +59,7 @@ fun ShichenPickerDialog(
     onDismissRequest: () -> Unit,
     onShichenSelected: (hour: Int, minute: Int) -> Unit
 ) {
+    val accentGold = LocalAccentGold.current
     AlertDialog(
         onDismissRequest = onDismissRequest,
         title = {
@@ -66,7 +67,7 @@ fun ShichenPickerDialog(
                 text = "选择传统十二时辰",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = FortuneGold
+                color = accentGold
             )
         },
         text = {
@@ -108,7 +109,7 @@ fun ShichenPickerDialog(
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(8.dp))
                                 .background(
-                                    if (isSelected) FortuneGold.copy(alpha = 0.2f)
+                                    if (isSelected) accentGold.copy(alpha = 0.2f)
                                     else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                                 )
                                 .clickable {
@@ -124,7 +125,7 @@ fun ShichenPickerDialog(
                                     text = item.name,
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (isSelected) FortuneGold else MaterialTheme.colorScheme.onSurface
+                                    color = if (isSelected) accentGold else MaterialTheme.colorScheme.onSurface
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
@@ -146,7 +147,7 @@ fun ShichenPickerDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismissRequest) {
-                Text("关闭", color = FortuneGold)
+                Text("关闭", color = accentGold)
             }
         }
     )

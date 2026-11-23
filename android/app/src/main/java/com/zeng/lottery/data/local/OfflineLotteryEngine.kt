@@ -552,6 +552,9 @@ class OfflineLotteryEngine(private val context: Context? = null) {
                 }
                 picked.add(selected)
             }
+            if (effectiveLocked.isNotEmpty() && picked.size > 1) {
+                picked.shuffle(Random)
+            }
             return picked
         } else {
             // 对数空间 A-Res 加权蓄水池无放回抽样

@@ -71,9 +71,12 @@ data class WuxingScores(
 }
 
 data class DayunDetail(
+    @SerializedName("gan_zhi", alternate = ["ganzhi"])
     val ganzhi: String = "",
     @SerializedName("start_age")
     val startAge: Int = 0,
+    @SerializedName("end_age")
+    val endAge: Int = 0,
     @SerializedName("start_year")
     val startYear: Int = 0,
     @SerializedName("end_year")
@@ -83,7 +86,9 @@ data class DayunDetail(
 data class NameGridItem(
     val value: Int = 0,
     val fortune: String = "平",
+    @SerializedName("description", alternate = ["meaning"])
     val meaning: String = "",
+    @SerializedName("element", alternate = ["wuxing"])
     val wuxing: String = ""
 )
 
@@ -99,14 +104,44 @@ data class NameNumerology(
     val surnameStrokes: List<Int> = emptyList(),
     @SerializedName("given_strokes")
     val givenStrokes: List<Int> = emptyList(),
+    @SerializedName("character_strokes")
+    val characterStrokes: Map<String, Int> = emptyMap(),
+    @SerializedName("tian_ge")
+    val tianGe: NameGridItem? = null,
+    @SerializedName("ren_ge")
+    val renGe: NameGridItem? = null,
+    @SerializedName("di_ge")
+    val diGe: NameGridItem? = null,
+    @SerializedName("wai_ge")
+    val waiGe: NameGridItem? = null,
+    @SerializedName("zong_ge")
+    val zongGe: NameGridItem? = null,
+    @SerializedName("primary_element")
+    val primaryElement: String = "",
     @SerializedName("five_grids")
-    val fiveGrids: Map<String, NameGridItem> = emptyMap(),
+    val fiveGrids: Map<String, NameGridItem>? = null,
     @SerializedName("name_wuxing")
     val nameWuxing: Map<String, Int> = emptyMap(),
     @SerializedName("name_lucky_numbers")
     val nameLuckyNumbers: List<Int> = emptyList(),
     val summary: String = ""
-)
+) {
+    /**
+     * 统一读取五格结构：兼容后端扁平字段（tian_ge/ren_ge/di_ge/wai_ge/zong_ge）及旧版 five_grids Map。
+     */
+    val resolvedFiveGrids: Map<String, NameGridItem>
+        get() {
+            val map = fiveGrids
+            if (!map.isNullOrEmpty()) return map
+            val built = LinkedHashMap<String, NameGridItem>(5)
+            tianGe?.let { built["tian_ge"] = it }
+            renGe?.let { built["ren_ge"] = it }
+            diGe?.let { built["di_ge"] = it }
+            waiGe?.let { built["wai_ge"] = it }
+            zongGe?.let { built["zong_ge"] = it }
+            return built
+        }
+}
 
 data class BaziDestiny(
     @SerializedName("solar_datetime")

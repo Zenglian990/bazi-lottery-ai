@@ -35,6 +35,9 @@ class GeminiClient(private val okHttpClient: OkHttpClient) {
                     val sb = StringBuilder()
                     for (i in 0 until parts.size()) {
                         val partObj = parts.get(i).asJsonObject
+                        // 过滤 Gemini 2.5 内部思考块 (thought=true)，防止推理草稿混入中文卦辞
+                        val isThought = partObj.get("thought")?.takeIf { !it.isJsonNull }?.asBoolean == true
+                        if (isThought) continue
                         val text = partObj.get("text")?.takeIf { !it.isJsonNull }?.asString
                         if (!text.isNullOrEmpty()) {
                             sb.append(text)

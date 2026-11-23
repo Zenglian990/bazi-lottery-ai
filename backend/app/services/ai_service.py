@@ -642,8 +642,14 @@ async def _call_gemini_api(
         candidates = data.get("candidates", [])
         if candidates:
             parts = candidates[0].get("content", {}).get("parts", [])
-            if parts:
-                return parts[0].get("text", "")
+            # 过滤 Gemini 2.5 思考块 (thought=True)，仅拼接正式正文内容
+            text_parts = [
+                p.get("text", "")
+                for p in parts
+                if isinstance(p, dict) and not p.get("thought") and p.get("text")
+            ]
+            if text_parts:
+                return "".join(text_parts)
         raise ValueError("Empty response from Gemini API")
 
 
@@ -739,11 +745,10 @@ async def generate_divination_text(request: BaziDivinationRequest) -> Dict[str, 
     }
 
 
-async def stream_divination_chunks(request: BaziDivinationRequest) -> AsyncGenerator[str, None]:
+async def stream_divination_events(request: BaziDivinationRequest) -> AsyncGenerator[Dict[str, Any], None]:
     """
-    Async generator yielding divination text chunks for SSE streaming.
-    Supports live LLM streaming or authentic typewriter chunk emission,
-    with guaranteed end-of-stream responsible gaming compliance suffix.
+    流式输出结构化 SSE 事件（包含正文 delta 与可选的 provider / fallback_reason 元信息），
+    同时在 Gemini 2.5 流式响应中严格过滤 thought=True 的内部思考块，并在降级时向客户端透明汇报原因。
     """
     cfg = _resolve_provider_configs(request)
     provider = cfg["provider"]
@@ -752,8 +757,9 @@ async def stream_divination_chunks(request: BaziDivinationRequest) -> AsyncGener
     gemini_key = cfg["gemini_key"]
     openai_key = cfg["openai_key"]
     openai_base = cfg["openai_base"]
+    last_upstream_error: Optional[str] = None
 
-    # Try streaming from DeepSeek if configured
+    # 1. 尝试 DeepSeek 流式输出
     if provider in ("deepseek", "auto") and deepseek_key:
         clean_base = deepseek_base.rstrip("/")
         endpoint = f"{clean_base}/v1/chat/completions" if not clean_base.endswith("/v1") else f"{clean_base}/chat/completions"
@@ -796,18 +802,22 @@ async def stream_divination_chunks(request: BaziDivinationRequest) -> AsyncGener
                                             delta = _sanitize_forbidden_promises(delta)
                                             emitted_any = True
                                             accumulated_parts.append(delta)
-                                            yield delta
+                                            yield {"delta": delta, "done": False}
                                 except Exception:
                                     continue
                         if emitted_any:
                             suffix = _get_missing_compliance_suffix("".join(accumulated_parts))
                             if suffix:
-                                yield suffix
+                                yield {"delta": suffix, "done": False}
                             return
+                    else:
+                        last_upstream_error = f"云端 DeepSeek 暂不可用 (HTTP {response.status_code})"
+                        logger.warning("DeepSeek streaming returned HTTP %s", response.status_code)
         except Exception as e:
+            last_upstream_error = "云端 DeepSeek 连接波动"
             logger.warning(f"DeepSeek streaming failed: {_safe_error_summary(e)}")
 
-    # Try streaming from Gemini if configured
+    # 2. 尝试 Gemini 流式输出（过滤 Gemini 2.5 thought 思考块）
     if provider in ("gemini", "auto") and gemini_key:
         target_model = _normalize_gemini_model(request.model)
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{target_model}:streamGenerateContent?alt=sse"
@@ -841,22 +851,31 @@ async def stream_divination_chunks(request: BaziDivinationRequest) -> AsyncGener
                                     if candidates:
                                         parts = candidates[0].get("content", {}).get("parts", [])
                                         for p in parts:
-                                            delta = p.get("text", "")
+                                            if isinstance(p, dict) and p.get("thought"):
+                                                continue
+                                            delta = p.get("text", "") if isinstance(p, dict) else ""
                                             if delta:
                                                 emitted_any = True
                                                 accumulated_parts.append(delta)
-                                                yield delta
+                                                yield {"delta": delta, "done": False}
                                 except Exception:
                                     continue
                         if emitted_any:
                             suffix = _get_missing_compliance_suffix("".join(accumulated_parts))
                             if suffix:
-                                yield suffix
+                                yield {"delta": suffix, "done": False}
                             return
+                    else:
+                        if response.status_code == 429:
+                            last_upstream_error = "云端 Gemini 区域/频率配额受限 (HTTP 429)，可在右上角切换 DeepSeek 直连"
+                        else:
+                            last_upstream_error = f"云端 Gemini 暂不可用 (HTTP {response.status_code})"
+                        logger.warning("Gemini streaming returned HTTP %s", response.status_code)
         except Exception as e:
+            last_upstream_error = "云端 Gemini 连接波动"
             logger.warning(f"Gemini streaming failed: {_safe_error_summary(e)}")
 
-    # Try streaming from OpenAI if configured
+    # 3. 尝试 OpenAI 兼容接口流式输出
     if provider in ("openai", "auto") and openai_key:
         clean_base = openai_base.rstrip("/")
         endpoint = f"{clean_base}/v1/chat/completions" if not clean_base.endswith("/v1") else f"{clean_base}/chat/completions"
@@ -898,18 +917,35 @@ async def stream_divination_chunks(request: BaziDivinationRequest) -> AsyncGener
                                             delta = _sanitize_forbidden_promises(delta)
                                             emitted_any = True
                                             accumulated_parts.append(delta)
-                                            yield delta
+                                            yield {"delta": delta, "done": False}
                                 except Exception:
                                     continue
                         if emitted_any:
                             suffix = _get_missing_compliance_suffix("".join(accumulated_parts))
                             if suffix:
-                                yield suffix
+                                yield {"delta": suffix, "done": False}
                             return
+                    else:
+                        last_upstream_error = f"云端 OpenAI 接口暂不可用 (HTTP {response.status_code})"
+                        logger.warning("OpenAI streaming returned HTTP %s", response.status_code)
         except Exception as e:
+            last_upstream_error = "云端 OpenAI 连接波动"
             logger.warning(f"OpenAI streaming failed: {_safe_error_summary(e)}")
 
-    # Fallback typewriter emission
+    # 4. 透明降级至典籍算法兜底：先发送元事件告知客户端真实降级原因
+    fallback_reason = (
+        f"{last_upstream_error}，已自动切换云端典籍算法推演"
+        if last_upstream_error
+        else "当前使用云端典籍算法推演（未配置上游大模型密钥）"
+    )
+    yield {
+        "delta": "",
+        "done": False,
+        "provider": "fallback",
+        "model": "algorithmic-master-v1",
+        "fallback_reason": fallback_reason,
+    }
+
     fallback_text = generate_fallback_divination(request)
     chunks = re.split(r"([，。；！\n]+)", fallback_text)
     for i in range(0, len(chunks), 2):
@@ -917,5 +953,13 @@ async def stream_divination_chunks(request: BaziDivinationRequest) -> AsyncGener
         sep = chunks[i + 1] if i + 1 < len(chunks) else ""
         text_piece = chunk + sep
         if text_piece:
-            yield text_piece
+            yield {"delta": text_piece, "done": False}
             await asyncio.sleep(0.01)
+
+
+async def stream_divination_chunks(request: BaziDivinationRequest) -> AsyncGenerator[str, None]:
+    """向后兼容纯文本块生成器接口，内部委托 stream_divination_events。"""
+    async for evt in stream_divination_events(request):
+        delta = evt.get("delta") or ""
+        if delta:
+            yield delta

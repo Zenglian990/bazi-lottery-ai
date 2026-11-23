@@ -212,7 +212,7 @@ data class HealthResponse(
     val version: String = "",
     val timestamp: String = "",
     @SerializedName("latest_draws")
-    val latestDraws: Map<String, Map<String, String>>? = null
+    val latestDraws: Map<String, Any>? = null
 )
 
 data class LotteryRuleDetail(

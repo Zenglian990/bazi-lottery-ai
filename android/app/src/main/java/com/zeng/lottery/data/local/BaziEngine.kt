@@ -33,9 +33,15 @@ object BaziEngine {
         return ZODIAC[idx]
     }
 
+    fun getZodiacFromBranch(branch: String): String {
+        val idx = BRANCHES.indexOf(branch)
+        return if (idx in ZODIAC.indices) ZODIAC[idx] else "鼠"
+    }
+
     fun getShichenShortRange(hour: Int): String {
         return when (hour) {
-            23, 0 -> "23-01"
+            0 -> "00-01"
+            23 -> "23-24"
             1, 2 -> "01-03"
             3, 4 -> "03-05"
             5, 6 -> "05-07"
@@ -53,7 +59,8 @@ object BaziEngine {
 
     fun getShichenRange(hour: Int): String {
         return when (hour) {
-            23, 0 -> "23:00-01:00"
+            0 -> "00:00-01:00"
+            23 -> "23:00-24:00"
             1, 2 -> "01:00-03:00"
             3, 4 -> "03:00-05:00"
             5, 6 -> "05:00-07:00"
@@ -337,9 +344,9 @@ object BaziEngine {
             calcDt.year, calcDt.monthValue, calcDt.dayOfMonth, calcDt.hour, calcDt.minute, calcDt.second
         )
         val lunarObj = solarObj.lunar
-        // 统一使用八字立春年干支，防止立春前标题干支与年柱矛盾
+        // 统一使用八字立春年干支及对应地支生肖，防止立春前标题干支与生肖矛盾
         val baziYearGz = fourPillars.year.fullText
-        val yearZodiac = getZodiac(lunarObj.year)
+        val yearZodiac = getZodiacFromBranch(fourPillars.year.branch)
         val shichenTitle = getShichenName(calcDt.hour)
         val formattedLunar = "${lunarObj.year}年 (${baziYearGz}${yearZodiac}年) 农历${lunarObj.monthInChinese}月${lunarObj.dayInChinese} $shichenTitle"
 

@@ -43,14 +43,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zeng.lottery.data.model.ClassicsEvidence
-import com.zeng.lottery.ui.theme.FortuneGold
-import com.zeng.lottery.ui.theme.FortuneGoldLight
-import com.zeng.lottery.ui.theme.MysticIndigo
+import com.zeng.lottery.ui.theme.LocalAccentGold
 
 /**
- * Ancient Metaphysics Classic Grounding Card.
- * Displays authoritative classical evidence (易经、奇门遁甲、穷通宝鉴等),
- * matching lucky numbers, ancient quotes and vernacular interpretations.
+ * 易理典籍印证卡片：自动适配玄墨暗金与宣纸浅色双主题。
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -58,6 +54,7 @@ fun ClassicsEvidenceCard(
     evidence: ClassicsEvidence,
     modifier: Modifier = Modifier
 ) {
+    val accentGold = LocalAccentGold.current
     var expanded by remember { mutableStateOf(true) }
 
     val categoryBadge = when (evidence.category) {
@@ -73,18 +70,17 @@ fun ClassicsEvidenceCard(
             .fillMaxWidth()
             .border(
                 width = 1.dp,
-                color = FortuneGold.copy(alpha = 0.35f),
+                color = accentGold.copy(alpha = 0.4f),
                 shape = RoundedCornerShape(12.dp)
             ),
         shape = RoundedCornerShape(12.dp),
-        color = Color(0xFF181512)
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(12.dp)
         ) {
-            // Header: Clickable row to expand/collapse
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -94,19 +90,20 @@ fun ClassicsEvidenceCard(
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.weight(1f)
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.MenuBook,
                         contentDescription = "典籍印证",
-                        tint = FortuneGold,
+                        tint = accentGold,
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
                         text = "${evidence.book} · ${evidence.chapter}",
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
-                        color = FortuneGoldLight
+                        color = accentGold
                     )
                 }
 
@@ -117,7 +114,7 @@ fun ClassicsEvidenceCard(
                     Box(
                         modifier = Modifier
                             .background(
-                                color = FortuneGold.copy(alpha = 0.15f),
+                                color = accentGold.copy(alpha = 0.14f),
                                 shape = RoundedCornerShape(4.dp)
                             )
                             .padding(horizontal = 6.dp, vertical = 2.dp)
@@ -126,14 +123,15 @@ fun ClassicsEvidenceCard(
                             text = categoryBadge,
                             style = MaterialTheme.typography.labelSmall,
                             fontSize = 10.sp,
-                            color = FortuneGold
+                            fontWeight = FontWeight.Bold,
+                            color = accentGold
                         )
                     }
 
                     Icon(
                         imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                         contentDescription = if (expanded) "折叠" else "展开",
-                        tint = FortuneGold.copy(alpha = 0.7f),
+                        tint = accentGold.copy(alpha = 0.8f),
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -149,17 +147,16 @@ fun ClassicsEvidenceCard(
                         .fillMaxWidth()
                         .padding(top = 10.dp)
                 ) {
-                    // Ancient Quote
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(
-                                color = Color(0xFF221E19),
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
                                 shape = RoundedCornerShape(8.dp)
                             )
                             .border(
-                                width = 0.5.dp,
-                                color = FortuneGold.copy(alpha = 0.2f),
+                                width = 0.6.dp,
+                                color = accentGold.copy(alpha = 0.28f),
                                 shape = RoundedCornerShape(8.dp)
                             )
                             .padding(10.dp)
@@ -169,7 +166,7 @@ fun ClassicsEvidenceCard(
                             style = MaterialTheme.typography.bodySmall,
                             fontStyle = FontStyle.Italic,
                             fontWeight = FontWeight.Medium,
-                            color = Color(0xFFE8D7B5),
+                            color = MaterialTheme.colorScheme.onSurface,
                             lineHeight = 18.sp,
                             fontSize = 12.sp
                         )
@@ -177,7 +174,6 @@ fun ClassicsEvidenceCard(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Vernacular explanation
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -186,7 +182,7 @@ fun ClassicsEvidenceCard(
                         Icon(
                             imageVector = Icons.Default.AutoAwesome,
                             contentDescription = "易理解释",
-                            tint = FortuneGold,
+                            tint = accentGold,
                             modifier = Modifier
                                 .size(14.dp)
                                 .padding(top = 2.dp)
@@ -200,7 +196,6 @@ fun ClassicsEvidenceCard(
                         )
                     }
 
-                    // Auspicious Numbers Tags
                     if (evidence.auspiciousNumbers.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Row(
@@ -211,7 +206,8 @@ fun ClassicsEvidenceCard(
                                 text = "印证神数:",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontSize = 11.sp,
-                                color = FortuneGold
+                                fontWeight = FontWeight.Bold,
+                                color = accentGold
                             )
                             FlowRow(
                                 horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -222,7 +218,7 @@ fun ClassicsEvidenceCard(
                                     Box(
                                         modifier = Modifier
                                             .background(
-                                                color = FortuneGold.copy(alpha = 0.2f),
+                                                color = accentGold.copy(alpha = 0.16f),
                                                 shape = RoundedCornerShape(4.dp)
                                             )
                                             .padding(horizontal = 5.dp, vertical = 1.dp)
@@ -232,7 +228,7 @@ fun ClassicsEvidenceCard(
                                             style = MaterialTheme.typography.labelSmall,
                                             fontSize = 11.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = FortuneGoldLight
+                                            color = accentGold
                                         )
                                     }
                                 }

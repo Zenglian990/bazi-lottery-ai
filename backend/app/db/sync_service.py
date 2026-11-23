@@ -246,8 +246,9 @@ async def fetch_dlt_live(client: httpx.AsyncClient, count: int = 100) -> List[Di
                 issue = "20" + raw_issue if len(raw_issue) == 5 else raw_issue
                 front = [f"{int(x):02d}" for x in tds[1:6]]
                 back = [f"{int(x):02d}" for x in tds[6:8]]
-                sales = _parse_money(tds[8]) if len(tds) > 8 else 0
-                pool = _parse_money(tds[9]) if len(tds) > 9 else 0
+                # 500.com 大乐透表格列序：tds[8]=奖池奖金(元)，tds[9]=一等奖注数，tds[13]=总投注额(元)
+                pool = _parse_money(tds[8]) if len(tds) > 8 else 0
+                sales = _parse_money(tds[13]) if len(tds) > 13 else 0
                 draw_date = tds[14] if len(tds) > 14 else ""
                 rec = _sanitize_draw_record(
                     lottery_type="dlt",
@@ -286,8 +287,9 @@ async def fetch_qxc_live(client: httpx.AsyncClient, count: int = 100) -> List[Di
                 continue
             front = [str(int(x)) for x in nums[:6]]
             back = [f"{int(nums[6]):02d}"]
-            sales = _parse_money(tds[2]) if len(tds) > 2 else 0
-            pool = _parse_money(tds[3]) if len(tds) > 3 else 0
+            # 500.com 七星彩表格列序：tds[2]=号码全加和，tds[3]=总销售额(元)，无奖池列
+            sales = _parse_money(tds[3]) if len(tds) > 3 else 0
+            pool = 0
             draw_date = tds[4] if len(tds) > 4 else ""
             rec = _sanitize_draw_record(
                 lottery_type="qxc",

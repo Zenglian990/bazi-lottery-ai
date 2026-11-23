@@ -43,8 +43,8 @@ import com.zeng.lottery.ui.theme.ElementFire
 import com.zeng.lottery.ui.theme.ElementMetal
 import com.zeng.lottery.ui.theme.ElementWater
 import com.zeng.lottery.ui.theme.ElementWood
-import com.zeng.lottery.ui.theme.FortuneGold
 import com.zeng.lottery.ui.theme.ImperialRed
+import com.zeng.lottery.ui.theme.LocalAccentGold
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -57,9 +57,10 @@ fun WuxingRadarChart(
     strengthLevel: String? = null,
     modifier: Modifier = Modifier
 ) {
+    val accentGold = LocalAccentGold.current
     val labels = listOf("金", "木", "水", "火", "土")
     val rawValues = listOf(scores.metal, scores.wood, scores.water, scores.fire, scores.earth)
-    val colors = listOf(ElementMetal, ElementWood, ElementWater, ElementFire, ElementEarth)
+    val colors = listOf(accentGold, ElementWood, ElementWater, ElementFire, ElementEarth)
     val normalizedXiYong = xiYongShen.map { BaziEngine.ELEMENT_ZH[it.lowercase()] ?: it }
 
     val maxRaw = rawValues.maxOrNull()?.coerceAtLeast(30f) ?: 100f
@@ -105,7 +106,7 @@ fun WuxingRadarChart(
                         text = "日主【$dayMaster】· $strength$levelSuffix",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
-                        color = FortuneGold
+                        color = accentGold
                     )
                 }
             }
@@ -187,14 +188,14 @@ fun WuxingRadarChart(
                 drawPath(
                     path = dataPath,
                     brush = Brush.radialGradient(
-                        colors = listOf(FortuneGold.copy(alpha = 0.65f), ImperialRed.copy(alpha = 0.25f)),
+                        colors = listOf(accentGold.copy(alpha = 0.65f), ImperialRed.copy(alpha = 0.25f)),
                         center = Offset(cx, cy),
                         radius = radius
                     )
                 )
                 drawPath(
                     path = dataPath,
-                    color = FortuneGold,
+                    color = accentGold,
                     style = Stroke(width = 2.5.dp.toPx())
                 )
 
@@ -218,7 +219,7 @@ fun WuxingRadarChart(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
                             .background(
-                                color = if (isXiYong) FortuneGold.copy(alpha = 0.16f) else Color.Transparent,
+                                color = if (isXiYong) accentGold.copy(alpha = 0.16f) else Color.Transparent,
                                 shape = RoundedCornerShape(8.dp)
                             )
                             .padding(horizontal = 6.dp, vertical = 4.dp)

@@ -168,4 +168,61 @@ class PrizeCheckerAndAuditFixesTest {
         prefs.deleteBirthProfile(p1.id)
         assertTrue(prefs.getBirthProfiles().isEmpty())
     }
+
+    @Test
+    fun v141BackendDtoContractsAndAiFiltersWorkAccurately() {
+        val gson = com.google.gson.Gson()
+        // 1. 验证后端扁平 name_numerology 与 gan_zhi 大运字段反序列化
+        val backendDestinyJson = """
+            {
+              "day_master": "辛",
+              "strength": "身弱",
+              "dayun_details": [
+                {"gan_zhi": "乙酉", "start_age": 9, "end_age": 18, "start_year": 1998, "end_year": 2007}
+              ],
+              "name_numerology": {
+                "surname": "曾",
+                "given_name": "练",
+                "character_strokes": {"曾": 12, "练": 8},
+                "tian_ge": {"value": 13, "element": "火", "fortune": "大吉", "description": "天赋吉运"},
+                "ren_ge": {"value": 20, "element": "水", "fortune": "凶", "description": "多逢考验"},
+                "di_ge": {"value": 9, "element": "水", "fortune": "凶", "description": "沉潜蓄势"},
+                "wai_ge": {"value": 2, "element": "木", "fortune": "凶", "description": "两仪之数"},
+                "zong_ge": {"value": 20, "element": "水", "fortune": "凶", "description": "多逢考验"},
+                "name_lucky_numbers": [1, 6, 10],
+                "summary": "五格摘要"
+              }
+            }
+        """.trimIndent()
+        val parsed = gson.fromJson(backendDestinyJson, com.zeng.lottery.data.model.BaziDestiny::class.java)
+        assertEquals("乙酉", parsed.dayunDetails?.firstOrNull()?.ganzhi)
+        assertEquals(18, parsed.dayunDetails?.firstOrNull()?.endAge)
+        val grids = parsed.nameNumerology?.resolvedFiveGrids.orEmpty()
+        assertEquals(5, grids.size)
+        assertEquals(13, grids["tian_ge"]?.value)
+        assertEquals("火", grids["tian_ge"]?.wuxing)
+        assertEquals("天赋吉运", grids["tian_ge"]?.meaning)
+
+        // 2. 验证 Gemini 2.5 thought=true 思考块过滤
+        val geminiClient = com.zeng.lottery.ai.GeminiClient(okhttp3.OkHttpClient())
+        val thoughtChunk = """
+            {"candidates":[{"content":{"parts":[{"text":"Thinking in English...","thought":true},{"text":"【命盘乾坤】正式卦辞"}]}}]}
+        """.trimIndent()
+        val delta = geminiClient.parseGeminiDelta(thoughtChunk)
+        assertEquals("【命盘乾坤】正式卦辞", delta)
+
+        // 3. 验证后端 SSE 降级元事件解析
+        val backendClient = com.zeng.lottery.ai.BackendAiClient(okhttp3.OkHttpClient()) { "secret" }
+        val metaEvt = backendClient.parseBackendEvent(
+            """{"delta":"","done":false,"provider":"fallback","fallback_reason":"云端 Gemini 配额受限 (HTTP 429)"}"""
+        )
+        assertEquals("fallback", metaEvt.provider)
+        assertTrue(metaEvt.fallbackReason.contains("429"))
+
+        // 4. 验证早/晚子时文案区分与立春地支生肖映射
+        assertEquals("00-01", BaziEngine.getShichenShortRange(0))
+        assertEquals("23-24", BaziEngine.getShichenShortRange(23))
+        assertEquals("龙", BaziEngine.getZodiacFromBranch("辰"))
+        assertEquals("蛇", BaziEngine.getZodiacFromBranch("巳"))
+    }
 }

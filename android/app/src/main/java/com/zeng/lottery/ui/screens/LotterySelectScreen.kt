@@ -25,8 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zeng.lottery.data.model.LotteryType
-import com.zeng.lottery.ui.theme.FortuneGold
-import com.zeng.lottery.ui.theme.ImperialRed
+import com.zeng.lottery.ui.theme.LocalAccentGold
 
 @Composable
 fun LotterySelectScreen(
@@ -34,6 +33,7 @@ fun LotterySelectScreen(
     onTypeSelected: (LotteryType) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val accentGold = LocalAccentGold.current
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -56,7 +56,7 @@ fun LotterySelectScreen(
                 selectedTabIndex = selectedType.ordinal,
                 edgePadding = 0.dp,
                 containerColor = Color.Transparent,
-                contentColor = FortuneGold,
+                contentColor = accentGold,
                 divider = {}
             ) {
                 LotteryType.entries.forEach { type ->
@@ -68,7 +68,7 @@ fun LotterySelectScreen(
                             Text(
                                 text = type.title,
                                 fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Normal,
-                                color = if (isSelected) FortuneGold else MaterialTheme.colorScheme.onSurfaceVariant
+                                color = if (isSelected) accentGold else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     )
@@ -125,7 +125,7 @@ fun LotterySelectScreen(
                     Text(
                         text = schedule,
                         style = MaterialTheme.typography.labelSmall,
-                        color = FortuneGold
+                        color = accentGold
                     )
                 }
 

@@ -43,7 +43,7 @@ import com.zeng.lottery.ui.theme.ElementFire
 import com.zeng.lottery.ui.theme.ElementMetal
 import com.zeng.lottery.ui.theme.ElementWater
 import com.zeng.lottery.ui.theme.ElementWood
-import com.zeng.lottery.ui.theme.FortuneGold
+import com.zeng.lottery.ui.theme.LocalAccentGold
 import java.time.LocalDate
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -53,6 +53,7 @@ fun DestinyChartScreen(
     userName: String = "缘主",
     modifier: Modifier = Modifier
 ) {
+    val accentGold = LocalAccentGold.current
     if (destiny == null) {
         Card(
             modifier = modifier.fillMaxWidth(),
@@ -71,7 +72,7 @@ fun DestinyChartScreen(
                     text = "正在推演【$userName】生辰八字命盘...",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = FortuneGold
+                    color = accentGold
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
@@ -108,7 +109,7 @@ fun DestinyChartScreen(
                         text = "【${userName.ifBlank { "缘主" }}】专属命盘格局",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.ExtraBold,
-                        color = FortuneGold
+                        color = accentGold
                     )
                     Text(
                         text = if (destiny.gender.equals("female", ignoreCase = true)) "坤造原局" else "乾造原局",
@@ -193,7 +194,7 @@ fun DestinyChartScreen(
                             text = "${(strengthRatio * 100).toInt()}%",
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Bold,
-                            color = if (isStrong) FortuneGold else MaterialTheme.colorScheme.secondary
+                            color = if (isStrong) accentGold else MaterialTheme.colorScheme.secondary
                         )
                     }
                     Spacer(modifier = Modifier.height(4.dp))
@@ -202,7 +203,7 @@ fun DestinyChartScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(8.dp),
-                        color = if (isStrong) FortuneGold else MaterialTheme.colorScheme.secondary,
+                        color = if (isStrong) accentGold else MaterialTheme.colorScheme.secondary,
                         trackColor = Color.Gray.copy(alpha = 0.25f)
                     )
                 }
@@ -220,7 +221,7 @@ fun DestinyChartScreen(
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     destiny.displayXiYongShen.forEachIndexed { idx, elem ->
-                        val color = getElementColor(elem)
+                        val color = getElementColor(elem, accentGold)
                         SuggestionChip(
                             onClick = {},
                             label = {
@@ -247,7 +248,7 @@ fun DestinyChartScreen(
                     Spacer(modifier = Modifier.height(6.dp))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         destiny.displayLackingElements.forEach { elem ->
-                            val color = getElementColor(elem)
+                            val color = getElementColor(elem, accentGold)
                             SuggestionChip(
                                 onClick = {},
                                 label = {
@@ -315,7 +316,7 @@ fun DestinyChartScreen(
                             text = "$dirText$startAgeText",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = FortuneGold
+                            color = accentGold
                         )
                     }
 
@@ -339,12 +340,12 @@ fun DestinyChartScreen(
                                 modifier = Modifier
                                     .width(74.dp)
                                     .background(
-                                        color = if (isCurrent) FortuneGold.copy(alpha = 0.18f) else MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                                        color = if (isCurrent) accentGold.copy(alpha = 0.16f) else MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
                                         shape = RoundedCornerShape(10.dp)
                                     )
                                     .border(
                                         width = if (isCurrent) 1.5.dp else 0.5.dp,
-                                        color = if (isCurrent) FortuneGold else MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
+                                        color = if (isCurrent) accentGold else MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
                                         shape = RoundedCornerShape(10.dp)
                                     )
                                     .padding(vertical = 8.dp, horizontal = 6.dp)
@@ -354,20 +355,20 @@ fun DestinyChartScreen(
                                     style = MaterialTheme.typography.labelSmall,
                                     fontSize = 10.sp,
                                     fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (isCurrent) FortuneGold else MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = if (isCurrent) accentGold else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
-                                    text = dy.ganzhi,
+                                    text = dy.ganzhi.ifBlank { "--" },
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.ExtraBold,
-                                    color = if (isCurrent) FortuneGold else MaterialTheme.colorScheme.onSurface
+                                    color = if (isCurrent) accentGold else MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
                                     text = "$stemZh$branchZh",
                                     style = MaterialTheme.typography.labelSmall,
                                     fontSize = 10.sp,
-                                    color = getElementColor(stemZh)
+                                    color = getElementColor(stemZh, accentGold)
                                 )
                                 if (dy.startYear > 0 && dy.endYear > 0) {
                                     Spacer(modifier = Modifier.height(2.dp))
@@ -395,6 +396,9 @@ fun DestinyChartScreen(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun NameNumerologyCard(nm: NameNumerology) {
+    val accentGold = LocalAccentGold.current
+    val resolvedGrids = nm.resolvedFiveGrids
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -418,11 +422,22 @@ private fun NameNumerologyCard(nm: NameNumerology) {
                     text = nm.strokeStandard.ifBlank { "简体笔画" },
                     style = MaterialTheme.typography.labelSmall,
                     fontSize = 10.sp,
-                    color = FortuneGold
+                    color = accentGold
                 )
             }
 
-            if (nm.fiveGrids.isNotEmpty()) {
+            if (nm.characterStrokes.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                val strokesLine = nm.characterStrokes.entries.joinToString(" · ") { "${it.key}(${it.value}画)" }
+                Text(
+                    text = "字画拆解：$strokesLine",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            if (resolvedGrids.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(10.dp))
                 val gridOrder = listOf(
                     "tian_ge" to "天格",
@@ -439,10 +454,10 @@ private fun NameNumerologyCard(nm: NameNumerology) {
                     horizontalArrangement = Arrangement.SpaceAround
                 ) {
                     gridOrder.forEach { (key, title) ->
-                        val item = nm.fiveGrids[key]
+                        val item = resolvedGrids[key]
                         if (item != null) {
                             val fortuneColor = when (item.fortune) {
-                                "大吉" -> FortuneGold
+                                "大吉" -> accentGold
                                 "吉" -> ElementWood
                                 "凶" -> MaterialTheme.colorScheme.secondary
                                 else -> MaterialTheme.colorScheme.onSurfaceVariant
@@ -461,7 +476,7 @@ private fun NameNumerologyCard(nm: NameNumerology) {
                                     Text(
                                         text = BaziEngine.ELEMENT_ZH[item.wuxing.lowercase()] ?: item.wuxing,
                                         fontSize = 10.sp,
-                                        color = getElementColor(item.wuxing)
+                                        color = getElementColor(item.wuxing, accentGold)
                                     )
                                 }
                             }
@@ -479,20 +494,20 @@ private fun NameNumerologyCard(nm: NameNumerology) {
                     Text(
                         text = "姓名吉数尾码:",
                         style = MaterialTheme.typography.labelSmall,
-                        color = FortuneGold,
+                        color = accentGold,
                         modifier = Modifier.align(Alignment.CenterVertically)
                     )
                     nm.nameLuckyNumbers.forEach { n ->
                         Box(
                             modifier = Modifier
-                                .background(FortuneGold.copy(alpha = 0.18f), RoundedCornerShape(6.dp))
+                                .background(accentGold.copy(alpha = 0.16f), RoundedCornerShape(6.dp))
                                 .padding(horizontal = 8.dp, vertical = 2.dp)
                         ) {
                             Text(
                                 text = String.format("%02d", n),
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = FortuneGold
+                                color = accentGold
                             )
                         }
                     }
@@ -512,15 +527,15 @@ private fun NameNumerologyCard(nm: NameNumerology) {
     }
 }
 
-private fun getElementColor(elem: String): Color {
+private fun getElementColor(elem: String, fallback: Color): Color {
     val zh = BaziEngine.ELEMENT_ZH[elem.lowercase()] ?: elem
     return when (zh) {
-        "金" -> ElementMetal
+        "金" -> fallback
         "木" -> ElementWood
         "水" -> ElementWater
         "火" -> ElementFire
         "土" -> ElementEarth
-        else -> FortuneGold
+        else -> fallback
     }
 }
 
@@ -531,6 +546,7 @@ private fun ChartPillarBadge(
     element: String,
     isDayMaster: Boolean = false
 ) {
+    val accentGold = LocalAccentGold.current
     val cleanElem = element
         .replace("metal", "金")
         .replace("wood", "木")
@@ -538,19 +554,19 @@ private fun ChartPillarBadge(
         .replace("fire", "火")
         .replace("earth", "土")
     val elemZh = BaziEngine.ELEMENT_ZH[cleanElem.lowercase()] ?: cleanElem
-    val elemColor = getElementColor(elemZh.take(1))
+    val elemColor = getElementColor(elemZh.take(1), accentGold)
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
-            color = if (isDayMaster) FortuneGold else MaterialTheme.colorScheme.onSurfaceVariant
+            color = if (isDayMaster) accentGold else MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.height(2.dp))
         Text(
             text = value,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.ExtraBold,
-            color = if (isDayMaster) FortuneGold else MaterialTheme.colorScheme.onSurface
+            color = if (isDayMaster) accentGold else MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.height(2.dp))
         Text(

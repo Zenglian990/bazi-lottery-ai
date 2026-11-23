@@ -35,8 +35,8 @@ import com.zeng.lottery.data.local.BaziEngine
 import com.zeng.lottery.data.model.BaziDestiny
 import com.zeng.lottery.data.model.TodayFortuneResponse
 import com.zeng.lottery.ui.theme.ElementWood
-import com.zeng.lottery.ui.theme.FortuneGold
 import com.zeng.lottery.ui.theme.ImperialRedBright
+import com.zeng.lottery.ui.theme.LocalAccentGold
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -49,6 +49,7 @@ fun TodayLiuRiCard(
     todayFortune: TodayFortuneResponse? = null,
     modifier: Modifier = Modifier
 ) {
+    val accentGold = LocalAccentGold.current
     // 按今日日期做 key，跨零点自动更新
     val todayKey = LocalDate.now().toString()
     val effectiveFortune = remember(todayFortune, destiny, todayKey) {
@@ -65,7 +66,7 @@ fun TodayLiuRiCard(
 
     val resonance = effectiveFortune.resonance
     val levelBadgeColor = when (resonance?.resonanceLevel) {
-        "大吉" -> FortuneGold
+        "大吉" -> accentGold
         "吉" -> ElementWood
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
@@ -90,7 +91,7 @@ fun TodayLiuRiCard(
                     Icon(
                         imageVector = Icons.Default.Today,
                         contentDescription = "今日气运",
-                        tint = FortuneGold,
+                        tint = accentGold,
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
@@ -120,7 +121,7 @@ fun TodayLiuRiCard(
                         text = timeStr,
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
-                        color = FortuneGold
+                        color = accentGold
                     )
                 }
             }
@@ -134,7 +135,7 @@ fun TodayLiuRiCard(
                 },
                 style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.Medium,
-                color = FortuneGold
+                color = accentGold
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -165,7 +166,7 @@ fun TodayLiuRiCard(
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 if (effectiveFortune.caiShenPosition.isNotBlank()) {
-                    DirectionChip("财神位", effectiveFortune.caiShenPosition, FortuneGold)
+                    DirectionChip("财神位", effectiveFortune.caiShenPosition, accentGold)
                 }
                 if (effectiveFortune.xiShenPosition.isNotBlank()) {
                     DirectionChip("喜神位", effectiveFortune.xiShenPosition, ElementWood)
@@ -253,6 +254,7 @@ private fun LiuRiBadge(
     elem: String,
     isHighlight: Boolean = false
 ) {
+    val accentGold = LocalAccentGold.current
     val displayElem = elem
         .replace("metal", "金")
         .replace("wood", "木")
@@ -264,7 +266,7 @@ private fun LiuRiBadge(
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
-            color = if (isHighlight) FortuneGold else MaterialTheme.colorScheme.onSurfaceVariant
+            color = if (isHighlight) accentGold else MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.height(2.dp))
         Text(
@@ -278,7 +280,7 @@ private fun LiuRiBadge(
                 text = displayElem,
                 style = MaterialTheme.typography.labelSmall,
                 fontSize = 10.sp,
-                color = FortuneGold
+                color = accentGold
             )
         }
     }

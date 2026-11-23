@@ -5,6 +5,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,6 +53,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -70,8 +72,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zeng.lottery.data.local.BaziEngine
 import com.zeng.lottery.data.local.PrizeCheckResult
+import com.zeng.lottery.data.local.PrizeChecker
 import com.zeng.lottery.data.local.SavedTicket
 import com.zeng.lottery.data.model.BaziRecommendationResponse
+import com.zeng.lottery.data.model.DrawItem
 import com.zeng.lottery.data.model.LotteryType
 import com.zeng.lottery.data.model.RecommendationItem
 import com.zeng.lottery.ui.components.BallColorType
@@ -80,6 +84,7 @@ import com.zeng.lottery.ui.components.LotteryBall
 import com.zeng.lottery.ui.theme.ElementWood
 import com.zeng.lottery.ui.theme.FortuneGold
 import com.zeng.lottery.ui.theme.ImperialRed
+import com.zeng.lottery.ui.theme.LocalAccentGold
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.util.Date
@@ -112,16 +117,21 @@ fun RecommendScreen(
     onReroll: () -> Unit,
     onOpenDivination: (Int) -> Unit = {},
     savedTickets: List<SavedTicket> = emptyList(),
+    drawsByType: Map<LotteryType, List<DrawItem>> = emptyMap(),
     onSaveTicket: (RecommendationItem, Int) -> Unit = { _, _ -> },
     onSaveAllTickets: () -> Unit = {},
     onDeleteSavedTicket: (String) -> Unit = {},
     onClearAllSavedTickets: () -> Unit = {},
     onCheckTicketPrize: (SavedTicket) -> PrizeCheckResult? = { null },
+    onCheckTicketAgainstDraw: (SavedTicket, DrawItem) -> PrizeCheckResult = { t, d ->
+        PrizeChecker.checkTicket(t.lotteryType, t.primaryNumbers, t.secondaryNumbers, d)
+    },
     onOpenHistory: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
+    val accentGold = LocalAccentGold.current
     // 补全全部 4 种策略（含极冷号反弹）
     val strategies = listOf("命理吉数优先", "稳健大数据", "冷热追号", "极冷号反弹")
     val recommendations = recommendationResponse?.recommendations ?: emptyList()
@@ -161,7 +171,7 @@ fun RecommendScreen(
                 Text(
                     text = selectedStrategy,
                     style = MaterialTheme.typography.labelSmall,
-                    color = FortuneGold,
+                    color = accentGold,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -228,8 +238,8 @@ fun RecommendScreen(
                             )
                         },
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = FortuneGold.copy(alpha = 0.25f),
-                            selectedLabelColor = FortuneGold
+                            selectedContainerColor = accentGold.copy(alpha = 0.22f),
+                            selectedLabelColor = accentGold
                         )
                     )
                 }
@@ -251,7 +261,7 @@ fun RecommendScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Tune, contentDescription = null, tint = FortuneGold, modifier = Modifier.size(15.dp))
+                        Icon(Icons.Default.Tune, contentDescription = null, tint = accentGold, modifier = Modifier.size(15.dp))
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = buildString {
@@ -261,13 +271,13 @@ fun RecommendScreen(
                             },
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = FortuneGold
+                            color = accentGold
                         )
                     }
                     Icon(
                         imageVector = if (showAdvancedPanel) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                         contentDescription = "展开或收起高级条件",
-                        tint = FortuneGold,
+                        tint = accentGold,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -290,6 +300,22 @@ fun RecommendScreen(
                         }
 
                         if (useCustomWeights) {
+                            val totalW = customWBazi + customWFreq + customWOmission
+                            val normText = if (totalW > 1e-4f) {
+                                val pb = (customWBazi / totalW * 100f).toInt()
+                                val pf = (customWFreq / totalW * 100f).toInt()
+                                val po = (100 - pb - pf).coerceAtLeast(0)
+                                "自动归一化生效比例：八字 $pb% · 频次 $pf% · 遗漏 $po%"
+                            } else {
+                                "三项权重均为 0，将自动恢复策略默认比例"
+                            }
+                            Text(
+                                text = normText,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontSize = 10.sp,
+                                color = accentGold,
+                                fontWeight = FontWeight.SemiBold
+                            )
                             WeightSliderRow("八字喜用权重", customWBazi) { onUpdateCustomWeights(it, customWFreq, customWOmission) }
                             WeightSliderRow("历史频次权重", customWFreq) { onUpdateCustomWeights(customWBazi, it, customWOmission) }
                             WeightSliderRow("遗漏欲出权重", customWOmission) { onUpdateCustomWeights(customWBazi, customWFreq, it) }
@@ -356,6 +382,26 @@ fun RecommendScreen(
                                 }
                             }
                         }
+
+                        // 一键应用高级条件并立即推演，避免用户改完权重或定胆杀号忘记点底部按钮
+                        Button(
+                            onClick = {
+                                onReroll()
+                                showAdvancedPanel = false
+                            },
+                            enabled = !isLoading,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(36.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(vertical = 4.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = FortuneGold,
+                                contentColor = Color(0xFF1A1200)
+                            )
+                        ) {
+                            Text("应用以上条件并立即推演", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             }
@@ -391,7 +437,7 @@ fun RecommendScreen(
                                         text = "第 [$ticketLabel] 注",
                                         style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.Bold,
-                                        color = FortuneGold
+                                        color = accentGold
                                     )
 
                                     Row(
@@ -403,7 +449,7 @@ fun RecommendScreen(
                                             shape = RoundedCornerShape(8.dp),
                                             contentPadding = PaddingValues(horizontal = 7.dp, vertical = 2.dp),
                                             modifier = Modifier.height(28.dp),
-                                            colors = ButtonDefaults.outlinedButtonColors(contentColor = FortuneGold)
+                                            colors = ButtonDefaults.outlinedButtonColors(contentColor = accentGold)
                                         ) {
                                             Icon(Icons.Default.AutoAwesome, contentDescription = "AI解此注", modifier = Modifier.size(12.dp))
                                             Spacer(modifier = Modifier.width(2.dp))
@@ -415,7 +461,7 @@ fun RecommendScreen(
                                             shape = RoundedCornerShape(8.dp),
                                             contentPadding = PaddingValues(horizontal = 7.dp, vertical = 2.dp),
                                             modifier = Modifier.height(28.dp),
-                                            colors = ButtonDefaults.outlinedButtonColors(contentColor = FortuneGold)
+                                            colors = ButtonDefaults.outlinedButtonColors(contentColor = accentGold)
                                         ) {
                                             Icon(Icons.Default.BookmarkAdd, contentDescription = "收藏单注", modifier = Modifier.size(12.dp))
                                             Spacer(modifier = Modifier.width(2.dp))
@@ -432,7 +478,7 @@ fun RecommendScreen(
                                             shape = RoundedCornerShape(8.dp),
                                             contentPadding = PaddingValues(horizontal = 7.dp, vertical = 2.dp),
                                             modifier = Modifier.height(28.dp),
-                                            colors = ButtonDefaults.outlinedButtonColors(contentColor = FortuneGold)
+                                            colors = ButtonDefaults.outlinedButtonColors(contentColor = accentGold)
                                         ) {
                                             Icon(Icons.Default.ContentCopy, contentDescription = "复制单注", modifier = Modifier.size(12.dp))
                                             Spacer(modifier = Modifier.width(2.dp))
@@ -534,7 +580,7 @@ fun RecommendScreen(
                             text = "选号玄机与大数据依据:",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = FortuneGold
+                            color = accentGold
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
@@ -566,9 +612,9 @@ fun RecommendScreen(
                         .fillMaxWidth()
                         .height(44.dp),
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = FortuneGold)
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = accentGold)
                 ) {
-                    Icon(Icons.Default.ContentCopy, contentDescription = "全票复制", modifier = Modifier.size(16.dp), tint = FortuneGold)
+                    Icon(Icons.Default.ContentCopy, contentDescription = "全票复制", modifier = Modifier.size(16.dp), tint = accentGold)
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "全票复制 (全部 ${recommendations.size} 注 · ¥${recommendations.size * 2})",
@@ -589,9 +635,9 @@ fun RecommendScreen(
                             .weight(1f)
                             .height(42.dp),
                         shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = FortuneGold)
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = accentGold)
                     ) {
-                        Icon(Icons.Default.BookmarkAdd, contentDescription = "收藏全票", modifier = Modifier.size(15.dp), tint = FortuneGold)
+                        Icon(Icons.Default.BookmarkAdd, contentDescription = "收藏全票", modifier = Modifier.size(15.dp), tint = accentGold)
                         Spacer(modifier = Modifier.width(4.dp))
                         Text("收藏本组灵感", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                     }
@@ -605,9 +651,9 @@ fun RecommendScreen(
                             .weight(1f)
                             .height(42.dp),
                         shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = FortuneGold)
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = accentGold)
                     ) {
-                        Icon(Icons.Default.History, contentDescription = "收藏与自动对奖", modifier = Modifier.size(15.dp), tint = FortuneGold)
+                        Icon(Icons.Default.History, contentDescription = "收藏与自动对奖", modifier = Modifier.size(15.dp), tint = accentGold)
                         Spacer(modifier = Modifier.width(4.dp))
                         Text("收藏对奖 (${savedTickets.size})", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                     }
@@ -623,9 +669,9 @@ fun RecommendScreen(
                         .fillMaxWidth()
                         .height(42.dp),
                     shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = FortuneGold)
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = accentGold)
                 ) {
-                    Icon(Icons.Default.History, contentDescription = "收藏与自动对奖", modifier = Modifier.size(16.dp), tint = FortuneGold)
+                    Icon(Icons.Default.History, contentDescription = "收藏与自动对奖", modifier = Modifier.size(16.dp), tint = accentGold)
                     Spacer(modifier = Modifier.width(6.dp))
                     Text("收藏夹与一键自动对奖 (${savedTickets.size})", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                 }
@@ -690,7 +736,9 @@ fun RecommendScreen(
     if (showHistoryDialog) {
         HistoryTicketsDialog(
             savedTickets = savedTickets,
+            drawsByType = drawsByType,
             onCheckPrize = onCheckTicketPrize,
+            onCheckTicketAgainstDraw = onCheckTicketAgainstDraw,
             onDismiss = { showHistoryDialog = false },
             onDeleteTicket = onDeleteSavedTicket,
             onClearAll = onClearAllSavedTickets
@@ -700,16 +748,17 @@ fun RecommendScreen(
 
 @Composable
 private fun WeightSliderRow(label: String, value: Float, onValueChange: (Float) -> Unit) {
+    val accentGold = LocalAccentGold.current
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(label, style = MaterialTheme.typography.labelSmall, fontSize = 11.sp)
-            Text("${(value * 100).toInt()}%", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = FortuneGold)
+            Text("${(value * 100).toInt()}%", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = accentGold)
         }
         Slider(
             value = value,
             onValueChange = onValueChange,
             valueRange = 0f..1f,
-            colors = SliderDefaults.colors(thumbColor = FortuneGold, activeTrackColor = FortuneGold)
+            colors = SliderDefaults.colors(thumbColor = accentGold, activeTrackColor = accentGold)
         )
     }
 }
@@ -752,19 +801,44 @@ private fun ConstraintBallChip(
 @Composable
 private fun HistoryTicketsDialog(
     savedTickets: List<SavedTicket>,
+    drawsByType: Map<LotteryType, List<DrawItem>>,
     onCheckPrize: (SavedTicket) -> PrizeCheckResult?,
+    onCheckTicketAgainstDraw: (SavedTicket, DrawItem) -> PrizeCheckResult,
     onDismiss: () -> Unit,
     onDeleteTicket: (String) -> Unit,
     onClearAll: () -> Unit
 ) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
+    val accentGold = LocalAccentGold.current
     val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()) }
     var showClearConfirm by rememberSaveable { mutableStateOf(false) }
     var showPrizeSummary by rememberSaveable { mutableStateOf(true) }
 
-    val prizeResults = remember(savedTickets) {
-        savedTickets.associate { it.id to onCheckPrize(it) }
+    // 支持按彩种切换对奖期号（默认 null 代表对照最新一期），并随 drawsByType 异步拉回实时刷新
+    val selectedIssueByLottery = remember { mutableStateMapOf<LotteryType, String>() }
+    val issueSelectionsSnapshot = selectedIssueByLottery.toMap()
+
+    val involvedTypes = remember(savedTickets) {
+        savedTickets.map { it.lotteryType }.distinct()
+    }
+
+    val prizeResults = remember(savedTickets, drawsByType, issueSelectionsSnapshot) {
+        savedTickets.associate { ticket ->
+            val draws = drawsByType[ticket.lotteryType].orEmpty()
+            val chosenIssue = issueSelectionsSnapshot[ticket.lotteryType]
+            val targetDraw = if (!chosenIssue.isNullOrBlank()) {
+                draws.firstOrNull { it.issue == chosenIssue } ?: draws.firstOrNull()
+            } else {
+                draws.firstOrNull()
+            }
+            val result = if (targetDraw != null) {
+                onCheckTicketAgainstDraw(ticket, targetDraw)
+            } else {
+                onCheckPrize(ticket)
+            }
+            ticket.id to result
+        }
     }
     val wonCount = prizeResults.values.count { it?.isWon == true }
 
@@ -824,7 +898,7 @@ private fun HistoryTicketsDialog(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .background(
-                                    color = if (wonCount > 0) FortuneGold.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+                                    color = if (wonCount > 0) accentGold.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
                                     shape = RoundedCornerShape(10.dp)
                                 )
                                 .padding(horizontal = 10.dp, vertical = 8.dp),
@@ -833,21 +907,62 @@ private fun HistoryTicketsDialog(
                             Icon(
                                 imageVector = Icons.Default.CheckCircle,
                                 contentDescription = null,
-                                tint = if (wonCount > 0) FortuneGold else ElementWood,
+                                tint = if (wonCount > 0) accentGold else ElementWood,
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = if (wonCount > 0) {
-                                    "对照最新一期官方开奖：共核验 ${savedTickets.size} 注，命中中奖 $wonCount 注！"
+                                    "对照选定官方开奖：共核验 ${savedTickets.size} 注，命中中奖 $wonCount 注！"
                                 } else {
-                                    "已自动核验全部 ${savedTickets.size} 注（对照各自彩种最新一期开奖，金环标出命中球）"
+                                    "已自动核验全部 ${savedTickets.size} 注（支持下方切换往期期号复盘，金环标出命中球）"
                                 },
                                 style = MaterialTheme.typography.labelSmall,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
+                        }
+                    }
+
+                    // 按收藏彩种提供最近 10 期开奖期号切换条（解决前几天收藏票无法对往期痛点）
+                    involvedTypes.forEach { lt ->
+                        val recentDraws = drawsByType[lt].orEmpty().take(10)
+                        if (recentDraws.size > 1) {
+                            val activeIssue = selectedIssueByLottery[lt] ?: recentDraws.first().issue
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text(
+                                    text = "${lt.title} 对奖期号（最新第 ${recentDraws.first().issue} 期）：",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontSize = 10.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .horizontalScroll(rememberScrollState()),
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    recentDraws.forEachIndexed { dIdx, dItem ->
+                                        val isCur = dItem.issue == activeIssue
+                                        FilterChip(
+                                            selected = isCur,
+                                            onClick = { selectedIssueByLottery[lt] = dItem.issue },
+                                            label = {
+                                                Text(
+                                                    text = if (dIdx == 0) "最新 ${dItem.issue}" else dItem.issue,
+                                                    fontSize = 10.sp,
+                                                    fontWeight = if (isCur) FontWeight.Bold else FontWeight.Normal
+                                                )
+                                            },
+                                            colors = FilterChipDefaults.filterChipColors(
+                                                selectedContainerColor = accentGold.copy(alpha = 0.22f),
+                                                selectedLabelColor = accentGold
+                                            )
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -864,7 +979,7 @@ private fun HistoryTicketsDialog(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .then(
-                                    if (prize?.isWon == true) Modifier.border(1.2.dp, FortuneGold, RoundedCornerShape(10.dp))
+                                    if (prize?.isWon == true) Modifier.border(1.2.dp, accentGold, RoundedCornerShape(10.dp))
                                     else Modifier
                                 ),
                             shape = RoundedCornerShape(10.dp),
@@ -897,7 +1012,7 @@ private fun HistoryTicketsDialog(
                                                 style = MaterialTheme.typography.labelSmall,
                                                 fontSize = 10.sp,
                                                 fontWeight = if (prize.isWon) FontWeight.ExtraBold else FontWeight.Normal,
-                                                color = if (prize.isWon) FortuneGold else MaterialTheme.colorScheme.onSurfaceVariant
+                                                color = if (prize.isWon) accentGold else MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                         }
                                     }
@@ -905,15 +1020,20 @@ private fun HistoryTicketsDialog(
                                     Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                                         IconButton(
                                             onClick = {
-                                                val pri = priList.joinToString(" ") { it.toString().padStart(2, '0') }
-                                                val sec = if (secList.isNotEmpty()) " + " + secList.joinToString(" ") { it.toString().padStart(2, '0') } else ""
+                                                val padPrimary = ticket.lotteryType.primaryRange.last > 9
+                                                val pri = priList.joinToString(" ") { n ->
+                                                    if (padPrimary) n.toString().padStart(2, '0') else n.toString()
+                                                }
+                                                val sec = if (secList.isNotEmpty()) {
+                                                    " + " + secList.joinToString(" ") { it.toString().padStart(2, '0') }
+                                                } else ""
                                                 val text = "${ticket.lotteryType.title}: $pri$sec"
                                                 clipboardManager.setText(AnnotatedString(text))
                                                 Toast.makeText(context, "已复制: $text", Toast.LENGTH_SHORT).show()
                                             },
                                             modifier = Modifier.size(36.dp)
                                         ) {
-                                            Icon(Icons.Default.ContentCopy, contentDescription = "复制此注", modifier = Modifier.size(16.dp), tint = FortuneGold)
+                                            Icon(Icons.Default.ContentCopy, contentDescription = "复制此注", modifier = Modifier.size(16.dp), tint = accentGold)
                                         }
 
                                         IconButton(
@@ -968,7 +1088,7 @@ private fun HistoryTicketsDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("关闭", fontWeight = FontWeight.Bold, color = FortuneGold)
+                Text("关闭", fontWeight = FontWeight.Bold, color = accentGold)
             }
         }
     )

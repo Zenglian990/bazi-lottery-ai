@@ -65,7 +65,7 @@ import com.zeng.lottery.data.model.TodayFortuneResponse
 import com.zeng.lottery.ui.components.LunarDatePickerDialog
 import com.zeng.lottery.ui.components.ShichenPickerDialog
 import com.zeng.lottery.ui.components.TodayLiuRiCard
-import com.zeng.lottery.ui.theme.FortuneGold
+import com.zeng.lottery.ui.theme.LocalAccentGold
 import java.time.LocalDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -89,7 +89,7 @@ fun BirthInputScreen(
     showTodayLiuRi: Boolean = true,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
+    val accentGold = LocalAccentGold.current
     var showDatePicker by rememberSaveable { mutableStateOf(false) }
     var showShichenPicker by rememberSaveable { mutableStateOf(false) }
     var showLongitudeMenu by remember { mutableStateOf(false) }
@@ -126,7 +126,7 @@ fun BirthInputScreen(
                     Text(
                         text = "农历 / 公历互转",
                         style = MaterialTheme.typography.labelSmall,
-                        color = FortuneGold,
+                        color = accentGold,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
@@ -148,7 +148,7 @@ fun BirthInputScreen(
                         shape = RoundedCornerShape(8.dp),
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
                         modifier = Modifier.height(32.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = FortuneGold)
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = accentGold)
                     ) {
                         Icon(Icons.Default.BookmarkAdd, contentDescription = "存为生辰档案", modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(3.dp))
@@ -194,34 +194,23 @@ fun BirthInputScreen(
                             Icon(
                                 imageVector = Icons.Default.Person,
                                 contentDescription = null,
-                                tint = FortuneGold,
+                                tint = accentGold,
                                 modifier = Modifier.size(18.dp)
                             )
                         }
                     )
 
                     OutlinedButton(
-                        onClick = {
-                            onResetCurrentTime()
-                            try {
-                                val nowLunar = BaziEngine.solarToLunar(LocalDateTime.now())
-                                Toast.makeText(
-                                    context,
-                                    "已对齐当前农历：${nowLunar.year}年${nowLunar.monthZh}${nowLunar.dayZh} ${nowLunar.shichenZh}",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            } catch (_: Throwable) {
-                            }
-                        },
+                        onClick = { onResetCurrentTime() },
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier.height(54.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = FortuneGold)
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = accentGold)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Update,
                             contentDescription = "设为当前农历",
                             modifier = Modifier.size(16.dp),
-                            tint = FortuneGold
+                            tint = accentGold
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
@@ -248,7 +237,7 @@ fun BirthInputScreen(
                         imageVector = Icons.Default.CalendarMonth,
                         contentDescription = "选择农历或公历生辰",
                         modifier = Modifier.size(20.dp),
-                        tint = FortuneGold
+                        tint = accentGold
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     Column(modifier = Modifier.weight(1f)) {
@@ -270,9 +259,9 @@ fun BirthInputScreen(
                                 style = MaterialTheme.typography.labelSmall,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = FortuneGold,
+                                color = accentGold,
                                 modifier = Modifier
-                                    .background(FortuneGold.copy(alpha = 0.15f), RoundedCornerShape(4.dp))
+                                    .background(accentGold.copy(alpha = 0.15f), RoundedCornerShape(4.dp))
                                     .padding(horizontal = 4.dp, vertical = 1.dp)
                             )
                         }
@@ -312,7 +301,7 @@ fun BirthInputScreen(
                             imageVector = Icons.Default.Schedule,
                             contentDescription = "十二时辰",
                             modifier = Modifier.size(16.dp),
-                            tint = FortuneGold
+                            tint = accentGold
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
@@ -366,7 +355,7 @@ fun BirthInputScreen(
                         Icon(
                             imageVector = Icons.Default.LocationOn,
                             contentDescription = "出生地经度",
-                            tint = FortuneGold,
+                            tint = accentGold,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
@@ -383,7 +372,7 @@ fun BirthInputScreen(
                             text = if (offsetMin == 0) "标准时" else "${if (offsetMin > 0) "+" else ""}${offsetMin}分",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = FortuneGold
+                            color = accentGold
                         )
                     }
 
@@ -471,7 +460,7 @@ fun BirthInputScreen(
                         showSaveProfileDialog = false
                     }
                 ) {
-                    Text("保存", color = FortuneGold, fontWeight = FontWeight.Bold)
+                    Text("保存", color = accentGold, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -525,6 +514,7 @@ private fun PillarBadge(
     element: String,
     isDayMaster: Boolean = false
 ) {
+    val accentGold = LocalAccentGold.current
     val displayElem = element
         .replace("metal", "金")
         .replace("wood", "木")
@@ -536,14 +526,14 @@ private fun PillarBadge(
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
-            color = if (isDayMaster) FortuneGold else MaterialTheme.colorScheme.onSurfaceVariant
+            color = if (isDayMaster) accentGold else MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.height(2.dp))
         Text(
             text = value,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.ExtraBold,
-            color = if (isDayMaster) FortuneGold else MaterialTheme.colorScheme.onSurface
+            color = if (isDayMaster) accentGold else MaterialTheme.colorScheme.onSurface
         )
         if (displayElem.isNotBlank()) {
             Spacer(modifier = Modifier.height(2.dp))
@@ -552,7 +542,7 @@ private fun PillarBadge(
                 style = MaterialTheme.typography.labelSmall,
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
-                color = if (isDayMaster) FortuneGold else MaterialTheme.colorScheme.onSurfaceVariant
+                color = if (isDayMaster) accentGold else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

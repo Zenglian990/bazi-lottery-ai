@@ -72,7 +72,7 @@ import com.zeng.lottery.ui.screens.LotterySelectScreen
 import com.zeng.lottery.ui.screens.RecommendScreen
 import com.zeng.lottery.ui.screens.StatsScreen
 import com.zeng.lottery.ui.theme.ElementWood
-import com.zeng.lottery.ui.theme.FortuneGold
+import com.zeng.lottery.ui.theme.LocalAccentGold
 import com.zeng.lottery.ui.viewmodel.LotteryViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -81,6 +81,7 @@ fun LotteryApp(
     viewModel: LotteryViewModel = viewModel()
 ) {
     val context = LocalContext.current
+    val accentGold = LocalAccentGold.current
     val selectedLottery by viewModel.selectedLottery.collectAsState()
     val lunarDate by viewModel.lunarDate.collectAsState()
     val isMale by viewModel.isMale.collectAsState()
@@ -127,6 +128,7 @@ fun LotteryApp(
     val userName by viewModel.userName.collectAsState()
     val betCount by viewModel.betCount.collectAsState()
     val historyDraws by viewModel.historyDraws.collectAsState()
+    val drawsByType by viewModel.drawsByType.collectAsState()
     val savedTickets by viewModel.savedTickets.collectAsState()
 
     // 使用 rememberSaveable 防止旋转/后台重建丢弃导航页签
@@ -155,20 +157,20 @@ fun LotteryApp(
                             text = "曾练彩票助手",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.ExtraBold,
-                            color = FortuneGold
+                            color = accentGold
                         )
                         if (isOffline) {
                             Spacer(modifier = Modifier.width(8.dp))
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
-                                    .background(FortuneGold.copy(alpha = 0.2f), RoundedCornerShape(6.dp))
+                                    .background(accentGold.copy(alpha = 0.2f), RoundedCornerShape(6.dp))
                                     .padding(horizontal = 6.dp, vertical = 2.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.CloudOff,
                                     contentDescription = "端侧离线",
-                                    tint = FortuneGold,
+                                    tint = accentGold,
                                     modifier = Modifier.size(12.dp)
                                 )
                                 Spacer(modifier = Modifier.width(3.dp))
@@ -176,7 +178,7 @@ fun LotteryApp(
                                     text = "离线引擎",
                                     style = MaterialTheme.typography.labelSmall,
                                     fontSize = 10.sp,
-                                    color = FortuneGold
+                                    color = accentGold
                                 )
                             }
                         }
@@ -187,14 +189,14 @@ fun LotteryApp(
                         Icon(
                             imageVector = if (isDarkTheme) Icons.Default.LightMode else Icons.Default.DarkMode,
                             contentDescription = if (isDarkTheme) "切换宣纸浅色主题" else "切换玄墨暗金主题",
-                            tint = FortuneGold
+                            tint = accentGold
                         )
                     }
                     IconButton(onClick = { viewModel.openAiSettings() }) {
                         Icon(
                             imageVector = Icons.Default.AutoAwesome,
                             contentDescription = "AI 模型配置",
-                            tint = FortuneGold
+                            tint = accentGold
                         )
                     }
                     IconButton(onClick = { showSettingsDialog = true }) {
@@ -213,7 +215,7 @@ fun LotteryApp(
         bottomBar = {
             NavigationBar(
                 containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = FortuneGold
+                contentColor = accentGold
             ) {
                 val navItems = listOf(
                     Triple("智能机选", Icons.Default.Casino, 0),
@@ -237,8 +239,8 @@ fun LotteryApp(
                         },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = MaterialTheme.colorScheme.secondary,
-                            selectedTextColor = FortuneGold,
-                            indicatorColor = FortuneGold.copy(alpha = 0.2f),
+                            selectedTextColor = accentGold,
+                            indicatorColor = accentGold.copy(alpha = 0.2f),
                             unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -286,11 +288,13 @@ fun LotteryApp(
                             onReroll = { viewModel.reroll() },
                             onOpenDivination = { betIdx -> viewModel.openDivinationSheet(betIdx) },
                             savedTickets = savedTickets,
+                            drawsByType = drawsByType,
                             onSaveTicket = { item, idx -> viewModel.saveCurrentTicket(item, idx) },
                             onSaveAllTickets = { viewModel.saveAllCurrentTickets() },
                             onDeleteSavedTicket = { viewModel.deleteSavedTicket(it) },
                             onClearAllSavedTickets = { viewModel.clearAllSavedTickets() },
                             onCheckTicketPrize = { ticket -> viewModel.checkTicketAgainstLatestDraw(ticket) },
+                            onCheckTicketAgainstDraw = { ticket, draw -> viewModel.checkTicketAgainstDraw(ticket, draw) },
                             onOpenHistory = { viewModel.prefetchAllDrawsForPrizeCheck() }
                         )
 
@@ -410,7 +414,7 @@ fun LotteryApp(
                         text = "快捷服务节点：",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = FortuneGold
+                        color = accentGold
                     )
 
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -424,8 +428,8 @@ fun LotteryApp(
                             label = { Text("⚡ 谷歌云官方云端", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
                             colors = if (isCloudSelected) {
                                 SuggestionChipDefaults.suggestionChipColors(
-                                    containerColor = FortuneGold.copy(alpha = 0.25f),
-                                    labelColor = FortuneGold
+                                    containerColor = accentGold.copy(alpha = 0.25f),
+                                    labelColor = accentGold
                                 )
                             } else {
                                 SuggestionChipDefaults.suggestionChipColors()
@@ -478,12 +482,12 @@ fun LotteryApp(
                             enabled = !isTestingPing
                         ) {
                             if (isTestingPing) {
-                                CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp, color = FortuneGold)
+                                CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp, color = accentGold)
                             } else {
-                                Icon(Icons.Default.NetworkCheck, contentDescription = null, modifier = Modifier.size(16.dp), tint = FortuneGold)
+                                Icon(Icons.Default.NetworkCheck, contentDescription = null, modifier = Modifier.size(16.dp), tint = accentGold)
                             }
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(if (isTestingPing) "测速中..." else "测试连接", fontSize = 12.sp, color = FortuneGold)
+                            Text(if (isTestingPing) "测速中..." else "测试连接", fontSize = 12.sp, color = accentGold)
                         }
 
                         if (!pingResultText.isNullOrBlank()) {
@@ -513,7 +517,7 @@ fun LotteryApp(
                         }
                     }
                 ) {
-                    Text("保存生效", color = FortuneGold, fontWeight = FontWeight.Bold)
+                    Text("保存生效", color = accentGold, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {

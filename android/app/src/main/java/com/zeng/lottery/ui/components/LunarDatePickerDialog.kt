@@ -57,6 +57,7 @@ import com.zeng.lottery.data.local.BaziEngine
 import com.zeng.lottery.data.model.LunarDate
 import com.zeng.lottery.ui.theme.FortuneGold
 import com.zeng.lottery.ui.theme.ImperialRed
+import com.zeng.lottery.ui.theme.LocalAccentGold
 import java.time.LocalDateTime
 import java.time.YearMonth
 
@@ -71,6 +72,7 @@ fun LunarDatePickerDialog(
     onDismissRequest: () -> Unit,
     onDateSelected: (LunarDate) -> Unit
 ) {
+    val accentGold = LocalAccentGold.current
     val initSolar = BaziEngine.lunarToSolar(currentDate)
 
     // Tab 0 = 农历模式，Tab 1 = 公历模式
@@ -162,13 +164,13 @@ fun LunarDatePickerDialog(
                     shape = RoundedCornerShape(8.dp),
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
                     modifier = Modifier.height(32.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = FortuneGold)
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = accentGold)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Update,
                         contentDescription = "对齐当前时间",
                         modifier = Modifier.size(13.dp),
-                        tint = FortuneGold
+                        tint = accentGold
                     )
                     Spacer(modifier = Modifier.width(3.dp))
                     Text("对齐当前", fontSize = 11.sp, fontWeight = FontWeight.Bold)
@@ -185,7 +187,7 @@ fun LunarDatePickerDialog(
                 TabRow(
                     selectedTabIndex = calendarMode,
                     containerColor = Color.Transparent,
-                    contentColor = FortuneGold
+                    contentColor = accentGold
                 ) {
                     Tab(
                         selected = calendarMode == 0,
@@ -225,8 +227,8 @@ fun LunarDatePickerDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
-                        .background(FortuneGold.copy(alpha = 0.14f))
-                        .border(1.dp, FortuneGold.copy(alpha = 0.45f), RoundedCornerShape(12.dp))
+                        .background(accentGold.copy(alpha = 0.14f))
+                        .border(1.dp, accentGold.copy(alpha = 0.45f), RoundedCornerShape(12.dp))
                         .padding(10.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -303,6 +305,27 @@ fun LunarDatePickerDialog(
                         }
                     }
 
+                    // 快捷年代跳转芯片（一键直达常用出生年代，免去长列表滑动）
+                    Spacer(modifier = Modifier.height(4.dp))
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        listOf(1965 to "60后", 1975 to "70后", 1985 to "80后", 1990 to "90后", 2000 to "00后", 2015 to "10后").forEach { (y, lbl) ->
+                            val inDecade = selectedYear in (y / 10 * 10)..(y / 10 * 10 + 9)
+                            FilterChip(
+                                selected = inDecade,
+                                onClick = { selectedYear = y },
+                                label = { Text(lbl, fontSize = 10.sp) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = accentGold.copy(alpha = 0.22f),
+                                    selectedLabelColor = accentGold
+                                )
+                            )
+                        }
+                    }
+
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Row(
@@ -315,7 +338,7 @@ fun LunarDatePickerDialog(
                             Text(
                                 text = "该年闰${BaziEngine.LUNAR_MONTH_NAMES[leapMonthOfYear - 1]}",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = FortuneGold
+                                color = accentGold
                             )
                         }
                     }
@@ -352,8 +375,8 @@ fun LunarDatePickerDialog(
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = FortuneGold,
                                     selectedLabelColor = Color(0xFF1A1200),
-                                    containerColor = FortuneGold.copy(alpha = 0.2f),
-                                    labelColor = FortuneGold
+                                    containerColor = accentGold.copy(alpha = 0.18f),
+                                    labelColor = accentGold
                                 )
                             )
                         }
@@ -443,6 +466,26 @@ fun LunarDatePickerDialog(
                         }
                         IconButton(onClick = { if (solarYear < 2100) solarYear++ }, enabled = solarYear < 2100) {
                             Icon(Icons.Default.ChevronRight, contentDescription = "下一年")
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        listOf(1965 to "60后", 1975 to "70后", 1985 to "80后", 1990 to "90后", 2000 to "00后", 2015 to "10后").forEach { (y, lbl) ->
+                            val inDecade = solarYear in (y / 10 * 10)..(y / 10 * 10 + 9)
+                            FilterChip(
+                                selected = inDecade,
+                                onClick = { solarYear = y },
+                                label = { Text(lbl, fontSize = 10.sp) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = accentGold.copy(alpha = 0.22f),
+                                    selectedLabelColor = accentGold
+                                )
+                            )
                         }
                     }
 

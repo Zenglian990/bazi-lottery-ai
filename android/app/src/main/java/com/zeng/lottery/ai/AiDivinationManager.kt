@@ -136,6 +136,11 @@ class AiDivinationManager(
                     if (reasoningText.isNotEmpty()) {
                         onReasoningDelta?.invoke(reasoningText)
                     }
+                } else if (chunk.startsWith(BackendAiClient.FALLBACK_META_TAG)) {
+                    val reason = chunk.removePrefix(BackendAiClient.FALLBACK_META_TAG)
+                    if (reason.isNotBlank()) {
+                        onFallback?.invoke(reason)
+                    }
                 } else if (chunk.isNotEmpty()) {
                     receivedContentChars += chunk.length
                     emit(chunk)

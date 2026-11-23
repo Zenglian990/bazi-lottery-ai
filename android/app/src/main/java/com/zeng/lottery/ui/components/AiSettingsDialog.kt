@@ -55,6 +55,7 @@ import com.zeng.lottery.ai.AiConfig
 import com.zeng.lottery.ai.AiProvider
 import com.zeng.lottery.ai.OpenAiClient
 import com.zeng.lottery.ui.theme.FortuneGold
+import com.zeng.lottery.ui.theme.LocalAccentGold
 
 /**
  * AI 大模型通道配置对话框（支持后端安全中继、DeepSeek V3/R1、Gemini 2.5 与 OpenAI 兼容端点）。
@@ -68,6 +69,7 @@ fun AiSettingsDialog(
     onSaveConfig: (AiConfig) -> Unit
 ) {
     val clipboardManager = LocalClipboardManager.current
+    val accentGold = LocalAccentGold.current
     var selectedProviderName by rememberSaveable { mutableStateOf(currentConfig.provider.name) }
     val selectedProvider = AiProvider.fromName(selectedProviderName)
 
@@ -101,7 +103,7 @@ fun AiSettingsDialog(
                 Icon(
                     imageVector = Icons.Default.Key,
                     contentDescription = null,
-                    tint = FortuneGold,
+                    tint = accentGold,
                     modifier = Modifier.padding(end = 8.dp)
                 )
                 Text(
@@ -123,7 +125,7 @@ fun AiSettingsDialog(
                     text = "选择大模型推理通道：",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
-                    color = FortuneGold
+                    color = accentGold
                 )
 
                 AiProvider.entries.forEach { provider ->
@@ -143,7 +145,7 @@ fun AiSettingsDialog(
                                 selectedProviderName = provider.name
                                 validationError = null
                             },
-                            colors = RadioButtonDefaults.colors(selectedColor = FortuneGold)
+                            colors = RadioButtonDefaults.colors(selectedColor = accentGold)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
@@ -163,7 +165,7 @@ fun AiSettingsDialog(
                                 text = desc,
                                 style = MaterialTheme.typography.bodySmall,
                                 fontSize = 11.sp,
-                                color = if (provider == AiProvider.DIRECT_DEEPSEEK) FortuneGold.copy(alpha = 0.9f) else MaterialTheme.colorScheme.onSurfaceVariant
+                                color = if (provider == AiProvider.DIRECT_DEEPSEEK) accentGold else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -226,8 +228,8 @@ fun AiSettingsDialog(
                                     label = { Text(label, fontSize = 11.sp) },
                                     colors = if (deepseekModel == code) {
                                         SuggestionChipDefaults.suggestionChipColors(
-                                            containerColor = FortuneGold.copy(alpha = 0.2f),
-                                            labelColor = FortuneGold
+                                            containerColor = accentGold.copy(alpha = 0.18f),
+                                            labelColor = accentGold
                                         )
                                     } else {
                                         SuggestionChipDefaults.suggestionChipColors()
@@ -290,8 +292,8 @@ fun AiSettingsDialog(
                                     label = { Text(label, fontSize = 11.sp) },
                                     colors = if (geminiModel == code) {
                                         SuggestionChipDefaults.suggestionChipColors(
-                                            containerColor = FortuneGold.copy(alpha = 0.2f),
-                                            labelColor = FortuneGold
+                                            containerColor = accentGold.copy(alpha = 0.18f),
+                                            labelColor = accentGold
                                         )
                                     } else {
                                         SuggestionChipDefaults.suggestionChipColors()
@@ -456,6 +458,7 @@ private fun ApiKeyField(
     onToggleVisible: () -> Unit,
     onPaste: () -> Unit
 ) {
+    val accentGold = LocalAccentGold.current
     OutlinedTextField(
         value = value,
         onValueChange = { input ->
@@ -477,7 +480,7 @@ private fun ApiKeyField(
                     Icon(
                         imageVector = Icons.Default.ContentPaste,
                         contentDescription = "粘贴剪贴板",
-                        tint = FortuneGold
+                        tint = accentGold
                     )
                 }
                 IconButton(onClick = onToggleVisible) {

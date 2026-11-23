@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zeng.lottery.data.local.BaziEngine
 import com.zeng.lottery.data.model.LotteryStats
-import com.zeng.lottery.ui.theme.FortuneGold
+import com.zeng.lottery.ui.theme.LocalAccentGold
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -40,6 +40,7 @@ fun TrendStatsCard(
     stats: LotteryStats,
     modifier: Modifier = Modifier
 ) {
+    val accentGold = LocalAccentGold.current
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     var selectedZoneIndex by rememberSaveable { mutableIntStateOf(0) } // 0: 红球/主区, 1: 蓝球/后区
     val tabs = listOf("🔥 热门号码", "❄️ 极冷潜伏", "⏳ 极限欲出")
@@ -88,7 +89,7 @@ fun TrendStatsCard(
                             text = "最新第 ${stats.lastIssue} 期$datePart · 样本 ${stats.totalDraws} 期",
                             style = MaterialTheme.typography.labelSmall,
                             fontSize = 11.sp,
-                            color = FortuneGold
+                            color = accentGold
                         )
                     }
                 }
@@ -100,8 +101,8 @@ fun TrendStatsCard(
                             onClick = { selectedZoneIndex = 0 },
                             label = { Text("主区", fontSize = 11.sp) },
                             colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = FortuneGold.copy(alpha = 0.25f),
-                                selectedLabelColor = FortuneGold
+                                selectedContainerColor = accentGold.copy(alpha = 0.25f),
+                                selectedLabelColor = accentGold
                             )
                         )
                         FilterChip(
@@ -109,8 +110,8 @@ fun TrendStatsCard(
                             onClick = { selectedZoneIndex = 1 },
                             label = { Text("蓝/后区", fontSize = 11.sp) },
                             colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = FortuneGold.copy(alpha = 0.25f),
-                                selectedLabelColor = FortuneGold
+                                selectedContainerColor = accentGold.copy(alpha = 0.25f),
+                                selectedLabelColor = accentGold
                             )
                         )
                     }
@@ -122,7 +123,7 @@ fun TrendStatsCard(
             TabRow(
                 selectedTabIndex = selectedTab,
                 containerColor = Color.Transparent,
-                contentColor = FortuneGold,
+                contentColor = accentGold,
                 divider = {}
             ) {
                 tabs.forEachIndexed { index, title ->
@@ -134,7 +135,7 @@ fun TrendStatsCard(
                                 text = title,
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal,
-                                color = if (selectedTab == index) FortuneGold else MaterialTheme.colorScheme.onSurfaceVariant
+                                color = if (selectedTab == index) accentGold else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     )
@@ -207,7 +208,7 @@ fun TrendStatsCard(
                                 style = MaterialTheme.typography.labelSmall,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = if (selectedTab == 0) MaterialTheme.colorScheme.secondary else FortuneGold
+                                color = if (selectedTab == 0) MaterialTheme.colorScheme.secondary else accentGold
                             )
                             if (subMetric.isNotBlank()) {
                                 Text(

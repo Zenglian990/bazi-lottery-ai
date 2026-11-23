@@ -30,6 +30,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -79,8 +81,16 @@ class LotteryViewModel @JvmOverloads constructor(
     private var statsJob: Job? = null
     private var nameDebounceJob: Job? = null
 
-    // 跨彩种最近开奖缓存，支持收藏列表多彩种一键自动对奖
+    // 跨彩种最近开奖响应式缓存，支持收藏列表多彩种一键自动对奖与往期期号切换
     private val latestDrawsByType = ConcurrentHashMap<LotteryType, List<DrawItem>>()
+    private val _drawsByType = MutableStateFlow<Map<LotteryType, List<DrawItem>>>(emptyMap())
+    val drawsByType: StateFlow<Map<LotteryType, List<DrawItem>>> = _drawsByType.asStateFlow()
+
+    private fun updateDrawsCache(type: LotteryType, draws: List<DrawItem>) {
+        if (draws.isEmpty()) return
+        latestDrawsByType[type] = draws
+        _drawsByType.value = HashMap(latestDrawsByType)
+    }
 
     private val _userName = MutableStateFlow(preferencesManager.getUserName())
     val userName: StateFlow<String> = _userName.asStateFlow()
@@ -279,7 +289,14 @@ class LotteryViewModel @JvmOverloads constructor(
         _stats.value = repository.getOfflineStats(initLottery)
         val initDraws = repository.getOfflineHistoryDraws(initLottery, 50)
         _historyDraws.value = initDraws
-        latestDrawsByType[initLottery] = initDraws
+        updateDrawsCache(initLottery, initDraws)
+        // 同步预载其余彩种本地缓存，确保打开收藏夹即刻可对奖
+        LotteryType.entries.forEach { t ->
+            if (t != initLottery) {
+                val cached = repository.getOfflineHistoryDraws(t, 15)
+                if (cached.isNotEmpty()) updateDrawsCache(t, cached)
+            }
+        }
         _recommendation.value = repository.getOfflineRecommendations(
             destiny = initialDestiny,
             lotteryType = initLottery,
@@ -416,14 +433,25 @@ class LotteryViewModel @JvmOverloads constructor(
     }
 
     fun togglePrimaryNumberConstraint(ball: String) {
-        // 三态循环：默认 -> 定胆(绿/金锁) -> 杀号(灰/红叉) -> 默认
+        // 三态循环：默认 -> 定胆(金锁) -> 杀号(灰叉) -> 默认；校验定胆/杀号上限防后端 422
         val curLocked = _lockedPrimary.value
         val curExcluded = _excludedPrimary.value
-        val maxLock = (_selectedLottery.value.primaryCount - 1).coerceAtLeast(1)
+        val lt = _selectedLottery.value
+        val maxLock = (lt.primaryCount - 1).coerceAtLeast(1)
+        val poolSize = lt.primaryRange.last - lt.primaryRange.first + 1
+        val maxExclude = if (lt.primaryAllowDuplicate) {
+            (poolSize - 1).coerceAtLeast(1)
+        } else {
+            minOf(25, (poolSize - lt.primaryCount).coerceAtLeast(1))
+        }
         when {
             ball in curLocked -> {
                 _lockedPrimary.value = curLocked - ball
-                _excludedPrimary.value = curExcluded + ball
+                if (curExcluded.size < maxExclude) {
+                    _excludedPrimary.value = curExcluded + ball
+                } else {
+                    _toastMessage.value = "主区杀号已达上限 ($maxExclude 个)，已取消该球定胆"
+                }
             }
             ball in curExcluded -> {
                 _excludedPrimary.value = curExcluded - ball
@@ -431,8 +459,11 @@ class LotteryViewModel @JvmOverloads constructor(
             else -> {
                 if (curLocked.size < maxLock) {
                     _lockedPrimary.value = curLocked + ball
-                } else {
+                } else if (curExcluded.size < maxExclude) {
                     _excludedPrimary.value = curExcluded + ball
+                    _toastMessage.value = "主区定胆已达上限 ($maxLock 个)，已自动将该球设为杀号"
+                } else {
+                    _toastMessage.value = "主区杀号已达上限 ($maxExclude 个)，请先取消部分杀号"
                 }
             }
         }
@@ -441,11 +472,19 @@ class LotteryViewModel @JvmOverloads constructor(
     fun toggleSecondaryNumberConstraint(ball: String) {
         val curLocked = _lockedSecondary.value
         val curExcluded = _excludedSecondary.value
-        val maxLock = _selectedLottery.value.secondaryCount.coerceAtLeast(1)
+        val lt = _selectedLottery.value
+        val secRange = lt.secondaryRange ?: return
+        val maxLock = lt.secondaryCount.coerceAtLeast(1)
+        val poolSize = secRange.last - secRange.first + 1
+        val maxExclude = minOf(25, (poolSize - lt.secondaryCount).coerceAtLeast(1))
         when {
             ball in curLocked -> {
                 _lockedSecondary.value = curLocked - ball
-                _excludedSecondary.value = curExcluded + ball
+                if (curExcluded.size < maxExclude) {
+                    _excludedSecondary.value = curExcluded + ball
+                } else {
+                    _toastMessage.value = "后区杀号已达上限 ($maxExclude 个)，已取消该球定胆"
+                }
             }
             ball in curExcluded -> {
                 _excludedSecondary.value = curExcluded - ball
@@ -453,8 +492,11 @@ class LotteryViewModel @JvmOverloads constructor(
             else -> {
                 if (curLocked.size < maxLock) {
                     _lockedSecondary.value = curLocked + ball
-                } else {
+                } else if (curExcluded.size < maxExclude) {
                     _excludedSecondary.value = curExcluded + ball
+                    _toastMessage.value = "后区定胆已达上限 ($maxLock 个)，已自动将该球设为杀号"
+                } else {
+                    _toastMessage.value = "后区杀号已达上限 ($maxExclude 个)，请先取消部分杀号"
                 }
             }
         }
@@ -483,7 +525,7 @@ class LotteryViewModel @JvmOverloads constructor(
         _stats.value = repository.getOfflineStats(type)
         val offlineHist = repository.getOfflineHistoryDraws(type, 50)
         _historyDraws.value = offlineHist
-        latestDrawsByType[type] = offlineHist
+        updateDrawsCache(type, offlineHist)
         _recommendation.value = repository.getOfflineRecommendations(
             destiny = currentDestiny,
             lotteryType = type,
@@ -512,37 +554,40 @@ class LotteryViewModel @JvmOverloads constructor(
             _isStatsLoading.value = true
             updateAggregateLoading()
             try {
-                withTimeout(15000L) {
-                    val remoteStats = repository.getStats(type)
-                    if (_selectedLottery.value != type) return@withTimeout
-                    _stats.value = remoteStats
-
-                    val remoteHist = repository.getHistoryDraws(type, 50)
-                    if (_selectedLottery.value != type) return@withTimeout
-                    if (remoteHist.isNotEmpty()) {
-                        _historyDraws.value = remoteHist
-                        latestDrawsByType[type] = remoteHist
+                withTimeout(28000L) {
+                    coroutineScope {
+                        val statsDef = async { repository.getStats(type) }
+                        val histDef = async { repository.getHistoryDraws(type, 50) }
+                        val recDef = async {
+                            repository.getRecommendations(
+                                destiny = currentDestiny,
+                                lotteryType = type,
+                                count = _betCount.value,
+                                strategy = _selectedStrategy.value,
+                                userName = effectiveUserName,
+                                lunarDate = _lunarDate.value,
+                                isMale = _isMale.value,
+                                longitude = _birthLongitude.value.toFloat(),
+                                wBazi = wb,
+                                wFreq = wf,
+                                wOmission = wo,
+                                lockedPrimary = _lockedPrimary.value.toList(),
+                                excludedPrimary = _excludedPrimary.value.toList(),
+                                lockedSecondary = _lockedSecondary.value.toList(),
+                                excludedSecondary = _excludedSecondary.value.toList()
+                            )
+                        }
+                        val remoteStats = statsDef.await()
+                        val remoteHist = histDef.await()
+                        val remoteRec = recDef.await()
+                        if (_selectedLottery.value != type) return@coroutineScope
+                        _stats.value = remoteStats
+                        if (remoteHist.isNotEmpty()) {
+                            _historyDraws.value = remoteHist
+                            updateDrawsCache(type, remoteHist)
+                        }
+                        _recommendation.value = remoteRec
                     }
-
-                    val remoteRec = repository.getRecommendations(
-                        destiny = currentDestiny,
-                        lotteryType = type,
-                        count = _betCount.value,
-                        strategy = _selectedStrategy.value,
-                        userName = effectiveUserName,
-                        lunarDate = _lunarDate.value,
-                        isMale = _isMale.value,
-                        longitude = _birthLongitude.value.toFloat(),
-                        wBazi = wb,
-                        wFreq = wf,
-                        wOmission = wo,
-                        lockedPrimary = _lockedPrimary.value.toList(),
-                        excludedPrimary = _excludedPrimary.value.toList(),
-                        lockedSecondary = _lockedSecondary.value.toList(),
-                        excludedSecondary = _excludedSecondary.value.toList()
-                    )
-                    if (_selectedLottery.value != type) return@withTimeout
-                    _recommendation.value = remoteRec
                 }
             } catch (_: CancellationException) {
                 return@launch
@@ -601,7 +646,7 @@ class LotteryViewModel @JvmOverloads constructor(
             _isRecommending.value = true
             updateAggregateLoading()
             try {
-                withTimeout(15000L) {
+                withTimeout(28000L) {
                     val rec = repository.getRecommendations(
                         destiny = currentDestiny,
                         lotteryType = targetType,
@@ -647,19 +692,23 @@ class LotteryViewModel @JvmOverloads constructor(
             updateAggregateLoading()
             var success = false
             try {
-                withTimeout(15000L) {
-                    val s = repository.getStats(targetType)
-                    if (_selectedLottery.value == targetType) {
-                        _stats.value = s
-                    }
-                    val remoteHist = repository.getHistoryDraws(targetType, 50)
-                    if (remoteHist.isNotEmpty()) {
-                        latestDrawsByType[targetType] = remoteHist
+                withTimeout(28000L) {
+                    coroutineScope {
+                        val sDef = async { repository.getStats(targetType) }
+                        val hDef = async { repository.getHistoryDraws(targetType, 50) }
+                        val s = sDef.await()
+                        val remoteHist = hDef.await()
                         if (_selectedLottery.value == targetType) {
-                            _historyDraws.value = remoteHist
+                            _stats.value = s
                         }
+                        if (remoteHist.isNotEmpty()) {
+                            updateDrawsCache(targetType, remoteHist)
+                            if (_selectedLottery.value == targetType) {
+                                _historyDraws.value = remoteHist
+                            }
+                        }
+                        success = s.totalDraws > 0
                     }
-                    success = s.totalDraws > 0
                 }
             } catch (_: CancellationException) {
                 return@launch
@@ -777,29 +826,35 @@ class LotteryViewModel @JvmOverloads constructor(
             _isDestinyLoading.value = true
             updateAggregateLoading()
             try {
-                withTimeout(15000L) {
+                withTimeout(28000L) {
                     val remoteD = repository.getDestinyFromLunar(curLunar, curMale, curName, longitude = curLon)
                     _destiny.value = remoteD
-                    _todayFortune.value = repository.getTodayFortune(curLunar, remoteD, curMale, curName, curLon)
-                    val remoteRec = repository.getRecommendations(
-                        destiny = remoteD,
-                        lotteryType = targetType,
-                        count = _betCount.value,
-                        strategy = _selectedStrategy.value,
-                        userName = curName,
-                        lunarDate = curLunar,
-                        isMale = curMale,
-                        longitude = curLon.toFloat(),
-                        wBazi = wb,
-                        wFreq = wf,
-                        wOmission = wo,
-                        lockedPrimary = _lockedPrimary.value.toList(),
-                        excludedPrimary = _excludedPrimary.value.toList(),
-                        lockedSecondary = _lockedSecondary.value.toList(),
-                        excludedSecondary = _excludedSecondary.value.toList()
-                    )
-                    if (_selectedLottery.value == targetType) {
-                        _recommendation.value = remoteRec
+                    coroutineScope {
+                        val tfDef = async { repository.getTodayFortune(curLunar, remoteD, curMale, curName, curLon) }
+                        val recDef = async {
+                            repository.getRecommendations(
+                                destiny = remoteD,
+                                lotteryType = targetType,
+                                count = _betCount.value,
+                                strategy = _selectedStrategy.value,
+                                userName = curName,
+                                lunarDate = curLunar,
+                                isMale = curMale,
+                                longitude = curLon.toFloat(),
+                                wBazi = wb,
+                                wFreq = wf,
+                                wOmission = wo,
+                                lockedPrimary = _lockedPrimary.value.toList(),
+                                excludedPrimary = _excludedPrimary.value.toList(),
+                                lockedSecondary = _lockedSecondary.value.toList(),
+                                excludedSecondary = _excludedSecondary.value.toList()
+                            )
+                        }
+                        _todayFortune.value = tfDef.await()
+                        val remoteRec = recDef.await()
+                        if (_selectedLottery.value == targetType) {
+                            _recommendation.value = remoteRec
+                        }
                     }
                 }
             } catch (_: CancellationException) {
@@ -824,33 +879,42 @@ class LotteryViewModel @JvmOverloads constructor(
         refreshJob?.cancel()
         refreshJob = viewModelScope.launch {
             try {
+                // 先通过轻量 /api/health 唤醒可能缩容至 0 的 Cloud Run 单实例，再并发拉取业务接口避免队列拥堵
                 repository.checkHealth()
                 val d = repository.getDestinyFromLunar(curLunar, curMale, curName, longitude = curLon)
                 _destiny.value = d
-                _todayFortune.value = repository.getTodayFortune(curLunar, d, curMale, curName, curLon)
-                val remoteStats = repository.getStats(targetType)
-                if (_selectedLottery.value == targetType) {
-                    _stats.value = remoteStats
-                }
-                val remoteHist = repository.getHistoryDraws(targetType, 50)
-                if (remoteHist.isNotEmpty()) {
-                    latestDrawsByType[targetType] = remoteHist
-                    if (_selectedLottery.value == targetType) {
-                        _historyDraws.value = remoteHist
+                coroutineScope {
+                    val tfDef = async { repository.getTodayFortune(curLunar, d, curMale, curName, curLon) }
+                    val statsDef = async { repository.getStats(targetType) }
+                    val histDef = async { repository.getHistoryDraws(targetType, 50) }
+                    val recDef = async {
+                        repository.getRecommendations(
+                            destiny = d,
+                            lotteryType = targetType,
+                            count = _betCount.value,
+                            strategy = _selectedStrategy.value,
+                            userName = curName,
+                            lunarDate = curLunar,
+                            isMale = curMale,
+                            longitude = curLon.toFloat()
+                        )
                     }
-                }
-                val remoteRec = repository.getRecommendations(
-                    destiny = d,
-                    lotteryType = targetType,
-                    count = _betCount.value,
-                    strategy = _selectedStrategy.value,
-                    userName = curName,
-                    lunarDate = curLunar,
-                    isMale = curMale,
-                    longitude = curLon.toFloat()
-                )
-                if (_selectedLottery.value == targetType) {
-                    _recommendation.value = remoteRec
+                    _todayFortune.value = tfDef.await()
+                    val remoteStats = statsDef.await()
+                    val remoteHist = histDef.await()
+                    val remoteRec = recDef.await()
+                    if (_selectedLottery.value == targetType) {
+                        _stats.value = remoteStats
+                    }
+                    if (remoteHist.isNotEmpty()) {
+                        updateDrawsCache(targetType, remoteHist)
+                        if (_selectedLottery.value == targetType) {
+                            _historyDraws.value = remoteHist
+                        }
+                    }
+                    if (_selectedLottery.value == targetType) {
+                        _recommendation.value = remoteRec
+                    }
                 }
             } catch (_: CancellationException) {
                 return@launch
@@ -893,36 +957,44 @@ class LotteryViewModel @JvmOverloads constructor(
             _isRecommending.value = true
             updateAggregateLoading()
             try {
-                withTimeout(15000L) {
+                withTimeout(30000L) {
                     repository.checkHealth()
                     val d = repository.getDestinyFromLunar(curLunar, curMale, curName, longitude = curLon)
                     _destiny.value = d
-                    _todayFortune.value = repository.getTodayFortune(curLunar, d, curMale, curName, curLon)
-                    val s = repository.getStats(targetType)
-                    if (_selectedLottery.value == targetType) _stats.value = s
-                    val remoteHist = repository.getHistoryDraws(targetType, 50)
-                    if (remoteHist.isNotEmpty()) {
-                        latestDrawsByType[targetType] = remoteHist
-                        if (_selectedLottery.value == targetType) _historyDraws.value = remoteHist
+                    coroutineScope {
+                        val tfDef = async { repository.getTodayFortune(curLunar, d, curMale, curName, curLon) }
+                        val sDef = async { repository.getStats(targetType) }
+                        val histDef = async { repository.getHistoryDraws(targetType, 50) }
+                        val recDef = async {
+                            repository.getRecommendations(
+                                destiny = d,
+                                lotteryType = targetType,
+                                count = _betCount.value,
+                                strategy = _selectedStrategy.value,
+                                userName = curName,
+                                lunarDate = curLunar,
+                                isMale = curMale,
+                                longitude = curLon.toFloat(),
+                                wBazi = wb,
+                                wFreq = wf,
+                                wOmission = wo,
+                                lockedPrimary = _lockedPrimary.value.toList(),
+                                excludedPrimary = _excludedPrimary.value.toList(),
+                                lockedSecondary = _lockedSecondary.value.toList(),
+                                excludedSecondary = _excludedSecondary.value.toList()
+                            )
+                        }
+                        _todayFortune.value = tfDef.await()
+                        val s = sDef.await()
+                        val remoteHist = histDef.await()
+                        val rec = recDef.await()
+                        if (_selectedLottery.value == targetType) _stats.value = s
+                        if (remoteHist.isNotEmpty()) {
+                            updateDrawsCache(targetType, remoteHist)
+                            if (_selectedLottery.value == targetType) _historyDraws.value = remoteHist
+                        }
+                        if (_selectedLottery.value == targetType) _recommendation.value = rec
                     }
-                    val rec = repository.getRecommendations(
-                        destiny = d,
-                        lotteryType = targetType,
-                        count = _betCount.value,
-                        strategy = _selectedStrategy.value,
-                        userName = curName,
-                        lunarDate = curLunar,
-                        isMale = curMale,
-                        longitude = curLon.toFloat(),
-                        wBazi = wb,
-                        wFreq = wf,
-                        wOmission = wo,
-                        lockedPrimary = _lockedPrimary.value.toList(),
-                        excludedPrimary = _excludedPrimary.value.toList(),
-                        lockedSecondary = _lockedSecondary.value.toList(),
-                        excludedSecondary = _excludedSecondary.value.toList()
-                    )
-                    if (_selectedLottery.value == targetType) _recommendation.value = rec
                 }
             } catch (_: CancellationException) {
                 return@launch
@@ -1044,30 +1116,38 @@ class LotteryViewModel @JvmOverloads constructor(
 
     // ============ 历史收藏与一键自动对奖复盘 ============
 
-    fun checkTicketAgainstLatestDraw(ticket: SavedTicket): PrizeCheckResult? {
-        val draws = latestDrawsByType[ticket.lotteryType]
-            ?: repository.getOfflineHistoryDraws(ticket.lotteryType, 10).also {
-                if (it.isNotEmpty()) latestDrawsByType[ticket.lotteryType] = it
-            }
-        val latest = draws.firstOrNull() ?: return null
+    fun checkTicketAgainstDraw(ticket: SavedTicket, draw: DrawItem): PrizeCheckResult {
         return PrizeChecker.checkTicket(
             lotteryType = ticket.lotteryType,
             ticketPrimary = ticket.primaryNumbers,
             ticketSecondary = ticket.secondaryNumbers,
-            draw = latest
+            draw = draw
         )
+    }
+
+    fun checkTicketAgainstLatestDraw(ticket: SavedTicket): PrizeCheckResult? {
+        val draws = latestDrawsByType[ticket.lotteryType]
+            ?: repository.getOfflineHistoryDraws(ticket.lotteryType, 15).also {
+                if (it.isNotEmpty()) updateDrawsCache(ticket.lotteryType, it)
+            }
+        val latest = draws.firstOrNull() ?: return null
+        return checkTicketAgainstDraw(ticket, latest)
     }
 
     fun prefetchAllDrawsForPrizeCheck() {
         if (!isNetworkAvailable()) return
         viewModelScope.launch {
-            LotteryType.entries.forEach { type ->
-                try {
-                    val draws = repository.getHistoryDraws(type, 10)
-                    if (draws.isNotEmpty()) {
-                        latestDrawsByType[type] = draws
+            coroutineScope {
+                LotteryType.entries.forEach { type ->
+                    async {
+                        try {
+                            val draws = repository.getHistoryDraws(type, 15)
+                            if (draws.isNotEmpty()) {
+                                updateDrawsCache(type, draws)
+                            }
+                        } catch (_: Exception) {
+                        }
                     }
-                } catch (_: Exception) {
                 }
             }
         }

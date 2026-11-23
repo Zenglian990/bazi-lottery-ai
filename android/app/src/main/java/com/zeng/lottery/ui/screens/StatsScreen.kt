@@ -63,8 +63,8 @@ import com.zeng.lottery.ui.components.BallColorType
 import com.zeng.lottery.ui.components.LotteryBall
 import com.zeng.lottery.ui.components.TrendStatsCard
 import com.zeng.lottery.ui.theme.ElementWater
-import com.zeng.lottery.ui.theme.FortuneGold
 import com.zeng.lottery.ui.theme.ImperialRed
+import com.zeng.lottery.ui.theme.LocalAccentGold
 
 /**
  * 往期历史开奖与冷热遗漏走势分析页。
@@ -85,6 +85,7 @@ fun StatsScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val accentGold = LocalAccentGold.current
     var selectedSubTab by rememberSaveable { mutableIntStateOf(0) } // 0: 往期开奖明细, 1: 冷热遗漏走势
 
     LazyColumn(
@@ -110,11 +111,11 @@ fun StatsScreen(
                 TabRow(
                     selectedTabIndex = selectedSubTab,
                     containerColor = Color.Transparent,
-                    contentColor = FortuneGold,
+                    contentColor = accentGold,
                     indicator = { tabPositions ->
                         TabRowDefaults.SecondaryIndicator(
                             Modifier.tabIndicatorOffset(tabPositions[selectedSubTab]),
-                            color = FortuneGold,
+                            color = accentGold,
                             height = 3.dp
                         )
                     }
@@ -128,13 +129,13 @@ fun StatsScreen(
                                     imageVector = Icons.Default.FormatListNumbered,
                                     contentDescription = null,
                                     modifier = Modifier.size(16.dp),
-                                    tint = if (selectedSubTab == 0) FortuneGold else MaterialTheme.colorScheme.onSurfaceVariant
+                                    tint = if (selectedSubTab == 0) accentGold else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = "往期开奖 (${historyDraws.size}期)",
                                     fontWeight = if (selectedSubTab == 0) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (selectedSubTab == 0) FortuneGold else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    color = if (selectedSubTab == 0) accentGold else MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 13.sp
                                 )
                             }
@@ -149,13 +150,13 @@ fun StatsScreen(
                                     imageVector = Icons.Default.ShowChart,
                                     contentDescription = null,
                                     modifier = Modifier.size(16.dp),
-                                    tint = if (selectedSubTab == 1) FortuneGold else MaterialTheme.colorScheme.onSurfaceVariant
+                                    tint = if (selectedSubTab == 1) accentGold else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = "冷热图表与遗漏矩阵",
                                     fontWeight = if (selectedSubTab == 1) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (selectedSubTab == 1) FortuneGold else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    color = if (selectedSubTab == 1) accentGold else MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 13.sp
                                 )
                             }
@@ -212,7 +213,7 @@ fun StatsScreen(
                                 },
                                 modifier = Modifier.weight(1f),
                                 enabled = !isLoading,
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = FortuneGold)
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = accentGold)
                             ) {
                                 Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(14.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
@@ -225,7 +226,7 @@ fun StatsScreen(
                                 colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.secondary)
                             ) {
                                 if (isSyncingCloud) {
-                                    CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp, color = FortuneGold)
+                                    CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp, color = accentGold)
                                 } else {
                                     Icon(Icons.Default.CloudDownload, contentDescription = null, modifier = Modifier.size(14.dp))
                                 }
@@ -309,7 +310,7 @@ fun StatsScreen(
                                     text = "当前彩种: ${lotteryType.title} (${lotteryType.code.uppercase()})",
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = FortuneGold
+                                    color = accentGold
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 val issueText = if (stats.lastIssue.isNotBlank()) "第 ${stats.lastIssue} 期" else "最新现行期"
@@ -342,6 +343,7 @@ private fun EmptyOrLoadingCard(
     emptyText: String,
     onRetry: () -> Unit
 ) {
+    val accentGold = LocalAccentGold.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -356,7 +358,7 @@ private fun EmptyOrLoadingCard(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             if (isLoading) {
-                CircularProgressIndicator(modifier = Modifier.size(34.dp), color = FortuneGold, strokeWidth = 3.dp)
+                CircularProgressIndicator(modifier = Modifier.size(34.dp), color = accentGold, strokeWidth = 3.dp)
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(loadingText, style = MaterialTheme.typography.bodyMedium)
             } else {
@@ -364,7 +366,7 @@ private fun EmptyOrLoadingCard(
                 Spacer(modifier = Modifier.height(10.dp))
                 OutlinedButton(
                     onClick = onRetry,
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = FortuneGold)
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = accentGold)
                 ) {
                     Text("点击重新加载")
                 }
@@ -376,6 +378,7 @@ private fun EmptyOrLoadingCard(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun DrawHistoryCard(draw: DrawItem, lotteryType: LotteryType) {
+    val accentGold = LocalAccentGold.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
@@ -396,15 +399,15 @@ private fun DrawHistoryCard(draw: DrawItem, lotteryType: LotteryType) {
             ) {
                 Box(
                     modifier = Modifier
-                        .border(1.dp, FortuneGold.copy(alpha = 0.6f), RoundedCornerShape(6.dp))
-                        .background(FortuneGold.copy(alpha = 0.12f), RoundedCornerShape(6.dp))
+                        .border(1.dp, accentGold.copy(alpha = 0.6f), RoundedCornerShape(6.dp))
+                        .background(accentGold.copy(alpha = 0.12f), RoundedCornerShape(6.dp))
                         .padding(horizontal = 8.dp, vertical = 2.dp)
                 ) {
                     Text(
                         text = "第 ${draw.issue} 期",
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
-                        color = FortuneGold
+                        color = accentGold
                     )
                 }
 
@@ -503,6 +506,7 @@ private fun FrequencyBarChartCard(
     lotteryType: LotteryType,
     zoneStats: Map<String, NumberStat>
 ) {
+    val accentGold = LocalAccentGold.current
     val sortedEntries = zoneStats.entries.sortedBy { it.key.toIntOrNull() ?: 0 }
     val maxFreq = sortedEntries.maxOfOrNull { it.value.frequency }?.coerceAtLeast(1) ?: 1
 
@@ -527,7 +531,7 @@ private fun FrequencyBarChartCard(
                 Text(
                     text = "峰值 ${maxFreq} 次",
                     style = MaterialTheme.typography.labelSmall,
-                    color = FortuneGold
+                    color = accentGold
                 )
             }
             Spacer(modifier = Modifier.height(10.dp))
@@ -548,7 +552,7 @@ private fun FrequencyBarChartCard(
                     val barColor = when {
                         stat.isHot -> ImperialRed
                         stat.isCold -> ElementWater
-                        else -> FortuneGold
+                        else -> accentGold
                     }
                     val left = idx * (barWidth + gap)
                     drawRoundRect(
@@ -582,6 +586,7 @@ private fun OmissionHeatmapCard(
     lotteryType: LotteryType,
     zoneStats: Map<String, NumberStat>
 ) {
+    val accentGold = LocalAccentGold.current
     val sortedEntries = zoneStats.entries.sortedBy { it.key.toIntOrNull() ?: 0 }
     val maxDesire = sortedEntries.maxOfOrNull { it.value.desireIndex }?.coerceAtLeast(1f) ?: 1f
 
@@ -614,8 +619,8 @@ private fun OmissionHeatmapCard(
                 sortedEntries.forEach { (numStr, stat) ->
                     val heat = (stat.desireIndex / maxDesire).coerceIn(0f, 1f)
                     val bgColor = when {
-                        heat >= 0.72f -> FortuneGold.copy(alpha = 0.32f)
-                        heat >= 0.45f -> FortuneGold.copy(alpha = 0.14f)
+                        heat >= 0.72f -> accentGold.copy(alpha = 0.32f)
+                        heat >= 0.45f -> accentGold.copy(alpha = 0.14f)
                         else -> MaterialTheme.colorScheme.surface.copy(alpha = 0.75f)
                     }
                     Column(
@@ -625,7 +630,7 @@ private fun OmissionHeatmapCard(
                             .background(bgColor, RoundedCornerShape(8.dp))
                             .border(
                                 width = if (heat >= 0.72f) 1.dp else 0.5.dp,
-                                color = if (heat >= 0.72f) FortuneGold else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                                color = if (heat >= 0.72f) accentGold else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
                                 shape = RoundedCornerShape(8.dp)
                             )
                             .padding(vertical = 4.dp)
@@ -634,7 +639,7 @@ private fun OmissionHeatmapCard(
                             text = numStr,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = if (heat >= 0.72f) FortuneGold else MaterialTheme.colorScheme.onSurface
+                            color = if (heat >= 0.72f) accentGold else MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = "${stat.currentOmission}期",

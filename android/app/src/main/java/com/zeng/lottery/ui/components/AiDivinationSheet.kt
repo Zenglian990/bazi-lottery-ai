@@ -71,9 +71,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zeng.lottery.ai.AiConfig
 import com.zeng.lottery.ai.AiProvider
-import com.zeng.lottery.ui.theme.FortuneGold
-import com.zeng.lottery.ui.theme.FortuneGoldLight
 import com.zeng.lottery.ui.theme.ImperialRed
+import com.zeng.lottery.ui.theme.LocalAccentGold
 import com.zeng.lottery.ui.theme.MysticIndigo
 
 /**
@@ -98,6 +97,7 @@ fun AiDivinationSheet(
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 ) {
     val context = LocalContext.current
+    val accentGold = LocalAccentGold.current
     var showReasoning by rememberSaveable { mutableStateOf(false) }
 
     val infiniteTransition = rememberInfiniteTransition(label = "cursorBlink")
@@ -143,7 +143,7 @@ fun AiDivinationSheet(
                     Icon(
                         imageVector = Icons.Default.AutoAwesome,
                         contentDescription = null,
-                        tint = FortuneGold,
+                        tint = accentGold,
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -152,7 +152,7 @@ fun AiDivinationSheet(
                             text = "易道彩经大师 · 智能解盘",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.ExtraBold,
-                            color = FortuneGold
+                            color = accentGold
                         )
                         Text(
                             text = "推理通道: $channelBadge",
@@ -168,7 +168,7 @@ fun AiDivinationSheet(
                         Icon(
                             imageVector = Icons.Default.Settings,
                             contentDescription = "AI通道设置",
-                            tint = FortuneGold
+                            tint = accentGold
                         )
                     }
                     IconButton(onClick = onDismiss) {
@@ -197,8 +197,8 @@ fun AiDivinationSheet(
                             onClick = { onSelectBet(i) },
                             label = { Text(label, fontSize = 11.sp) },
                             colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = FortuneGold.copy(alpha = 0.25f),
-                                selectedLabelColor = FortuneGold
+                                selectedContainerColor = accentGold.copy(alpha = 0.25f),
+                                selectedLabelColor = accentGold
                             )
                         )
                     }
@@ -211,15 +211,15 @@ fun AiDivinationSheet(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(FortuneGold.copy(alpha = 0.14f), RoundedCornerShape(8.dp))
-                        .border(0.8.dp, FortuneGold.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                        .background(accentGold.copy(alpha = 0.14f), RoundedCornerShape(8.dp))
+                        .border(0.8.dp, accentGold.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
                         .padding(horizontal = 10.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
                         imageVector = Icons.Default.Info,
                         contentDescription = "通道提示",
-                        tint = FortuneGold,
+                        tint = accentGold,
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
@@ -251,7 +251,7 @@ fun AiDivinationSheet(
                         color = MaterialTheme.colorScheme.background,
                         shape = RoundedCornerShape(12.dp)
                     )
-                    .border(1.dp, FortuneGold.copy(alpha = 0.25f), RoundedCornerShape(12.dp))
+                    .border(1.dp, accentGold.copy(alpha = 0.25f), RoundedCornerShape(12.dp))
                     .padding(14.dp)
             ) {
                 if (text.isEmpty() && reasoningText.isEmpty() && isStreaming) {
@@ -260,7 +260,7 @@ fun AiDivinationSheet(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         CircularProgressIndicator(
-                            color = FortuneGold,
+                            color = accentGold,
                             modifier = Modifier.size(36.dp),
                             strokeWidth = 3.dp
                         )
@@ -268,7 +268,7 @@ fun AiDivinationSheet(
                         Text(
                             text = "正在感应干支气场，推演乾坤数理...",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = FortuneGold
+                            color = accentGold
                         )
                     }
                 } else {
@@ -300,12 +300,12 @@ fun AiDivinationSheet(
                                         text = "大师推演思路 (${reasoningText.length}字)",
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.Bold,
-                                        color = FortuneGold
+                                        color = accentGold
                                     )
                                     Icon(
                                         imageVector = if (showReasoning) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                                         contentDescription = "展开或收起推演思路",
-                                        tint = FortuneGold,
+                                        tint = accentGold,
                                         modifier = Modifier.size(16.dp)
                                     )
                                 }
@@ -329,7 +329,7 @@ fun AiDivinationSheet(
                         if (isStreaming) {
                             Text(
                                 text = " ▌",
-                                color = FortuneGold,
+                                color = accentGold,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.alpha(cursorAlpha)
@@ -372,7 +372,7 @@ fun AiDivinationSheet(
                         shape = RoundedCornerShape(10.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            contentColor = FortuneGold
+                            contentColor = accentGold
                         )
                     ) {
                         Icon(
@@ -409,6 +409,7 @@ fun AiDivinationSheet(
 
 @Composable
 private fun RenderDivinationSections(text: String) {
+    val accentGold = LocalAccentGold.current
     val sections = text.split(Regex("(?=【[^】]+】)"))
 
     for (sec in sections) {
@@ -418,10 +419,10 @@ private fun RenderDivinationSections(text: String) {
         if (trimmed.startsWith("【理性倡议】")) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = FortuneGold.copy(alpha = 0.12f)),
+                colors = CardDefaults.cardColors(containerColor = accentGold.copy(alpha = 0.12f)),
                 shape = RoundedCornerShape(8.dp),
                 border = CardDefaults.outlinedCardBorder().copy(
-                    brush = androidx.compose.ui.graphics.SolidColor(FortuneGold.copy(alpha = 0.45f))
+                    brush = androidx.compose.ui.graphics.SolidColor(accentGold.copy(alpha = 0.45f))
                 )
             ) {
                 Row(
@@ -431,7 +432,7 @@ private fun RenderDivinationSections(text: String) {
                     Icon(
                         imageVector = Icons.Default.Security,
                         contentDescription = "理性倡议",
-                        tint = FortuneGold,
+                        tint = accentGold,
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -440,7 +441,7 @@ private fun RenderDivinationSections(text: String) {
                             text = "【理性倡议】",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
-                            color = FortuneGold
+                            color = accentGold
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
@@ -464,9 +465,9 @@ private fun RenderDivinationSections(text: String) {
             ) {
                 if (header.isNotEmpty()) {
                     val headerColor = when {
-                        header.contains("乾坤") || header.contains("玄机") -> FortuneGold
+                        header.contains("乾坤") || header.contains("玄机") -> accentGold
                         header.contains("五行") || header.contains("吉言") -> MysticIndigo
-                        else -> FortuneGoldLight
+                        else -> accentGold
                     }
                     Text(
                         text = header,

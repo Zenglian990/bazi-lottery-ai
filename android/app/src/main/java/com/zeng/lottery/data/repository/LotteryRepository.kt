@@ -46,7 +46,7 @@ class LotteryRepository(
 
     suspend fun checkHealth(): HealthResponse? {
         return try {
-            withTimeout(15000L) {
+            withTimeout(26000L) {
                 val res = apiService.checkHealth()
                 _isOffline.value = false
                 res
@@ -72,7 +72,7 @@ class LotteryRepository(
                 gender = if (isMale) "male" else "female",
                 longitude = longitude
             )
-            withTimeout(15000L) {
+            withTimeout(26000L) {
                 val remote = apiService.calculateDestiny(req)
                 _isOffline.value = false
                 remote
@@ -106,7 +106,7 @@ class LotteryRepository(
                 lunarDay = lunarDate.day,
                 lunarHour = lunarDate.shichenZh
             )
-            withTimeout(15000L) {
+            withTimeout(26000L) {
                 val remote = apiService.calculateDestiny(req)
                 _isOffline.value = false
                 val finalLunarText = "${lunarDate.year}年 (${lunarDate.ganzhiYear}${lunarDate.zodiac}年) 农历${lunarDate.monthZh}${lunarDate.dayZh} ${lunarDate.shichenZh}"
@@ -140,7 +140,7 @@ class LotteryRepository(
                 lunarHour = lunarDate?.shichenZh,
                 gender = if (isMale) "male" else "female"
             )
-            withTimeout(12000L) {
+            withTimeout(22000L) {
                 val remote = apiService.getTodayFortune(req)
                 _isOffline.value = false
                 remote
@@ -155,7 +155,7 @@ class LotteryRepository(
 
     suspend fun getStats(lotteryType: LotteryType): LotteryStats {
         return try {
-            withTimeout(15000L) {
+            withTimeout(26000L) {
                 val remote = apiService.getStats(lotteryType.code)
                 _isOffline.value = false
                 remote
@@ -170,7 +170,7 @@ class LotteryRepository(
 
     suspend fun getHistoryDraws(lotteryType: LotteryType, limit: Int = 50): List<DrawItem> {
         return try {
-            withTimeout(15000L) {
+            withTimeout(26000L) {
                 val remote = apiService.getHistory(lotteryType.code, limit = limit)
                 _isOffline.value = false
                 if (remote.records.isNotEmpty()) {
@@ -281,7 +281,7 @@ class LotteryRepository(
                 lockedSecondary = lockedSecondary.ifEmpty { null },
                 excludedSecondary = excludedSecondary.ifEmpty { null }
             )
-            withTimeout(15000L) {
+            withTimeout(26000L) {
                 val remote = apiService.getRecommendation(req)
                 _isOffline.value = false
                 remote
