@@ -1,11 +1,11 @@
 """FastAPI router for lottery rules, historical data, statistics, and validation."""
 import threading
 import time
-from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, Response
 
 from backend.app.core.config import settings
 from backend.app.core.security import require_admin_auth
-from backend.app.db.database import get_draws, get_draws_with_total, get_total_draws_count
+from backend.app.db.database import get_data_version, get_draws, get_draws_with_total, get_total_draws_count
 from backend.app.db.sync_service import sync_lottery_data_detailed_async
 from backend.app.models.lottery import (
     AllRulesResponse,
@@ -33,6 +33,27 @@ from backend.app.services.lottery_stats import (
 
 router = APIRouter(prefix="/lottery", tags=["lottery"])
 
+# 面向单实例高并发的进程内只读热数据缓存（按数据库路径与数据版本号精确失效）
+_HOT_READ_CACHE: dict = {}
+_HOT_READ_CACHE_LOCK = threading.Lock()
+_HOT_READ_CACHE_MAX = 128
+
+
+def _cache_get(key: tuple):
+    with _HOT_READ_CACHE_LOCK:
+        return _HOT_READ_CACHE.get(key)
+
+
+def _cache_set(key: tuple, value) -> None:
+    with _HOT_READ_CACHE_LOCK:
+        if len(_HOT_READ_CACHE) >= _HOT_READ_CACHE_MAX:
+            _HOT_READ_CACHE.clear()
+        _HOT_READ_CACHE[key] = value
+
+
+def _current_cache_epoch() -> tuple:
+    return (str(settings.DB_PATH), get_data_version())
+
 
 @router.get("/rules", response_model=AllRulesResponse)
 def list_rules() -> AllRulesResponse:
@@ -56,6 +77,7 @@ def get_rule(
 
 @router.get("/history/{lottery_type}", response_model=HistoryResponse)
 def get_history(
+    response: Response,
     lottery_type: str = Path(..., min_length=1, max_length=16, description="Lottery code: ssq, dlt, fc3d, qxc"),
     limit: int = Query(default=100, ge=1, le=500, description="Number of draws to return"),
     page: int = Query(default=1, ge=1, le=1000, description="Page number (1-indexed)"),
@@ -64,6 +86,12 @@ def get_history(
     rule = get_lottery_rule(lottery_type)
     if not rule:
         raise HTTPException(status_code=404, detail=f"Unsupported lottery type: '{lottery_type}'")
+
+    response.headers["Cache-Control"] = "public, max-age=300"
+    cache_key = ("history", _current_cache_epoch(), lottery_type.lower(), limit, page)
+    cached = _cache_get(cache_key)
+    if cached is not None:
+        return cached
 
     offset = (page - 1) * limit
     draws, total_int = get_draws_with_total(lottery_type, limit=limit, offset=offset)
@@ -80,7 +108,7 @@ def get_history(
         for d in draws
     ]
 
-    return HistoryResponse(
+    result = HistoryResponse(
         lottery_type=lottery_type.lower(),
         page=page,
         limit=limit,
@@ -89,10 +117,14 @@ def get_history(
         last_issue=records[0].issue if records else None,
         records=records,
     )
+    if records:
+        _cache_set(cache_key, result)
+    return result
 
 
 @router.get("/stats/{lottery_type}", response_model=LotteryStatsResponse)
 def get_stats(
+    response: Response,
     lottery_type: str = Path(..., min_length=1, max_length=16, description="Lottery code: ssq, dlt, fc3d, qxc"),
     limit: int = Query(default=100, ge=10, le=500, description="Total history draws to analyze"),
     window: int = Query(default=30, ge=5, le=100, description="Sliding window size for hot/cold analysis"),
@@ -102,6 +134,12 @@ def get_stats(
     if not rule:
         raise HTTPException(status_code=404, detail=f"Unsupported lottery type: '{lottery_type}'")
 
+    response.headers["Cache-Control"] = "public, max-age=300"
+    cache_key = ("stats", _current_cache_epoch(), lottery_type.lower(), limit, window)
+    cached = _cache_get(cache_key)
+    if cached is not None:
+        return cached
+
     draws = get_draws(lottery_type, limit=limit)
     if not draws:
         raise HTTPException(status_code=404, detail=f"No historical draw data found for '{lottery_type}'")
@@ -109,11 +147,13 @@ def get_stats(
     stats = calculate_lottery_stats(lottery_type, draws, window=window)
     if not stats:
         raise HTTPException(status_code=500, detail="Failed to calculate statistics")
+    _cache_set(cache_key, stats)
     return stats
 
 
 @router.get("/hot-cold/{lottery_type}", response_model=HotColdResponse)
 def get_hot_cold(
+    response: Response,
     lottery_type: str = Path(..., min_length=1, max_length=16, description="Lottery code: ssq, dlt, fc3d, qxc"),
     window: int = Query(default=30, ge=5, le=100, description="Moving window length for hot/cold classification"),
 ) -> HotColdResponse:
@@ -122,6 +162,12 @@ def get_hot_cold(
     if not rule:
         raise HTTPException(status_code=404, detail=f"Unsupported lottery type: '{lottery_type}'")
 
+    response.headers["Cache-Control"] = "public, max-age=300"
+    cache_key = ("hot_cold", _current_cache_epoch(), lottery_type.lower(), window)
+    cached = _cache_get(cache_key)
+    if cached is not None:
+        return cached
+
     draws = get_draws(lottery_type, limit=max(window, 100))
     if not draws:
         raise HTTPException(status_code=404, detail=f"No historical draw data found for '{lottery_type}'")
@@ -129,11 +175,13 @@ def get_hot_cold(
     hc = calculate_hot_cold(lottery_type, draws, window=window)
     if not hc:
         raise HTTPException(status_code=500, detail="Failed to calculate hot/cold numbers")
+    _cache_set(cache_key, hc)
     return hc
 
 
 @router.get("/omission/{lottery_type}", response_model=OmissionResponse)
 def get_omission(
+    response: Response,
     lottery_type: str = Path(..., min_length=1, max_length=16, description="Lottery code: ssq, dlt, fc3d, qxc"),
     limit: int = Query(default=100, ge=10, le=500, description="Draw sample size to evaluate omissions"),
 ) -> OmissionResponse:
@@ -142,6 +190,12 @@ def get_omission(
     if not rule:
         raise HTTPException(status_code=404, detail=f"Unsupported lottery type: '{lottery_type}'")
 
+    response.headers["Cache-Control"] = "public, max-age=300"
+    cache_key = ("omission", _current_cache_epoch(), lottery_type.lower(), limit)
+    cached = _cache_get(cache_key)
+    if cached is not None:
+        return cached
+
     draws = get_draws(lottery_type, limit=limit)
     if not draws:
         raise HTTPException(status_code=404, detail=f"No historical draw data found for '{lottery_type}'")
@@ -149,6 +203,7 @@ def get_omission(
     om = calculate_omission(lottery_type, draws)
     if not om:
         raise HTTPException(status_code=500, detail="Failed to calculate omission statistics")
+    _cache_set(cache_key, om)
     return om
 
 

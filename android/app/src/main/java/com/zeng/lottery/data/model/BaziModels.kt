@@ -345,20 +345,6 @@ data class TodayFortuneResponse(
     val resonance: TodayResonance? = null
 )
 
-data class SyncLotteryRequest(
-    @SerializedName("lottery_type")
-    val lotteryType: String = "all",
-    @SerializedName("force_reload")
-    val forceReload: Boolean = false
-)
-
-data class SyncLotteryResponse(
-    val status: String = "",
-    @SerializedName("synced_counts")
-    val syncedCounts: Map<String, Int> = emptyMap(),
-    val message: String = ""
-)
-
 data class ClassicsEvidence(
     val book: String = "",
     val chapter: String = "",

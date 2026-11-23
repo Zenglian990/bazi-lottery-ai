@@ -156,7 +156,7 @@ fun AiSettingsDialog(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             val desc = when (provider) {
-                                AiProvider.BACKEND_RELAY -> "免配置 Key，通过 HMAC-Nonce 防重放签名直连云端 Gemini 中继"
+                                AiProvider.BACKEND_RELAY -> "免配置 Key，内置易道典籍实时推演引擎；如需深度大模型，可在下方填入个人 Key"
                                 AiProvider.DIRECT_DEEPSEEK -> "国内直连，支持 DeepSeek-V3 (deepseek-chat) 与 R1 深度推理 (deepseek-reasoner)"
                                 AiProvider.DIRECT_GEMINI -> "Google 直连，支持 Gemini 2.5 Flash / 2.5 Pro 极速流式解盘"
                                 AiProvider.DIRECT_OPENAI -> "支持 OpenAI、硅基流动、Groq 等 HTTPS OpenAI 兼容接口"
@@ -245,7 +245,7 @@ fun AiSettingsDialog(
                             placeholder = { Text("deepseek-chat") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii, autoCorrect = false, imeAction = ImeAction.Next)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii, autoCorrectEnabled = false, imeAction = ImeAction.Next)
                         )
 
                         OutlinedTextField(
@@ -258,7 +258,7 @@ fun AiSettingsDialog(
                             placeholder = { Text("https://api.deepseek.com/v1") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, autoCorrect = false, imeAction = ImeAction.Done)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, autoCorrectEnabled = false, imeAction = ImeAction.Done)
                         )
                     }
 
@@ -309,7 +309,7 @@ fun AiSettingsDialog(
                             placeholder = { Text("gemini-2.5-flash") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii, autoCorrect = false, imeAction = ImeAction.Done)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii, autoCorrectEnabled = false, imeAction = ImeAction.Done)
                         )
                     }
 
@@ -343,7 +343,7 @@ fun AiSettingsDialog(
                             placeholder = { Text("https://api.openai.com/v1") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, autoCorrect = false, imeAction = ImeAction.Next)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, autoCorrectEnabled = false, imeAction = ImeAction.Next)
                         )
 
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -365,7 +365,7 @@ fun AiSettingsDialog(
                             placeholder = { Text("gpt-4o-mini / deepseek-chat") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii, autoCorrect = false, imeAction = ImeAction.Done)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii, autoCorrectEnabled = false, imeAction = ImeAction.Done)
                         )
                     }
                 }
@@ -471,7 +471,7 @@ private fun ApiKeyField(
         visualTransformation = if (visible) VisualTransformation.None else PasswordVisualTransformation(),
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Ascii,
-            autoCorrect = false,
+            autoCorrectEnabled = false,
             imeAction = ImeAction.Done
         ),
         trailingIcon = {

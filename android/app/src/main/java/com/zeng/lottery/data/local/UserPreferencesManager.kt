@@ -58,6 +58,8 @@ class UserPreferencesManager(
         const val KEY_BIRTH_LONGITUDE = "birth_longitude"
         const val KEY_DARK_THEME = "dark_theme"
         const val KEY_BIRTH_PROFILES = "saved_birth_profiles_v1"
+        const val KEY_HAS_CUSTOMIZED_BIRTH = "has_customized_birth_v1"
+        const val KEY_HAS_ACCEPTED_COMPLIANCE = "has_accepted_compliance_v1"
 
         val DEFAULT_LUNAR_DATE = LunarDate(1990, 6, false, 24, 8, 30)
         const val DEFAULT_IS_LUNAR = true
@@ -108,6 +110,7 @@ class UserPreferencesManager(
                 ?.putInt(KEY_LUNAR_DAY, clampedDay)
                 ?.putInt(KEY_LUNAR_HOUR, clampedHour)
                 ?.putInt(KEY_LUNAR_MINUTE, clampedMinute)
+                ?.putBoolean(KEY_HAS_CUSTOMIZED_BIRTH, true)
                 ?.apply()
         } catch (_: Throwable) {
         }
@@ -117,6 +120,7 @@ class UserPreferencesManager(
         memoryStore[KEY_LUNAR_DAY] = clampedDay
         memoryStore[KEY_LUNAR_HOUR] = clampedHour
         memoryStore[KEY_LUNAR_MINUTE] = clampedMinute
+        memoryStore[KEY_HAS_CUSTOMIZED_BIRTH] = true
     }
 
     override fun getLunarDate(): LunarDate {
@@ -358,6 +362,37 @@ class UserPreferencesManager(
         val updated = getBirthProfiles().filterNot { it.id == profileId }
         saveBirthProfiles(updated)
         return updated
+    }
+
+    /** 是否已录入过个人生辰（兼容老版本已存过 KEY_LUNAR_YEAR 的老用户，不误弹引导）。 */
+    fun hasCustomizedBirth(): Boolean {
+        return try {
+            (prefs != null && (prefs.getBoolean(KEY_HAS_CUSTOMIZED_BIRTH, false) || prefs.contains(KEY_LUNAR_YEAR))) ||
+                (memoryStore[KEY_HAS_CUSTOMIZED_BIRTH] as? Boolean == true) ||
+                memoryStore.containsKey(KEY_LUNAR_YEAR)
+        } catch (_: Throwable) {
+            (memoryStore[KEY_HAS_CUSTOMIZED_BIRTH] as? Boolean == true) || memoryStore.containsKey(KEY_LUNAR_YEAR)
+        }
+    }
+
+    fun hasAcceptedCompliance(): Boolean {
+        return try {
+            if (prefs != null && prefs.contains(KEY_HAS_ACCEPTED_COMPLIANCE)) {
+                prefs.getBoolean(KEY_HAS_ACCEPTED_COMPLIANCE, false)
+            } else {
+                (memoryStore[KEY_HAS_ACCEPTED_COMPLIANCE] as? Boolean) ?: false
+            }
+        } catch (_: Throwable) {
+            (memoryStore[KEY_HAS_ACCEPTED_COMPLIANCE] as? Boolean) ?: false
+        }
+    }
+
+    fun saveAcceptedCompliance(accepted: Boolean) {
+        try {
+            prefs?.edit()?.putBoolean(KEY_HAS_ACCEPTED_COMPLIANCE, accepted)?.apply()
+        } catch (_: Throwable) {
+        }
+        memoryStore[KEY_HAS_ACCEPTED_COMPLIANCE] = accepted
     }
 
     override fun clear() {

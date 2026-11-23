@@ -14,8 +14,6 @@ import com.zeng.lottery.data.model.HealthResponse
 import com.zeng.lottery.data.model.LotteryStats
 import com.zeng.lottery.data.model.LotteryType
 import com.zeng.lottery.data.model.LunarDate
-import com.zeng.lottery.data.model.SyncLotteryRequest
-import com.zeng.lottery.data.model.SyncLotteryResponse
 import com.zeng.lottery.data.model.TodayFortuneRequest
 import com.zeng.lottery.data.model.TodayFortuneResponse
 import kotlinx.coroutines.CancellationException
@@ -109,7 +107,9 @@ class LotteryRepository(
             withTimeout(26000L) {
                 val remote = apiService.calculateDestiny(req)
                 _isOffline.value = false
-                val finalLunarText = "${lunarDate.year}年 (${lunarDate.ganzhiYear}${lunarDate.zodiac}年) 农历${lunarDate.monthZh}${lunarDate.dayZh} ${lunarDate.shichenZh}"
+                // 优先保留后端经真太阳时校正并含立春分界年柱备注的 lunarDatetime，仅当为空时回退本地拼接串
+                val fallbackLunarText = "${lunarDate.year}年 (${lunarDate.ganzhiYear}${lunarDate.zodiac}年) 农历${lunarDate.monthZh}${lunarDate.dayZh} ${lunarDate.shichenZh}"
+                val finalLunarText = remote.lunarDatetime.ifBlank { fallbackLunarText }
                 remote.copy(lunarDatetime = finalLunarText, userName = userName)
             }
         } catch (e: CancellationException) {
@@ -191,43 +191,6 @@ class LotteryRepository(
 
     fun getOfflineHistoryDraws(lotteryType: LotteryType, limit: Int = 50): List<DrawItem> {
         return offlineEngine.getHistoryDraws(lotteryType, limit)
-    }
-
-    /**
-     * 自用云端同步：使用 ADMIN_SYNC_TOKEN 触发后端抓取福彩/体彩最新开奖并持久化到 GCS。
-     */
-    suspend fun triggerCloudSync(
-        lotteryTypeCode: String = "all",
-        adminToken: String,
-        forceReload: Boolean = false
-    ): Result<SyncLotteryResponse> {
-        val token = adminToken.trim()
-        if (token.isBlank()) {
-            return Result.failure(IllegalStateException("未内置同步令牌，仅执行云端数据拉取刷新"))
-        }
-        return try {
-            withTimeout(25000L) {
-                val resp = apiService.syncLotteryData(
-                    authHeader = "Bearer $token",
-                    request = SyncLotteryRequest(lotteryType = lotteryTypeCode, forceReload = forceReload)
-                )
-                _isOffline.value = false
-                Result.success(resp)
-            }
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: HttpException) {
-            handleNetworkFailure(e)
-            val errMsg = when (e.code()) {
-                401, 403 -> "同步令牌鉴权未通过 (HTTP ${e.code()})"
-                429 -> "云端同步冷却中，请稍候再试 (HTTP 429)"
-                else -> "云端同步失败 (HTTP ${e.code()})"
-            }
-            Result.failure(IllegalStateException(errMsg, e))
-        } catch (e: Exception) {
-            handleNetworkFailure(e)
-            Result.failure(e)
-        }
     }
 
     suspend fun getRecommendations(

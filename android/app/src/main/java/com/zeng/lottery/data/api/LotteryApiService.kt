@@ -8,13 +8,10 @@ import com.zeng.lottery.data.model.HealthResponse
 import com.zeng.lottery.data.model.HistoryResponse
 import com.zeng.lottery.data.model.LotteryRulesResponse
 import com.zeng.lottery.data.model.LotteryStats
-import com.zeng.lottery.data.model.SyncLotteryRequest
-import com.zeng.lottery.data.model.SyncLotteryResponse
 import com.zeng.lottery.data.model.TodayFortuneRequest
 import com.zeng.lottery.data.model.TodayFortuneResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
-import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -54,10 +51,4 @@ interface LotteryApiService {
 
     @POST("/api/bazi/today-fortune")
     suspend fun getTodayFortune(@Body request: TodayFortuneRequest): TodayFortuneResponse
-
-    @POST("/api/lottery/sync")
-    suspend fun syncLotteryData(
-        @Header("Authorization") authHeader: String,
-        @Body request: SyncLotteryRequest
-    ): SyncLotteryResponse
 }

@@ -3,6 +3,8 @@ package com.zeng.lottery
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +25,7 @@ import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Casino
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.GppGood
@@ -64,6 +67,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zeng.lottery.data.api.ApiClient
 import com.zeng.lottery.ui.components.AiDivinationSheet
@@ -90,6 +94,8 @@ fun LotteryApp(
     val birthLongitude by viewModel.birthLongitude.collectAsState()
     val isDarkTheme by viewModel.isDarkTheme.collectAsState()
     val birthProfiles by viewModel.birthProfiles.collectAsState()
+    val hasCustomizedBirth by viewModel.hasCustomizedBirth.collectAsState()
+    val hasAcceptedCompliance by viewModel.hasAcceptedCompliance.collectAsState()
     val destiny by viewModel.destiny.collectAsState()
     val todayFortune by viewModel.todayFortune.collectAsState()
     val stats by viewModel.stats.collectAsState()
@@ -266,6 +272,48 @@ fun LotteryApp(
                             .padding(horizontal = 14.dp, vertical = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
+                        // 新手首屏轻引导：未设置个人生辰时明确提示当前为示例生辰，点击直达生辰录入
+                        if (!hasCustomizedBirth) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(accentGold.copy(alpha = 0.14f))
+                                    .border(1.dp, accentGold.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+                                    .clickable { selectedNavIndex = 3 }
+                                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CalendarMonth,
+                                    contentDescription = null,
+                                    tint = accentGold,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "当前为示例生辰排盘 (${lunarDate.year}年${lunarDate.monthZh}${lunarDate.dayZh})",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = "点此录入您的真实生辰八字与姓名，获取专属喜用吉数",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontSize = 11.sp,
+                                        color = accentGold
+                                    )
+                                }
+                                Icon(
+                                    imageVector = Icons.Default.ChevronRight,
+                                    contentDescription = "前往生辰排盘",
+                                    tint = accentGold,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+
                         RecommendScreen(
                             lotteryType = selectedLottery,
                             recommendationResponse = recommendation,
@@ -578,6 +626,63 @@ fun LotteryApp(
             currentConfig = aiConfig,
             onDismiss = { viewModel.closeAiSettings() },
             onSaveConfig = { viewModel.updateAiConfig(it) }
+        )
+    }
+
+    // 首次启动一次性合规告知弹窗（面向大众发行必备：隐私、免责与未成年人禁购）
+    if (!hasAcceptedCompliance) {
+        AlertDialog(
+            onDismissRequest = {},
+            properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.GppGood,
+                        contentDescription = null,
+                        tint = accentGold,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "欢迎使用曾练彩票助手",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            text = {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "使用前请您知悉以下隐私与理性购彩说明：",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = accentGold
+                    )
+                    Text(
+                        text = "• 本地隐私保护：生辰档案、历史收藏均仅存手机本地；自定义大模型 API Key 由 Android KeyStore (AES-256-GCM) 硬件加密，不收集个人隐私。",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "• 纯娱乐参考工具：国家彩票开奖为独立随机事件，易理排盘、冷热统计与 AI 解盘仅供传统文化研究与选号娱乐参考，不承诺中奖率。",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "• 理性合规购彩：本应用不提供在线购彩、代购或充值服务；请量力而行、理性娱乐，严禁未满 18 周岁未成年人购彩。",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { viewModel.acceptCompliance() }) {
+                    Text("我已满18周岁 · 同意并进入", color = accentGold, fontWeight = FontWeight.Bold)
+                }
+            }
         )
     }
 

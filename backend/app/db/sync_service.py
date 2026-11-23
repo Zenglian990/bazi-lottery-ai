@@ -227,72 +227,50 @@ async def fetch_fc3d_live(client: httpx.AsyncClient, count: int = 100) -> List[D
     return records[:count]
 
 
-async def fetch_dlt_live(client: httpx.AsyncClient, count: int = 100) -> List[Dict[str, Any]]:
-    """抓取 500.com 大乐透开奖走势表。"""
-    url = f"https://datachart.500.com/dlt/history/newinc/history.php?limit={count}"
-    resp = await _get_with_retry(client, url, HEADERS_500)
-    html_text = resp.content.decode("gb18030", errors="replace")
-    soup = BeautifulSoup(html_text, "html.parser")
+HEADERS_SPORTTERY = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+    "Referer": "https://www.lottery.gov.cn/",
+    "Origin": "https://www.lottery.gov.cn",
+    "Accept": "application/json, text/plain, */*",
+}
 
+
+async def _fetch_sporttery_backup(
+    client: httpx.AsyncClient,
+    game_no: str,
+    lottery_type: str,
+    count: int = 100,
+) -> List[Dict[str, Any]]:
+    """中国体彩官方 JSON 备用数据源（gameNo: 85=大乐透, 04=七星彩）。"""
+    page_size = min(max(count, 30), 100)
+    url = (
+        "https://webapi.sporttery.cn/gateway/lottery/getHistoryPageListV1.qry"
+        f"?gameNo={game_no}&provinceId=0&pageSize={page_size}&isVerify=1&pageNo=1"
+    )
+    resp = await _get_with_retry(client, url, HEADERS_SPORTTERY)
+    payload = resp.json()
+    items = (payload.get("value") or {}).get("list") or []
     records: List[Dict[str, Any]] = []
-    tbody = soup.find("tbody", id="tdata")
-    if tbody:
-        for tr in tbody.find_all("tr"):
-            try:
-                tds = [td.get_text(strip=True) for td in tr.find_all("td")]
-                if len(tds) < 8:
-                    continue
-                raw_issue = tds[0]
-                issue = "20" + raw_issue if len(raw_issue) == 5 else raw_issue
-                front = [f"{int(x):02d}" for x in tds[1:6]]
-                back = [f"{int(x):02d}" for x in tds[6:8]]
-                # 500.com 大乐透表格列序：tds[8]=奖池奖金(元)，tds[9]=一等奖注数，tds[13]=总投注额(元)
-                pool = _parse_money(tds[8]) if len(tds) > 8 else 0
-                sales = _parse_money(tds[13]) if len(tds) > 13 else 0
-                draw_date = tds[14] if len(tds) > 14 else ""
-                rec = _sanitize_draw_record(
-                    lottery_type="dlt",
-                    issue=issue,
-                    draw_date=draw_date,
-                    primary_numbers=front,
-                    secondary_numbers=back,
-                    sales_amount=sales,
-                    pool_amount=pool,
-                )
-                if rec:
-                    records.append(rec)
-            except (ValueError, TypeError, KeyError, IndexError):
-                continue
-    return records[:count]
-
-
-async def fetch_qxc_live(client: httpx.AsyncClient, count: int = 100) -> List[Dict[str, Any]]:
-    """抓取 500.com 七星彩开奖表（严格限定数据表容器，防止误扫全页无关 tr）。"""
-    url = f"https://datachart.500.com/qxc/history/inc/history.php?limit={max(count, 120)}"
-    resp = await _get_with_retry(client, url, HEADERS_500)
-    html_text = resp.content.decode("gb18030", errors="replace")
-    soup = BeautifulSoup(html_text, "html.parser")
-
-    records: List[Dict[str, Any]] = []
-    container = soup.find("tbody", id="tdata") or soup.find("table", id="tablelist") or soup.find("table", class_="t_tr1") or soup
-    for tr in container.find_all("tr"):
+    for item in items:
         try:
-            tds = [td.get_text(strip=True) for td in tr.find_all("td")]
-            if len(tds) < 5 or not _ISSUE_RE.fullmatch(tds[0]):
-                continue
-            raw_issue = tds[0]
+            raw_issue = str(item.get("lotteryDrawNum") or "").strip()
             issue = "20" + raw_issue if len(raw_issue) == 5 else raw_issue
-            nums = tds[1].split()
-            if len(nums) != 7:
-                continue
-            front = [str(int(x)) for x in nums[:6]]
-            back = [f"{int(nums[6]):02d}"]
-            # 500.com 七星彩表格列序：tds[2]=号码全加和，tds[3]=总销售额(元)，无奖池列
-            sales = _parse_money(tds[3]) if len(tds) > 3 else 0
-            pool = 0
-            draw_date = tds[4] if len(tds) > 4 else ""
+            draw_date = str(item.get("lotteryDrawTime") or "").strip()[:10]
+            nums = str(item.get("lotteryDrawResult") or "").strip().split()
+            sales = _parse_money(item.get("totalSaleAmount"))
+            pool = _parse_money(item.get("poolBalanceAfterdraw"))
+            if lottery_type == "dlt":
+                if len(nums) != 7:
+                    continue
+                front = [f"{int(x):02d}" for x in nums[:5]]
+                back = [f"{int(x):02d}" for x in nums[5:7]]
+            else:
+                if len(nums) != 7:
+                    continue
+                front = [str(int(x)) for x in nums[:6]]
+                back = [f"{int(nums[6]):02d}"]
             rec = _sanitize_draw_record(
-                lottery_type="qxc",
+                lottery_type=lottery_type,
                 issue=issue,
                 draw_date=draw_date,
                 primary_numbers=front,
@@ -304,6 +282,98 @@ async def fetch_qxc_live(client: httpx.AsyncClient, count: int = 100) -> List[Di
                 records.append(rec)
         except (ValueError, TypeError, KeyError, IndexError):
             continue
+    return records[:count]
+
+
+async def fetch_dlt_live(client: httpx.AsyncClient, count: int = 100) -> List[Dict[str, Any]]:
+    """抓取大乐透开奖数据（优先 500.com，异常或空表时自动切换体彩官网 JSON 备用源）。"""
+    records: List[Dict[str, Any]] = []
+    try:
+        url = f"https://datachart.500.com/dlt/history/newinc/history.php?limit={count}"
+        resp = await _get_with_retry(client, url, HEADERS_500)
+        html_text = resp.content.decode("gb18030", errors="replace")
+        soup = BeautifulSoup(html_text, "html.parser")
+
+        tbody = soup.find("tbody", id="tdata")
+        if tbody:
+            for tr in tbody.find_all("tr"):
+                try:
+                    tds = [td.get_text(strip=True) for td in tr.find_all("td")]
+                    if len(tds) < 8:
+                        continue
+                    raw_issue = tds[0]
+                    issue = "20" + raw_issue if len(raw_issue) == 5 else raw_issue
+                    front = [f"{int(x):02d}" for x in tds[1:6]]
+                    back = [f"{int(x):02d}" for x in tds[6:8]]
+                    # 500.com 大乐透表格列序：tds[8]=奖池奖金(元)，tds[9]=一等奖注数，tds[13]=总投注额(元)
+                    pool = _parse_money(tds[8]) if len(tds) > 8 else 0
+                    sales = _parse_money(tds[13]) if len(tds) > 13 else 0
+                    draw_date = tds[14] if len(tds) > 14 else ""
+                    rec = _sanitize_draw_record(
+                        lottery_type="dlt",
+                        issue=issue,
+                        draw_date=draw_date,
+                        primary_numbers=front,
+                        secondary_numbers=back,
+                        sales_amount=sales,
+                        pool_amount=pool,
+                    )
+                    if rec:
+                        records.append(rec)
+                except (ValueError, TypeError, KeyError, IndexError):
+                    continue
+    except Exception as exc:
+        logger.warning("500.com DLT sync failed (%s), switching to Sporttery official API backup...", type(exc).__name__)
+
+    if not records:
+        records = await _fetch_sporttery_backup(client, game_no="85", lottery_type="dlt", count=count)
+    return records[:count]
+
+
+async def fetch_qxc_live(client: httpx.AsyncClient, count: int = 100) -> List[Dict[str, Any]]:
+    """抓取七星彩开奖数据（优先 500.com，异常或空表时自动切换体彩官网 JSON 备用源）。"""
+    records: List[Dict[str, Any]] = []
+    try:
+        url = f"https://datachart.500.com/qxc/history/inc/history.php?limit={max(count, 120)}"
+        resp = await _get_with_retry(client, url, HEADERS_500)
+        html_text = resp.content.decode("gb18030", errors="replace")
+        soup = BeautifulSoup(html_text, "html.parser")
+
+        container = soup.find("tbody", id="tdata") or soup.find("table", id="tablelist") or soup.find("table", class_="t_tr1") or soup
+        for tr in container.find_all("tr"):
+            try:
+                tds = [td.get_text(strip=True) for td in tr.find_all("td")]
+                if len(tds) < 5 or not _ISSUE_RE.fullmatch(tds[0]):
+                    continue
+                raw_issue = tds[0]
+                issue = "20" + raw_issue if len(raw_issue) == 5 else raw_issue
+                nums = tds[1].split()
+                if len(nums) != 7:
+                    continue
+                front = [str(int(x)) for x in nums[:6]]
+                back = [f"{int(nums[6]):02d}"]
+                # 500.com 七星彩表格列序：tds[2]=号码全加和，tds[3]=总销售额(元)，无奖池列
+                sales = _parse_money(tds[3]) if len(tds) > 3 else 0
+                pool = 0
+                draw_date = tds[4] if len(tds) > 4 else ""
+                rec = _sanitize_draw_record(
+                    lottery_type="qxc",
+                    issue=issue,
+                    draw_date=draw_date,
+                    primary_numbers=front,
+                    secondary_numbers=back,
+                    sales_amount=sales,
+                    pool_amount=pool,
+                )
+                if rec:
+                    records.append(rec)
+            except (ValueError, TypeError, KeyError, IndexError):
+                continue
+    except Exception as exc:
+        logger.warning("500.com QXC sync failed (%s), switching to Sporttery official API backup...", type(exc).__name__)
+
+    if not records:
+        records = await _fetch_sporttery_backup(client, game_no="04", lottery_type="qxc", count=count)
     return records[:count]
 
 

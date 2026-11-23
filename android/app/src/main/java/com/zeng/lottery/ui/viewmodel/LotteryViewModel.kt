@@ -123,6 +123,17 @@ class LotteryViewModel @JvmOverloads constructor(
     private val _birthProfiles = MutableStateFlow(preferencesManager.getBirthProfiles())
     val birthProfiles: StateFlow<List<SavedBirthProfile>> = _birthProfiles.asStateFlow()
 
+    private val _hasCustomizedBirth = MutableStateFlow(preferencesManager.hasCustomizedBirth())
+    val hasCustomizedBirth: StateFlow<Boolean> = _hasCustomizedBirth.asStateFlow()
+
+    private val _hasAcceptedCompliance = MutableStateFlow(preferencesManager.hasAcceptedCompliance())
+    val hasAcceptedCompliance: StateFlow<Boolean> = _hasAcceptedCompliance.asStateFlow()
+
+    fun acceptCompliance() {
+        _hasAcceptedCompliance.value = true
+        preferencesManager.saveAcceptedCompliance(true)
+    }
+
     private val _destiny = MutableStateFlow<BaziDestiny?>(null)
     val destiny: StateFlow<BaziDestiny?> = _destiny.asStateFlow()
 
@@ -336,6 +347,7 @@ class LotteryViewModel @JvmOverloads constructor(
         _lunarDate.value = date
         _birthDateTime.value = BaziEngine.lunarToSolar(date)
         preferencesManager.saveLunarDate(date)
+        _hasCustomizedBirth.value = true
         invalidateAiDivination()
         refreshDestinyAndRecommend()
     }
@@ -352,6 +364,7 @@ class LotteryViewModel @JvmOverloads constructor(
         val lunar = BaziEngine.solarToLunar(dt)
         _lunarDate.value = lunar
         preferencesManager.saveLunarDate(lunar)
+        _hasCustomizedBirth.value = true
         invalidateAiDivination()
         refreshDestinyAndRecommend()
     }
@@ -408,6 +421,7 @@ class LotteryViewModel @JvmOverloads constructor(
         _lunarDate.value = profile.lunarDate
         _birthDateTime.value = BaziEngine.lunarToSolar(profile.lunarDate)
         preferencesManager.saveLunarDate(profile.lunarDate)
+        _hasCustomizedBirth.value = true
         invalidateAiDivination()
         refreshDestinyAndRecommend()
         _toastMessage.value = "已切换至档案【${profile.label}】"
@@ -502,15 +516,20 @@ class LotteryViewModel @JvmOverloads constructor(
         }
     }
 
-    fun clearNumberConstraints() {
+    fun clearNumberConstraints(triggerReroll: Boolean = true) {
+        val hadAny = _lockedPrimary.value.isNotEmpty() || _excludedPrimary.value.isNotEmpty() ||
+            _lockedSecondary.value.isNotEmpty() || _excludedSecondary.value.isNotEmpty()
         _lockedPrimary.value = emptySet()
         _excludedPrimary.value = emptySet()
         _lockedSecondary.value = emptySet()
         _excludedSecondary.value = emptySet()
+        if (triggerReroll && hadAny) {
+            reroll()
+        }
     }
 
     /**
-     * 供「冷热走势」热力矩阵点击号码格直接一键设为定胆。
+     * 供「冷热走势」热力矩阵点击号码格直接一键设为定胆或取消定胆，并立即刷新推荐号码。
      */
     fun lockPrimaryFromStats(ball: String) {
         val lt = _selectedLottery.value
@@ -518,7 +537,8 @@ class LotteryViewModel @JvmOverloads constructor(
         val curLocked = _lockedPrimary.value
         if (ball in curLocked) {
             _lockedPrimary.value = curLocked - ball
-            _toastMessage.value = "已取消号码 $ball 的【定胆】"
+            reroll()
+            _toastMessage.value = "已取消号码 $ball 的【定胆】，吉数已自动刷新"
             return
         }
         if (curLocked.size >= maxLock) {
@@ -527,11 +547,12 @@ class LotteryViewModel @JvmOverloads constructor(
         }
         _excludedPrimary.value = _excludedPrimary.value - ball
         _lockedPrimary.value = curLocked + ball
-        _toastMessage.value = "已将号码 $ball 设为【定胆】，前往「智能机选」立即生效"
+        reroll()
+        _toastMessage.value = "已将号码 $ball 设为【定胆】并立即重算吉数"
     }
 
     /**
-     * 供「冷热走势」热力矩阵点击号码格直接一键设为杀号。
+     * 供「冷热走势」热力矩阵点击号码格直接一键设为杀号或取消杀号，并立即刷新推荐号码。
      */
     fun excludePrimaryFromStats(ball: String) {
         val lt = _selectedLottery.value
@@ -544,7 +565,8 @@ class LotteryViewModel @JvmOverloads constructor(
         val curExcluded = _excludedPrimary.value
         if (ball in curExcluded) {
             _excludedPrimary.value = curExcluded - ball
-            _toastMessage.value = "已取消号码 $ball 的【杀号】"
+            reroll()
+            _toastMessage.value = "已取消号码 $ball 的【杀号】，吉数已自动刷新"
             return
         }
         if (curExcluded.size >= maxExclude) {
@@ -553,7 +575,8 @@ class LotteryViewModel @JvmOverloads constructor(
         }
         _lockedPrimary.value = _lockedPrimary.value - ball
         _excludedPrimary.value = curExcluded + ball
-        _toastMessage.value = "已将号码 $ball 设为【杀号】，前往「智能机选」立即生效"
+        reroll()
+        _toastMessage.value = "已将号码 $ball 设为【杀号】并立即重算吉数"
     }
 
     fun selectLottery(type: LotteryType) {
@@ -561,7 +584,7 @@ class LotteryViewModel @JvmOverloads constructor(
         _selectedLottery.value = type
         preferencesManager.saveSelectedLottery(type)
         if (changed) {
-            clearNumberConstraints()
+            clearNumberConstraints(triggerReroll = false)
             invalidateAiDivination()
         }
 

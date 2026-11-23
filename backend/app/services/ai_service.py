@@ -870,9 +870,9 @@ async def stream_divination_events(request: BaziDivinationRequest) -> AsyncGener
                             return
                     else:
                         if response.status_code == 429:
-                            last_upstream_error = "云端 Gemini 区域/频率配额受限 (HTTP 429)，可在右上角切换 DeepSeek 直连"
+                            last_upstream_error = "当前免费云端通道繁忙"
                         else:
-                            last_upstream_error = f"云端 Gemini 暂不可用 (HTTP {response.status_code})"
+                            last_upstream_error = "云端大模型通道暂不可用"
                         logger.warning("Gemini streaming returned HTTP %s", response.status_code)
         except Exception as e:
             last_upstream_error = "云端 Gemini 连接波动"
@@ -935,11 +935,11 @@ async def stream_divination_events(request: BaziDivinationRequest) -> AsyncGener
             last_upstream_error = "云端 OpenAI 连接波动"
             logger.warning(f"OpenAI streaming failed: {_safe_error_summary(e)}")
 
-    # 4. 透明降级至典籍算法兜底：先发送元事件告知客户端真实降级原因
+    # 4. 透明降级至典籍算法兜底：以大众易懂的友好措辞说明当前推演模式与自定义 Key 升级方式
     fallback_reason = (
-        f"{last_upstream_error}，已自动切换云端典籍算法推演"
+        f"{last_upstream_error}，已为您启用「易道典籍实时推演引擎」；如需深度大模型解盘，可在右上角配置个人 API Key"
         if last_upstream_error
-        else "当前使用云端典籍算法推演（未配置上游大模型密钥）"
+        else "当前使用「易道典籍实时推演引擎」；如需接入 DeepSeek / Gemini 大模型深度推理，可在右上角配置个人 API Key"
     )
     yield {
         "delta": "",

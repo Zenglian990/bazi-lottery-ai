@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 _AI_RATE_BUCKETS: dict[str, list[float]] = {}
 _AI_RATE_LOCK = threading.Lock()
-_AI_RATE_LIMIT = 30
+_AI_RATE_LIMIT = settings.RATE_LIMIT_AI_PER_MIN
 _AI_RATE_WINDOW = 60.0
 _AI_RATE_MAX_BUCKETS = 2000
 

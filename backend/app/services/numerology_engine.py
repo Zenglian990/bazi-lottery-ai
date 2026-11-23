@@ -3,10 +3,15 @@ from datetime import datetime, timedelta, timezone
 import itertools
 import math
 import random
+import threading
 from typing import Any, Dict, List, Optional, Tuple
 from lunar_python import Solar
 
-from backend.app.db.database import get_draws
+from backend.app.core.config import settings
+from backend.app.db.database import get_data_version, get_draws
+_ORIG_GET_DRAWS = get_draws
+_FEATURE_MAP_CACHE: Dict[Tuple[str, int, str, int], Tuple[Dict[int, float], Dict[int, float]]] = {}
+_FEATURE_MAP_CACHE_LOCK = threading.Lock()
 from backend.app.services.lottery_rules import get_lottery_rule
 from backend.app.services.name_numerology import analyze_name_numerology
 from backend.app.services.wuxing_engine import (
@@ -218,7 +223,15 @@ def get_historical_feature_maps(
     lottery_type: str,
     zone_index: int = 0,
 ) -> Tuple[Dict[int, float], Dict[int, float]]:
-    """读取最近 100 期历史开奖，统计频次 C(n) 与当前遗漏 G(n)。"""
+    """读取最近 100 期历史开奖，统计频次 C(n) 与当前遗漏 G(n)（带版本号自动失效进程内缓存）。"""
+    can_cache = get_draws is _ORIG_GET_DRAWS
+    cache_key = (str(settings.DB_PATH), get_data_version(), lottery_type.lower(), zone_index)
+    if can_cache:
+        with _FEATURE_MAP_CACHE_LOCK:
+            cached = _FEATURE_MAP_CACHE.get(cache_key)
+            if cached is not None:
+                return dict(cached[0]), dict(cached[1])
+
     freq_map: Dict[int, float] = {}
     omission_map: Dict[int, float] = {}
 
@@ -251,6 +264,12 @@ def get_historical_feature_maps(
     for num in freq_map:
         if num not in omission_map:
             omission_map[num] = total_draws
+
+    if can_cache and freq_map:
+        with _FEATURE_MAP_CACHE_LOCK:
+            if len(_FEATURE_MAP_CACHE) > 64:
+                _FEATURE_MAP_CACHE.clear()
+            _FEATURE_MAP_CACHE[cache_key] = (dict(freq_map), dict(omission_map))
 
     return freq_map, omission_map
 

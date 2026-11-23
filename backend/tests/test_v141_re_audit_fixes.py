@@ -169,3 +169,92 @@ def test_v150_fallback_divination_respects_weak_vs_strong_strength():
     )
     strong_text = ai_service.generate_fallback_divination(strong_req)
     assert "生逢生旺之令，气盛神足" in strong_text
+
+
+def test_v151_global_rate_limit_middleware_blocks_excess_and_exempts_health():
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+    from backend.app.main import GlobalRateLimitMiddleware
+
+    mini = FastAPI()
+    mini.add_middleware(GlobalRateLimitMiddleware, max_requests_per_min=2, force_enable=True)
+
+    @mini.get("/api/health")
+    def _h():
+        return {"ok": True}
+
+    @mini.get("/api/ping")
+    def _p():
+        return {"pong": True}
+
+    client = TestClient(mini)
+    assert client.get("/api/ping").status_code == 200
+    assert client.get("/api/ping").status_code == 200
+    blocked = client.get("/api/ping")
+    assert blocked.status_code == 429
+    assert blocked.headers.get("Retry-After") == "15"
+    # 健康检查端点必须始终豁免，防止探针误杀容器
+    assert client.get("/api/health").status_code == 200
+
+
+def test_v151_hot_read_cache_header_and_version_bump(tmp_path):
+    from fastapi.testclient import TestClient
+    from backend.app.db.database import get_data_version, init_db, upsert_draws
+    from backend.app.main import app
+
+    client = TestClient(app)
+    r1 = client.get("/api/lottery/stats/ssq?limit=50")
+    assert r1.status_code == 200
+    assert "max-age=300" in (r1.headers.get("Cache-Control") or "")
+
+    isolated_db = tmp_path / "cache_test.db"
+    init_db(isolated_db, seed_if_empty=False)
+    v_before = get_data_version()
+    upsert_draws(
+        "ssq",
+        [
+            {
+                "issue": "2099999",
+                "draw_date": "2099-01-01",
+                "primary_numbers": ["01", "02", "03", "04", "05", "06"],
+                "secondary_numbers": ["07"],
+                "sales_amount": 1000,
+                "pool_amount": 2000,
+            }
+        ],
+        db_path=isolated_db,
+    )
+    assert get_data_version() > v_before
+
+
+@pytest.mark.asyncio
+async def test_v151_sporttery_backup_source_when_500_fails():
+    fake_sporttery_resp = MagicMock()
+    fake_sporttery_resp.json.return_value = {
+        "value": {
+            "list": [
+                {
+                    "lotteryDrawNum": "26135",
+                    "lotteryDrawTime": "2026-11-23",
+                    "lotteryDrawResult": "03 11 19 25 34 04 11",
+                    "totalSaleAmount": "320,100,000",
+                    "poolBalanceAfterdraw": "812,500,000",
+                }
+            ]
+        }
+    }
+
+    async def _side_effect(client, url, headers, max_retries=2):
+        if "500.com" in url:
+            raise RuntimeError("500.com temporarily down")
+        return fake_sporttery_resp
+
+    with patch("backend.app.db.sync_service._get_with_retry", side_effect=_side_effect):
+        rows = await fetch_dlt_live(MagicMock(), count=10)
+
+    assert len(rows) == 1
+    assert rows[0]["issue"] == "2026135"
+    assert rows[0]["primary_numbers"] == ["03", "11", "19", "25", "34"]
+    assert rows[0]["secondary_numbers"] == ["04", "11"]
+    assert rows[0]["pool_amount"] == 812500000
+    assert rows[0]["sales_amount"] == 320100000

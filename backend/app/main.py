@@ -5,7 +5,9 @@ from datetime import datetime, timezone
 import json
 import logging
 import os
+import threading
 import time
+from typing import Optional
 import uuid
 
 from fastapi import FastAPI, Request
@@ -18,6 +20,7 @@ from backend.app.api.routes_ai import router as ai_router
 from backend.app.api.routes_bazi import router as bazi_router
 from backend.app.api.routes_lottery import router as lottery_router
 from backend.app.core.config import settings
+from backend.app.core.security import get_trusted_client_ip
 from backend.app.db.database import get_latest_draw_summary, get_total_draws_count, init_db
 from backend.app.db.gcs_sync import (
     download_db_from_gcs,
@@ -103,6 +106,79 @@ class SecurityHeadersMiddleware:
         await self.app(scope, receive, send_with_security_headers)
 
 
+class GlobalRateLimitMiddleware:
+    """纯 ASGI 单实例全局防刷限流中间件（按可信客户端 IP 与 RATE_LIMIT_DEFAULT_PER_MIN 滑动窗口限流）。"""
+
+    _EXEMPT_PATHS = {"/", "/api/health", "/api/health/detailed"}
+    _WINDOW_SECONDS = 60.0
+    _MAX_BUCKETS = 4000
+
+    def __init__(self, app: ASGIApp, max_requests_per_min: Optional[int] = None, force_enable: bool = False) -> None:
+        self.app = app
+        self._limit = max_requests_per_min
+        self._force_enable = force_enable
+        self._buckets: dict[str, list[float]] = {}
+        self._lock = threading.Lock()
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        if not (self._force_enable or settings.ENABLE_GLOBAL_RATE_LIMIT):
+            await self.app(scope, receive, send)
+            return
+
+        method = str(scope.get("method") or "").upper()
+        path = str(scope.get("path") or "")
+        if method == "OPTIONS" or path in self._EXEMPT_PATHS:
+            await self.app(scope, receive, send)
+            return
+
+        limit = self._limit if self._limit is not None else settings.RATE_LIMIT_DEFAULT_PER_MIN
+        client_ip = get_trusted_client_ip(Request(scope))
+        # Starlette 进程内 TestClient 默认使用虚拟主机名 "testclient"，非显式压测时不误伤自动化测试套
+        if client_ip == "testclient" and not self._force_enable:
+            await self.app(scope, receive, send)
+            return
+        now = time.monotonic()
+
+        allowed = True
+        with self._lock:
+            if len(self._buckets) > 1000:
+                stale = [
+                    k for k, v in self._buckets.items()
+                    if not v or (now - v[-1] > self._WINDOW_SECONDS * 2)
+                ]
+                for k in stale:
+                    self._buckets.pop(k, None)
+                if len(self._buckets) >= self._MAX_BUCKETS:
+                    oldest = sorted(
+                        self._buckets.items(),
+                        key=lambda item: item[1][-1] if item[1] else 0.0,
+                    )[: self._MAX_BUCKETS // 4]
+                    for k, _ in oldest:
+                        self._buckets.pop(k, None)
+
+            bucket = [t for t in self._buckets.get(client_ip, []) if now - t < self._WINDOW_SECONDS]
+            if len(bucket) >= limit:
+                allowed = False
+            else:
+                bucket.append(now)
+                self._buckets[client_ip] = bucket
+
+        if not allowed:
+            resp = JSONResponse(
+                status_code=429,
+                content={"detail": "当前访问过于频繁，请稍候片刻再试。"},
+                headers={"Retry-After": "15"},
+            )
+            await resp(scope, receive, send)
+            return
+
+        await self.app(scope, receive, send)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """应用生命周期：优先从 GCS 恢复 SQLite 快照，按需轻量检查滞后并安全回收后台任务。"""
@@ -181,6 +257,7 @@ app.add_middleware(
     allow_methods=settings.CORS_ALLOW_METHODS,
     allow_headers=settings.CORS_ALLOW_HEADERS,
 )
+app.add_middleware(GlobalRateLimitMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 
 

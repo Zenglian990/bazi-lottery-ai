@@ -283,4 +283,25 @@ class PrizeCheckerAndAuditFixesTest {
         assertTrue("Ticket count must be capped at 200", store.getAllTickets().size <= 200)
         store.clearAll()
     }
+
+    @Test
+    fun v151PublicApkCleanApiOnboardingAndLunarDatetimePreservation() {
+        // 1. 公开版 APK 不再暴露废弃的后台同步路由方法
+        val hasSyncMethod = com.zeng.lottery.data.api.LotteryApiService::class.java.declaredMethods
+            .any { it.name == "syncLotteryData" }
+        assertFalse("Public APK must NOT declare syncLotteryData", hasSyncMethod)
+
+        // 2. 新手生辰引导与首次合规确认持久化状态验证
+        UserPreferencesManager.resetJvmTestPrefs()
+        val prefs = UserPreferencesManager(context = null)
+        assertFalse("Fresh install should not mark birth customized", prefs.hasCustomizedBirth())
+        assertFalse("Fresh install should prompt compliance once", prefs.hasAcceptedCompliance())
+
+        prefs.saveAcceptedCompliance(true)
+        assertTrue(prefs.hasAcceptedCompliance())
+
+        prefs.saveLunarDate(LunarDate(1995, 3, false, 12, 10, 0))
+        assertTrue("Saving lunar date should mark birth customized", prefs.hasCustomizedBirth())
+        UserPreferencesManager.resetJvmTestPrefs()
+    }
 }

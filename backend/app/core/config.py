@@ -36,12 +36,20 @@ def _parse_bool(raw: Optional[str], default: bool = False) -> bool:
 
 class Settings:
     PROJECT_NAME: str = "曾练彩票助手 - 易道乾坤与大数据分析中枢"
-    VERSION: str = "1.5.0"
+    VERSION: str = "1.5.1"
     API_V1_PREFIX: str = "/api"
 
     # 运行环境配置（默认生产模式 fail-closed）
     ENV: str = os.getenv("ENV", "production").strip().lower()
     IS_PRODUCTION: bool = ENV in ("prod", "production")
+
+    # 单实例面向大众防刷限流配置（默认按环境变量动态生效）
+    RATE_LIMIT_AI_PER_MIN: int = max(1, int(os.getenv("RATE_LIMIT_AI_PER_MIN", "30")))
+    RATE_LIMIT_DEFAULT_PER_MIN: int = max(10, int(os.getenv("RATE_LIMIT_DEFAULT_PER_MIN", "120")))
+    ENABLE_GLOBAL_RATE_LIMIT: bool = _parse_bool(
+        os.getenv("ENABLE_GLOBAL_RATE_LIMIT"),
+        default=ENV in ("prod", "production"),
+    )
 
     # 安全与鉴权配置（支持将写库 ADMIN_TOKEN 与 AI_SERVICE_TOKEN 最小权限分离）
     ADMIN_TOKEN: str = os.getenv("ADMIN_TOKEN", "").strip()

@@ -15,6 +15,21 @@ logger = logging.getLogger(__name__)
 _db_write_lock = threading.Lock()
 _CHECKED_EMPTY_PATHS: set[str] = set()
 _CHECKED_PATHS_LOCK = threading.Lock()
+_DATA_VERSION: int = 0
+_DATA_VERSION_LOCK = threading.Lock()
+
+
+def get_data_version() -> int:
+    """返回开奖数据版本号（仅在写入/同步新开奖时递增，用于零开销使热数据缓存精准失效）。"""
+    with _DATA_VERSION_LOCK:
+        return _DATA_VERSION
+
+
+def _bump_data_version() -> int:
+    global _DATA_VERSION
+    with _DATA_VERSION_LOCK:
+        _DATA_VERSION += 1
+        return _DATA_VERSION
 
 DDL_CREATE_DRAWS_TABLE = """
 CREATE TABLE IF NOT EXISTS lottery_draws (
@@ -134,6 +149,8 @@ def seed_database_if_empty(db_path: Optional[Path] = None) -> int:
                     total_inserted += len(params_list)
                     logger.info(f"Seeded {len(params_list)} historical draws for lottery '{l_type}'")
 
+    if total_inserted > 0:
+        _bump_data_version()
     return total_inserted
 
 def upsert_draws(lottery_type: str, draws: List[Dict[str, Any]], db_path: Optional[Path] = None) -> int:
@@ -162,6 +179,7 @@ def upsert_draws(lottery_type: str, draws: List[Dict[str, Any]], db_path: Option
             cursor = conn.cursor()
             cursor.executemany(UPSERT_DRAW_SQL, params_list)
             conn.commit()
+    _bump_data_version()
     return len(params_list)
 
 def _query_draws_single_conn(

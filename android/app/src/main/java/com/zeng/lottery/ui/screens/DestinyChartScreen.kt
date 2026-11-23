@@ -40,7 +40,6 @@ import com.zeng.lottery.data.model.displayXiYongShen
 import com.zeng.lottery.ui.components.WuxingRadarChart
 import com.zeng.lottery.ui.theme.ElementEarth
 import com.zeng.lottery.ui.theme.ElementFire
-import com.zeng.lottery.ui.theme.ElementMetal
 import com.zeng.lottery.ui.theme.ElementWater
 import com.zeng.lottery.ui.theme.ElementWood
 import com.zeng.lottery.ui.theme.LocalAccentGold
