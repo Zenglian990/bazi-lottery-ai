@@ -225,4 +225,51 @@ class PrizeCheckerAndAuditFixesTest {
         assertEquals("龙", BaziEngine.getZodiacFromBranch("辰"))
         assertEquals("蛇", BaziEngine.getZodiacFromBranch("巳"))
     }
+
+    @Test
+    fun v150PublicReleaseHardeningAndUxRegressionChecks() {
+        // 1. 公开版 APK 严禁在 BuildConfig 中暴露 ADMIN_SYNC_TOKEN
+        val hasAdminField = BuildConfig::class.java.declaredFields.any { it.name == "ADMIN_SYNC_TOKEN" }
+        assertFalse("Public APK BuildConfig must NOT contain ADMIN_SYNC_TOKEN", hasAdminField)
+
+        // 2. 大运起运年龄与首步大运详情口径完全一致（虚岁）
+        val dt = LocalDateTime.of(1990, 8, 15, 8, 30)
+        val destiny = BaziEngine.analyzeDestiny(dt, isMale = true)
+        assertEquals(destiny.dayunDetails?.firstOrNull()?.startAge, destiny.dayunStartAge)
+
+        // 3. 本地兜底解盘区分身强与身弱话术
+        val weakDestiny = destiny.copy(strength = "身弱")
+        val weakText = com.zeng.lottery.ai.AiPromptBuilder.generateLocalFallback(
+            lotteryType = LotteryType.SSQ,
+            primaryNumbers = listOf("01", "02", "03", "04", "05", "06"),
+            secondaryNumbers = listOf("07"),
+            destiny = weakDestiny,
+            userName = "曾先生🎉"
+        )
+        assertFalse(weakText.contains("生逢生旺之令，气盛神足"))
+        assertTrue(weakText.contains("气机清灵内敛"))
+
+        val strongDestiny = destiny.copy(strength = "身强")
+        val strongText = com.zeng.lottery.ai.AiPromptBuilder.generateLocalFallback(
+            lotteryType = LotteryType.SSQ,
+            primaryNumbers = listOf("01", "02", "03", "04", "05", "06"),
+            secondaryNumbers = listOf("07"),
+            destiny = strongDestiny,
+            userName = "曾先生"
+        )
+        assertTrue(strongText.contains("生逢生旺之令，气盛神足"))
+
+        // 4. 收藏夹防重与 200 条上限保护
+        com.zeng.lottery.data.local.UserPickHistoryStore.resetJvmTestStore()
+        val store = com.zeng.lottery.data.local.UserPickHistoryStore(context = null)
+        val sample = com.zeng.lottery.data.local.SavedTicket(
+            lotteryType = LotteryType.SSQ,
+            primaryNumbers = listOf(1, 2, 3, 4, 5, 6),
+            secondaryNumbers = listOf(7)
+        )
+        store.saveTicket(sample)
+        store.saveTicket(sample.copy(id = "another-id"))
+        assertEquals("Duplicate ticket should be deduplicated", 1, store.getAllTickets().size)
+        store.clearAll()
+    }
 }

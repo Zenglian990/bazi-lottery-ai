@@ -436,11 +436,14 @@ def generate_fallback_divination(request: BaziDivinationRequest) -> str:
     user_name = getattr(request, "user_name", None) or "缘主"
     user_name = user_name.strip() if user_name.strip() else "缘主"
 
-    # Section 1: 【命盘乾坤】
+    # Section 1: 【命盘乾坤】（区分身强/身弱专业话术，杜绝“身弱却称生旺”矛盾）
+    if strength == "身强":
+        strength_phrase = "生逢生旺之令，气盛神足，命局气象显定为【身强】。四柱八字根基厚实，气机沛然；宜取【" + xi_yong_str + "】为喜用神以克泄疏导、流通秀气"
+    else:
+        strength_phrase = "气机清灵内敛，得令偏轻，命局气象显定为【身弱】。四柱八字贵在得助，宜立【" + xi_yong_str + "】为喜用神以生扶培元、调顺阴阳"
     p1 = (
         f"【命盘乾坤】\n"
-        f"缘主【{user_name}】日主天干为【{day_master}】，生逢生旺之令，命局气象显定为【{strength}】。"
-        f"四柱八字神气内敛，气机升腾；喜用神当立【{xi_yong_str}】以平衡中和、调顺阴阳，"
+        f"缘主【{user_name}】日主天干为【{day_master}】，{strength_phrase}，"
         f"助益命局生化不息、运势畅达。"
     )
 

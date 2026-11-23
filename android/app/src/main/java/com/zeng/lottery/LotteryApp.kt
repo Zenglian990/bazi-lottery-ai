@@ -25,12 +25,14 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Casino
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.GppGood
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.NetworkCheck
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -134,6 +136,7 @@ fun LotteryApp(
     // 使用 rememberSaveable 防止旋转/后台重建丢弃导航页签
     var selectedNavIndex by rememberSaveable { mutableIntStateOf(0) }
     var showSettingsDialog by rememberSaveable { mutableStateOf(false) }
+    var showComplianceDialog by rememberSaveable { mutableStateOf(false) }
 
     // 4 个 Tab 各自持有独立滚动位置，切换页签互不干扰
     val recommendScroll = rememberScrollState()
@@ -347,9 +350,13 @@ fun LotteryApp(
                         lotteryType = selectedLottery,
                         isLoading = isStatsLoading,
                         isSyncingCloud = isSyncingCloud,
+                        lockedPrimary = lockedPrimary,
+                        excludedPrimary = excludedPrimary,
                         onLotterySelected = { viewModel.selectLottery(it) },
                         onRefreshStats = { viewModel.refreshStats() },
-                        onTriggerCloudSync = { viewModel.triggerCloudSync() }
+                        onTriggerCloudSync = { viewModel.triggerCloudSync() },
+                        onLockPrimary = { viewModel.lockPrimaryFromStats(it) },
+                        onExcludePrimary = { viewModel.excludePrimaryFromStats(it) }
                     )
                 }
 
@@ -502,6 +509,27 @@ fun LotteryApp(
                             )
                         }
                     }
+
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
+
+                    OutlinedButton(
+                        onClick = { showComplianceDialog = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.GppGood,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = accentGold
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "隐私政策、免责声明与理性购彩告知",
+                            fontSize = 12.sp,
+                            color = accentGold,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 }
             },
             confirmButton = {
@@ -550,6 +578,79 @@ fun LotteryApp(
             currentConfig = aiConfig,
             onDismiss = { viewModel.closeAiSettings() },
             onSaveConfig = { viewModel.updateAiConfig(it) }
+        )
+    }
+
+    // 面向大众合规公告：隐私政策、免责声明与理性购彩告知
+    if (showComplianceDialog) {
+        AlertDialog(
+            onDismissRequest = { showComplianceDialog = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.GppGood,
+                        contentDescription = null,
+                        tint = accentGold,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "隐私政策与理性购彩告知",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            text = {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text = "1. 隐私保护与本地加密",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = accentGold
+                    )
+                    Text(
+                        text = "您的生辰档案、姓名昵称与历史收藏均默认保存于手机本地；自定义大模型 API Key 经由 Android KeyStore (AES-256-GCM) 硬件级加密存储，不会收集、追踪或出售您的任何个人隐私数据。",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "2. 算法性质与免责声明",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = accentGold
+                    )
+                    Text(
+                        text = "国家福利彩票与体育彩票每次开奖均为独立随机事件。本应用提供的八字五行数理排盘、河图洛书映射、历史冷热遗漏统计及 AI 易道解盘仅作传统文化研究与选号娱乐参考，不构成任何中奖承诺或投资收益保证。",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "3. 合规与理性购彩提示",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = accentGold
+                    )
+                    Text(
+                        text = "本应用为纯工具软件，不提供任何在线购彩、代购、充值或资金交易服务。请前往国家正规线下实体彩站购彩，量力而行、理性娱乐；严禁未满 18 周岁未成年人购买彩票及兑奖。",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "版本信息：曾练彩票助手 v${BuildConfig.VERSION_NAME} (面向大众公开合规版)",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showComplianceDialog = false }) {
+                    Text("我已知晓", color = accentGold, fontWeight = FontWeight.Bold)
+                }
+            }
         )
     }
 }

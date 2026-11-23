@@ -118,3 +118,54 @@ def test_strategy_alias_map_covers_short_english_aliases():
     assert STRATEGY_ALIAS_MAP["cold"] == "cold_reversal"
     assert STRATEGY_ALIAS_MAP["bazi_heavy"] == "bazi_priority"
     assert STRATEGY_ALIAS_MAP["balanced"] == "balanced"
+
+
+def test_v150_emoji_nickname_allowed_and_xss_blocked():
+    from pydantic import ValidationError
+
+    # 大众昵称含 Emoji/标点应放行，避免排盘 200 但 AI 解盘 422
+    req = BaziDivinationRequest(
+        lottery_type="ssq",
+        recommended_numbers=DivinationTicket(primary_numbers=["01", "02", "03", "04", "05", "06"], secondary_numbers=["07"]),
+        user_name="曾先生🎉·2026!",
+    )
+    assert req.user_name == "曾先生🎉·2026!"
+
+    # 尖括号注入与控制字符仍须拦截
+    with pytest.raises(ValidationError):
+        BaziDivinationRequest(
+            lottery_type="ssq",
+            recommended_numbers=DivinationTicket(primary_numbers=["01", "02", "03", "04", "05", "06"], secondary_numbers=["07"]),
+            user_name="<script>alert(1)</script>",
+        )
+
+
+def test_v150_dayun_start_age_matches_first_detail_and_lichun_note():
+    from backend.app.services.bazi_engine import calculate_four_pillars
+
+    # 立春前日（2025-02-02 农历乙巳年正月初五，但八字仍属甲辰年）
+    res = calculate_four_pillars("2025-02-02T10:00:00", calendar_type="solar", gender="male")
+    assert res["dayun_details"], "dayun_details should not be empty"
+    assert res["dayun_start_age"] == res["dayun_details"][0]["start_age"]
+    assert "[八字甲辰年]" in res["lunar_datetime"]
+
+
+def test_v150_fallback_divination_respects_weak_vs_strong_strength():
+    weak_req = BaziDivinationRequest(
+        lottery_type="ssq",
+        recommended_numbers=DivinationTicket(primary_numbers=["01", "02", "03", "04", "05", "06"], secondary_numbers=["07"]),
+        user_name="曾先生",
+        bazi_summary={"day_master": "辛", "strength": "身弱", "xi_yong_shen": ["土", "金"]},
+    )
+    weak_text = ai_service.generate_fallback_divination(weak_req)
+    assert "生逢生旺之令，气盛神足" not in weak_text
+    assert "气机清灵内敛" in weak_text
+
+    strong_req = BaziDivinationRequest(
+        lottery_type="ssq",
+        recommended_numbers=DivinationTicket(primary_numbers=["01", "02", "03", "04", "05", "06"], secondary_numbers=["07"]),
+        user_name="曾先生",
+        bazi_summary={"day_master": "甲", "strength": "身强", "xi_yong_shen": ["火", "土"]},
+    )
+    strong_text = ai_service.generate_fallback_divination(strong_req)
+    assert "生逢生旺之令，气盛神足" in strong_text

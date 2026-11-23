@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.zeng.lottery.BuildConfig
 import com.zeng.lottery.ai.AiConfig
 import com.zeng.lottery.ai.AiDivinationManager
 import com.zeng.lottery.ai.KeyStoreManager
@@ -476,7 +475,8 @@ class LotteryViewModel @JvmOverloads constructor(
         val secRange = lt.secondaryRange ?: return
         val maxLock = lt.secondaryCount.coerceAtLeast(1)
         val poolSize = secRange.last - secRange.first + 1
-        val maxExclude = minOf(25, (poolSize - lt.secondaryCount).coerceAtLeast(1))
+        // 与后端 Pydantic excluded_secondary max_length=12 严格对齐，杜绝 422
+        val maxExclude = minOf(12, (poolSize - lt.secondaryCount).coerceAtLeast(1))
         when {
             ball in curLocked -> {
                 _lockedSecondary.value = curLocked - ball
@@ -507,6 +507,53 @@ class LotteryViewModel @JvmOverloads constructor(
         _excludedPrimary.value = emptySet()
         _lockedSecondary.value = emptySet()
         _excludedSecondary.value = emptySet()
+    }
+
+    /**
+     * 供「冷热走势」热力矩阵点击号码格直接一键设为定胆。
+     */
+    fun lockPrimaryFromStats(ball: String) {
+        val lt = _selectedLottery.value
+        val maxLock = (lt.primaryCount - 1).coerceAtLeast(1)
+        val curLocked = _lockedPrimary.value
+        if (ball in curLocked) {
+            _lockedPrimary.value = curLocked - ball
+            _toastMessage.value = "已取消号码 $ball 的【定胆】"
+            return
+        }
+        if (curLocked.size >= maxLock) {
+            _toastMessage.value = "主区定胆已满 ($maxLock 个)，请先取消部分胆码"
+            return
+        }
+        _excludedPrimary.value = _excludedPrimary.value - ball
+        _lockedPrimary.value = curLocked + ball
+        _toastMessage.value = "已将号码 $ball 设为【定胆】，前往「智能机选」立即生效"
+    }
+
+    /**
+     * 供「冷热走势」热力矩阵点击号码格直接一键设为杀号。
+     */
+    fun excludePrimaryFromStats(ball: String) {
+        val lt = _selectedLottery.value
+        val poolSize = lt.primaryRange.last - lt.primaryRange.first + 1
+        val maxExclude = if (lt.primaryAllowDuplicate) {
+            (poolSize - 1).coerceAtLeast(1)
+        } else {
+            minOf(25, (poolSize - lt.primaryCount).coerceAtLeast(1))
+        }
+        val curExcluded = _excludedPrimary.value
+        if (ball in curExcluded) {
+            _excludedPrimary.value = curExcluded - ball
+            _toastMessage.value = "已取消号码 $ball 的【杀号】"
+            return
+        }
+        if (curExcluded.size >= maxExclude) {
+            _toastMessage.value = "主区杀号已达上限 ($maxExclude 个)"
+            return
+        }
+        _lockedPrimary.value = _lockedPrimary.value - ball
+        _excludedPrimary.value = curExcluded + ball
+        _toastMessage.value = "已将号码 $ball 设为【杀号】，前往「智能机选」立即生效"
     }
 
     fun selectLottery(type: LotteryType) {
@@ -727,34 +774,58 @@ class LotteryViewModel @JvmOverloads constructor(
     }
 
     /**
-     * 自用云端全量同步：触发云端 /api/lottery/sync 抓取官网最新开奖并同步持久化至 GCS，再立即刷新走势与历史开奖。
+     * 面向大众的云端最新开奖同步：并发拉取 4 大彩种最新官方开奖与统计缓存（由云端每日定时自动入库，无需客户端持有管理员写库密钥）。
      */
     fun triggerCloudSync(forceReload: Boolean = false) {
         if (!isNetworkAvailable()) {
-            _toastMessage.value = "当前处于离线状态，无法触发云端抓取"
+            _toastMessage.value = "当前处于离线状态，已展示本地缓存开奖数据"
             return
         }
         viewModelScope.launch {
             _isSyncingCloud.value = true
             updateAggregateLoading()
             try {
-                val adminToken = BuildConfig.ADMIN_SYNC_TOKEN
-                if (adminToken.isNotBlank()) {
-                    val result = repository.triggerCloudSync("all", adminToken, forceReload)
-                    result.onSuccess { resp ->
-                        val total = resp.syncedCounts.values.sum()
-                        _toastMessage.value = when (resp.status) {
-                            "success" -> "云端抓取成功！已同步 $total 条最新官方开奖"
-                            "partial" -> "部分彩种同步完成（更新 $total 条），请留意详情"
-                            else -> "云端官网同步暂未成功：${resp.message.take(40)}"
+                val targetType = _selectedLottery.value
+                var updatedLotteries = 0
+                withTimeout(28000L) {
+                    coroutineScope {
+                        val jobs = LotteryType.entries.map { type ->
+                            async {
+                                try {
+                                    val draws = repository.getHistoryDraws(type, 50)
+                                    if (draws.isNotEmpty()) {
+                                        updateDrawsCache(type, draws)
+                                        if (type == targetType) {
+                                            _historyDraws.value = draws
+                                        }
+                                        true
+                                    } else false
+                                } catch (_: Exception) {
+                                    false
+                                }
+                            }
                         }
-                    }.onFailure { err ->
-                        _toastMessage.value = err.message ?: "云端同步失败"
+                        val statsDef = async {
+                            try {
+                                val s = repository.getStats(targetType)
+                                if (_selectedLottery.value == targetType) _stats.value = s
+                            } catch (_: Exception) {
+                            }
+                        }
+                        statsDef.await()
+                        updatedLotteries = jobs.count { it.await() }
                     }
-                } else {
-                    _toastMessage.value = "正在刷新云端最新统计榜单…"
                 }
-                refreshStats()
+                val latest = _historyDraws.value.firstOrNull()
+                _toastMessage.value = if (updatedLotteries > 0 && latest != null) {
+                    "已同步云端最新开奖（${targetType.title} 最新第 ${latest.issue} 期 · ${latest.drawDate}）"
+                } else {
+                    "云端开奖刷新完成"
+                }
+            } catch (_: CancellationException) {
+                return@launch
+            } catch (_: Exception) {
+                _toastMessage.value = "云端连接波动，已保持本地最新缓存"
             } finally {
                 _isSyncingCloud.value = false
                 updateAggregateLoading()

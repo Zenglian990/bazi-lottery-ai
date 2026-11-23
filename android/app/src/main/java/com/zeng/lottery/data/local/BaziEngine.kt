@@ -355,7 +355,6 @@ object BaziEngine {
         val eightChar = lunarObj.eightChar
         eightChar.sect = 2
         val yun = eightChar.getYun(if (isMale) 1 else 0)
-        val dayunStartAge = runCatching { yun.startYear }.getOrNull()
         val rawDaYun = runCatching { yun.daYun }.getOrDefault(emptyArray())
         val dayunDetails = rawDaYun
             .filter { it.ganZhi.isNotBlank() }
@@ -364,10 +363,13 @@ object BaziEngine {
                 DayunDetail(
                     ganzhi = dy.ganZhi,
                     startAge = dy.startAge,
+                    endAge = dy.endAge,
                     startYear = dy.startYear,
                     endYear = dy.endYear
                 )
             }
+        // 统一使用第一柱大运虚岁起运年龄，与大运卡片完全一致
+        val dayunStartAge = dayunDetails.firstOrNull()?.startAge ?: runCatching { yun.startYear }.getOrNull()
         val dayunList = dayunDetails.map { it.ganzhi }
 
         return BaziDestiny(

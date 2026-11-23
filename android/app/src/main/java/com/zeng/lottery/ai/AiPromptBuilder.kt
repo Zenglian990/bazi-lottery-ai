@@ -119,9 +119,14 @@ object AiPromptBuilder {
             "，后区/蓝球【${secondaryNumbers.joinToString(", ")}】"
         } else ""
 
+        val strengthClause = if (strength == "身强") {
+            "生逢生旺之令，气盛神足，命局气象显定为【身强】。四柱八字根基厚实，气机沛然；喜用神当立【$xiYong】以克泄疏导、流通秀气"
+        } else {
+            "气机清灵内敛，得令偏轻，命局气象显定为【$strength】。四柱八字贵在得助，喜用神当立【$xiYong】以生扶培元、调顺阴阳"
+        }
         val p1 = """
             【命盘乾坤】
-            缘主【$effectiveName】日主天干为【$dayMaster】，生逢生旺之令，命局气象显定为【$strength】。四柱八字神气内敛，气机升腾；喜用神当立【$xiYong】以平衡中和、调顺阴阳，助益命局生化不息、运势畅达。
+            缘主【$effectiveName】日主天干为【$dayMaster】，${strengthClause}，助益命局生化不息、运势畅达。
         """.trimIndent()
 
         val p2 = """

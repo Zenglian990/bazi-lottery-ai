@@ -33,13 +33,13 @@ import com.zeng.lottery.ui.theme.BlueBallHighlight
 import com.zeng.lottery.ui.theme.BlueBallShadow
 import com.zeng.lottery.ui.theme.ElementEarth
 import com.zeng.lottery.ui.theme.ElementFire
-import com.zeng.lottery.ui.theme.ElementMetal
 import com.zeng.lottery.ui.theme.ElementWater
 import com.zeng.lottery.ui.theme.ElementWood
 import com.zeng.lottery.ui.theme.FortuneGold
 import com.zeng.lottery.ui.theme.GoldBallBase
 import com.zeng.lottery.ui.theme.GoldBallHighlight
 import com.zeng.lottery.ui.theme.GoldBallShadow
+import com.zeng.lottery.ui.theme.LocalAccentGold
 import com.zeng.lottery.ui.theme.RedBallBase
 import com.zeng.lottery.ui.theme.RedBallHighlight
 import com.zeng.lottery.ui.theme.RedBallShadow
@@ -98,7 +98,7 @@ fun LotteryBall(
     }
 
     val elementColor = when (wuxingElement) {
-        "金", "metal" -> ElementMetal
+        "金", "metal" -> LocalAccentGold.current
         "木", "wood" -> ElementWood
         "水", "water" -> ElementWater
         "火", "fire" -> ElementFire

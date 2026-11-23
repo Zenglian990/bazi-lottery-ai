@@ -57,6 +57,7 @@ class UserPickHistoryStore(
     companion object {
         const val PREFS_NAME = "lottery_user_pick_history"
         const val KEY_SAVED_TICKETS = "saved_tickets_json"
+        const val MAX_TICKETS = 200
 
         // Shared in-memory storage for JVM unit test execution across instances when Context is null
         private val jvmTestStorage = ConcurrentHashMap<String, String>()
@@ -64,6 +65,10 @@ class UserPickHistoryStore(
         fun resetJvmTestStore() {
             jvmTestStorage.clear()
         }
+    }
+
+    private fun ticketFingerprint(t: SavedTicket): String {
+        return "${t.lotteryType.code}|${t.primaryNumbers.joinToString(",")}|${t.secondaryNumbers.joinToString(",")}"
     }
 
     private val prefs: SharedPreferences? = try {
@@ -122,10 +127,12 @@ class UserPickHistoryStore(
 
     override fun saveTicket(ticket: SavedTicket) {
         synchronized(this) {
+            val fp = ticketFingerprint(ticket)
             val current = getAllTickets().toMutableList()
-            current.removeAll { it.id == ticket.id }
+            // 同彩种同号码去重防手滑重复收藏，并限制总上限防止本地存储无限膨胀
+            current.removeAll { it.id == ticket.id || ticketFingerprint(it) == fp }
             current.add(0, ticket)
-            val sorted = current.sortedByDescending { it.timestamp }
+            val sorted = current.sortedByDescending { it.timestamp }.take(MAX_TICKETS)
             writeTickets(sorted)
         }
     }
@@ -134,10 +141,15 @@ class UserPickHistoryStore(
         if (tickets.isEmpty()) return
         synchronized(this) {
             val current = getAllTickets().toMutableList()
-            val incomingIds = tickets.map { it.id }.toSet()
-            current.removeAll { it.id in incomingIds }
-            current.addAll(0, tickets)
-            val sorted = current.sortedByDescending { it.timestamp }
+            val dedupIncoming = LinkedHashMap<String, SavedTicket>()
+            for (t in tickets) {
+                dedupIncoming[ticketFingerprint(t)] = t
+            }
+            val incomingIds = dedupIncoming.values.map { it.id }.toSet()
+            val incomingFps = dedupIncoming.keys
+            current.removeAll { it.id in incomingIds || ticketFingerprint(it) in incomingFps }
+            current.addAll(0, dedupIncoming.values)
+            val sorted = current.sortedByDescending { it.timestamp }.take(MAX_TICKETS)
             writeTickets(sorted)
         }
     }

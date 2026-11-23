@@ -87,7 +87,6 @@ jobs:
       - name: Build Signed & R8-Minified Release APK
         env:
           APP_HMAC_SECRET: ${{ secrets.APP_HMAC_SECRET }}
-          ADMIN_SYNC_TOKEN: ${{ secrets.ADMIN_SYNC_TOKEN }}
           ANDROID_KEYSTORE_PATH: ${{ steps.keystore.outputs.path }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
@@ -114,14 +113,13 @@ jobs:
           tag_name: ${{ steps.version.outputs.tag }}
           name: "曾练彩票助手 ${{ steps.version.outputs.tag }} (Release)"
           body: |
-            ## 曾练彩票助手 ${{ steps.version.outputs.tag }} 正式发布
+            ## 曾练彩票助手 ${{ steps.version.outputs.tag }} 面向大众正式版
 
-            ### 本次全栈重磅升级：
-            - **云端 AI 安全中继打通**：Android 端自动计算带一次性 Nonce 的 HMAC-SHA256 防重放签名，无缝调用云端 Gemini / 易经 64 卦全库 RAG 解盘；支持 DeepSeek R1 思考链折叠与透明降级提示；
-            - **精准算法全面重构**：A-Res 抽样迁至对数空间杜绝下溢反转、修复 `hot_chase` / `balanced` 遗漏曲线、补全《周易》完整 64 卦与《穷通宝鉴》12 调候真值、支持天文均时差与真太阳时校正；
-            - **自用闭环重磅功能**：新增 **4 大彩种收藏夹一键自动对奖复盘**、**定胆/杀号与自定义三元权重**、**农历/公历双向选择器**、**多亲友生辰档案**、**八步大运时间轴与姓名五格数理卡片**、**Canvas 频次柱状图与遗漏热力矩阵**、**宣纸浅色 / 玄墨暗金主题切换**；
-            - **零成本云端开奖持久化**：Cloud Run 单实例锁定 + GCS SQLite 自动快照同步 + Cloud Scheduler 每日自动拉取官方开奖 + 端侧磁盘缓存最新开奖期号；
-            - **工程安全加固**：正式固定签名 + R8 代码混淆 + 网络明文禁令 + AndroidKeyStore 强依赖 + 全栈 CI 质量门禁。
+            ### 核心特性与本次升级：
+            - **公开分发零特权密钥安全架构**：客户端彻底剥离管理员写库令牌，全量开奖由云端 Cloud Scheduler 每日自动同步并经 GCS 快照持久化，零配置开箱即用；
+            - **精准子平八字与易理融合**：支持 1900–2100 农历/公历双向互转、真太阳时与均时差校正、8 步大运虚岁时间轴、姓名五格数理卡片与《周易》64 卦全库典籍印证；
+            - **全闭环选号与复盘体验**：4 大官方彩种 × 4 大策略 × 1/5/10/20 注、定胆/杀号与自定义三元权重、走势遗漏热力矩阵点击查详情与一键定胆/杀号、收藏夹防重懒加载及最近 10 期自动对奖复盘；
+            - **双主题护眼与流畅交互**：玄墨暗金 / 宣纸浅色（6.3:1 高对比度赤金）一键切换、AI 流式解盘不抢滚动条、透明降级提示与 DeepSeek R1 思考链折叠、内置隐私政策与理性购彩合规告知。
           files: android/app/build/outputs/apk/release/ZengLian-Lottery-v${{ steps.version.outputs.name }}.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

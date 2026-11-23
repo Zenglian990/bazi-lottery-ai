@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +28,8 @@ import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.FormatListNumbered
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.ShowChart
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -39,13 +42,17 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -63,6 +70,7 @@ import com.zeng.lottery.ui.components.BallColorType
 import com.zeng.lottery.ui.components.LotteryBall
 import com.zeng.lottery.ui.components.TrendStatsCard
 import com.zeng.lottery.ui.theme.ElementWater
+import com.zeng.lottery.ui.theme.FortuneGold
 import com.zeng.lottery.ui.theme.ImperialRed
 import com.zeng.lottery.ui.theme.LocalAccentGold
 
@@ -79,9 +87,13 @@ fun StatsScreen(
     lotteryType: LotteryType,
     isLoading: Boolean = false,
     isSyncingCloud: Boolean = false,
+    lockedPrimary: Set<String> = emptySet(),
+    excludedPrimary: Set<String> = emptySet(),
     onLotterySelected: (LotteryType) -> Unit = {},
     onRefreshStats: () -> Unit,
     onTriggerCloudSync: () -> Unit = {},
+    onLockPrimary: (String) -> Unit = {},
+    onExcludePrimary: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -231,7 +243,7 @@ fun StatsScreen(
                                     Icon(Icons.Default.CloudDownload, contentDescription = null, modifier = Modifier.size(14.dp))
                                 }
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text(if (isSyncingCloud) "抓取中..." else "云端同步官网", style = MaterialTheme.typography.labelSmall)
+                                Text(if (isSyncingCloud) "同步中..." else "同步最新开奖", style = MaterialTheme.typography.labelSmall)
                             }
                         }
                     }
@@ -279,7 +291,12 @@ fun StatsScreen(
                     item(key = "omission_heatmap") {
                         OmissionHeatmapCard(
                             lotteryType = lotteryType,
-                            zoneStats = primaryMap
+                            zoneStats = primaryMap,
+                            totalDraws = stats.totalDraws,
+                            lockedPrimary = lockedPrimary,
+                            excludedPrimary = excludedPrimary,
+                            onLockPrimary = onLockPrimary,
+                            onExcludePrimary = onExcludePrimary
                         )
                     }
                 }
@@ -578,17 +595,23 @@ private fun FrequencyBarChartCard(
 }
 
 /**
- * 全号盘当前遗漏热力矩阵（欲出度越高，格底越暖亮）。
+ * 全号盘当前遗漏热力矩阵（支持点击号码查明细，并一键定胆/杀号闭环联动机选）。
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun OmissionHeatmapCard(
     lotteryType: LotteryType,
-    zoneStats: Map<String, NumberStat>
+    zoneStats: Map<String, NumberStat>,
+    totalDraws: Int = 0,
+    lockedPrimary: Set<String> = emptySet(),
+    excludedPrimary: Set<String> = emptySet(),
+    onLockPrimary: (String) -> Unit = {},
+    onExcludePrimary: (String) -> Unit = {}
 ) {
     val accentGold = LocalAccentGold.current
     val sortedEntries = zoneStats.entries.sortedBy { it.key.toIntOrNull() ?: 0 }
     val maxDesire = sortedEntries.maxOfOrNull { it.value.desireIndex }?.coerceAtLeast(1f) ?: 1f
+    var selectedEntry by remember { mutableStateOf<Pair<String, NumberStat>?>(null) }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -604,7 +627,7 @@ private fun OmissionHeatmapCard(
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "上行为球号，下行为当前遗漏期数；高亮琥珀色代表高欲出度",
+                text = "点击任意号码查详情并一键定胆/杀号 · 琥珀高亮为高欲出度",
                 style = MaterialTheme.typography.labelSmall,
                 fontSize = 10.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -617,39 +640,181 @@ private fun OmissionHeatmapCard(
                 verticalArrangement = Arrangement.spacedBy(5.dp)
             ) {
                 sortedEntries.forEach { (numStr, stat) ->
+                    val normalizedBall = if (lotteryType.primaryRange.last > 9) {
+                        numStr.padStart(2, '0')
+                    } else {
+                        numStr.toIntOrNull()?.toString() ?: numStr
+                    }
+                    val isLocked = normalizedBall in lockedPrimary
+                    val isExcluded = normalizedBall in excludedPrimary
                     val heat = (stat.desireIndex / maxDesire).coerceIn(0f, 1f)
                     val bgColor = when {
+                        isLocked -> FortuneGold
+                        isExcluded -> Color.Gray.copy(alpha = 0.30f)
                         heat >= 0.72f -> accentGold.copy(alpha = 0.32f)
                         heat >= 0.45f -> accentGold.copy(alpha = 0.14f)
                         else -> MaterialTheme.colorScheme.surface.copy(alpha = 0.75f)
                     }
+                    val borderColor = when {
+                        isLocked -> FortuneGold
+                        isExcluded -> MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                        heat >= 0.72f -> accentGold
+                        else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                    }
+                    val titleColor = when {
+                        isLocked -> Color(0xFF1A1200)
+                        isExcluded -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
+                        heat >= 0.72f -> accentGold
+                        else -> MaterialTheme.colorScheme.onSurface
+                    }
+                    val subColor = when {
+                        isLocked -> Color(0xFF3A2800)
+                        else -> MaterialTheme.colorScheme.onSurfaceVariant
+                    }
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
-                            .width(42.dp)
+                            .width(44.dp)
+                            .clip(RoundedCornerShape(8.dp))
                             .background(bgColor, RoundedCornerShape(8.dp))
                             .border(
-                                width = if (heat >= 0.72f) 1.dp else 0.5.dp,
-                                color = if (heat >= 0.72f) accentGold else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                                width = if (isLocked || heat >= 0.72f) 1.2.dp else 0.5.dp,
+                                color = borderColor,
                                 shape = RoundedCornerShape(8.dp)
                             )
+                            .clickable { selectedEntry = normalizedBall to stat }
                             .padding(vertical = 4.dp)
                     ) {
                         Text(
-                            text = numStr,
-                            fontSize = 12.sp,
+                            text = when {
+                                isLocked -> "$normalizedBall★"
+                                isExcluded -> "×$normalizedBall"
+                                else -> normalizedBall
+                            },
+                            fontSize = 11.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = if (heat >= 0.72f) accentGold else MaterialTheme.colorScheme.onSurface
+                            color = titleColor
                         )
                         Text(
                             text = "${stat.currentOmission}期",
                             fontSize = 9.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = subColor
                         )
                     }
                 }
             }
         }
+    }
+
+    selectedEntry?.let { (ballStr, stat) ->
+        val numInt = ballStr.toIntOrNull() ?: 0
+        val wuxing = BaziEngine.getHetuElementZh(numInt)
+        val isLocked = ballStr in lockedPrimary
+        val isExcluded = ballStr in excludedPrimary
+        val statusLabel = when {
+            stat.isHot -> "热号（近期高频）"
+            stat.isCold -> "冷号（近期低频）"
+            else -> "温号（走势均衡）"
+        }
+        val hitPercent = if (stat.hitRate > 0f) {
+            String.format(java.util.Locale.CHINA, "%.1f%%", stat.hitRate * 100f)
+        } else if (totalDraws > 0) {
+            String.format(java.util.Locale.CHINA, "%.1f%%", stat.frequency * 100f / totalDraws)
+        } else {
+            "--"
+        }
+
+        AlertDialog(
+            onDismissRequest = { selectedEntry = null },
+            title = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    LotteryBall(
+                        number = ballStr,
+                        colorType = BallColorType.RED,
+                        wuxingElement = wuxing,
+                        size = 38.dp,
+                        animate = false
+                    )
+                    Column {
+                        Text(
+                            text = "${lotteryType.title} 主区号码 $ballStr",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "河图五行属【$wuxing】 · $statusLabel",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = accentGold
+                        )
+                    }
+                }
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f), RoundedCornerShape(10.dp))
+                            .padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = "统计期数出号：${stat.frequency} 次（出现率 $hitPercent）",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Text(
+                            text = "当前遗漏：${stat.currentOmission} 期  |  历史最大遗漏：${stat.maxOmission} 期",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Text(
+                            text = "理论欲出度：${String.format(java.util.Locale.CHINA, "%.2f", stat.desireIndex)}（>1.0 代表超过平均间隔）",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = accentGold,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            onClick = {
+                                onLockPrimary(ballStr)
+                                selectedEntry = null
+                            },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isLocked) MaterialTheme.colorScheme.surfaceVariant else FortuneGold,
+                                contentColor = if (isLocked) MaterialTheme.colorScheme.onSurface else Color(0xFF1A1200)
+                            )
+                        ) {
+                            Text(if (isLocked) "取消定胆" else "★ 一键定胆", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+                        OutlinedButton(
+                            onClick = {
+                                onExcludePrimary(ballStr)
+                                selectedEntry = null
+                            },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = if (isExcluded) accentGold else MaterialTheme.colorScheme.error
+                            )
+                        ) {
+                            Text(if (isExcluded) "取消杀号" else "× 一键杀号", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { selectedEntry = null }) {
+                    Text("关闭", color = accentGold, fontWeight = FontWeight.Bold)
+                }
+            }
+        )
     }
 }
 

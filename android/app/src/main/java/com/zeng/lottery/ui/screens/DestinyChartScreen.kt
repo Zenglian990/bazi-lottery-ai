@@ -311,7 +311,7 @@ fun DestinyChartScreen(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         val dirText = if (destiny.dayunForward == false) "逆行" else "顺行"
-                        val startAgeText = destiny.dayunStartAge?.let { " · ${it}岁起运" } ?: ""
+                        val startAgeText = destiny.dayunStartAge?.let { " · 虚岁${it}岁起运" } ?: ""
                         Text(
                             text = "$dirText$startAgeText",
                             style = MaterialTheme.typography.labelSmall,

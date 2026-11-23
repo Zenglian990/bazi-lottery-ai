@@ -26,7 +26,6 @@ fun escapeBuildConfigString(raw: String): String {
 }
 
 val appHmacSecret = resolveConfigProp("APP_HMAC_SECRET")
-val adminSyncToken = resolveConfigProp("ADMIN_SYNC_TOKEN")
 
 val releaseKeystorePath = resolveConfigProp("ANDROID_KEYSTORE_PATH")
 val releaseKeystorePassword = resolveConfigProp("ANDROID_KEYSTORE_PASSWORD")
@@ -46,13 +45,12 @@ android {
         applicationId = "com.zeng.lottery"
         minSdk = 26
         targetSdk = 35
-        versionCode = 11
-        versionName = "1.4.1"
+        versionCode = 12
+        versionName = "1.5.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "APP_HMAC_SECRET", "\"${escapeBuildConfigString(appHmacSecret)}\"")
-        buildConfigField("String", "ADMIN_SYNC_TOKEN", "\"${escapeBuildConfigString(adminSyncToken)}\"")
     }
 
     signingConfigs {

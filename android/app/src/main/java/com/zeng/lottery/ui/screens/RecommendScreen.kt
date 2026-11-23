@@ -20,9 +20,10 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.BookmarkAdd
@@ -885,43 +886,44 @@ private fun HistoryTicketsDialog(
                     )
                 }
             } else {
-                Column(
+                LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(max = 440.dp)
-                        .verticalScroll(rememberScrollState()),
+                        .heightIn(max = 440.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     // 顶部自动对奖汇总横幅
                     if (showPrizeSummary) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(
-                                    color = if (wonCount > 0) accentGold.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
-                                    shape = RoundedCornerShape(10.dp)
+                        item(key = "prize_summary") {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(
+                                        color = if (wonCount > 0) accentGold.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+                                        shape = RoundedCornerShape(10.dp)
+                                    )
+                                    .padding(horizontal = 10.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CheckCircle,
+                                    contentDescription = null,
+                                    tint = if (wonCount > 0) accentGold else ElementWood,
+                                    modifier = Modifier.size(16.dp)
                                 )
-                                .padding(horizontal = 10.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.CheckCircle,
-                                contentDescription = null,
-                                tint = if (wonCount > 0) accentGold else ElementWood,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = if (wonCount > 0) {
-                                    "对照选定官方开奖：共核验 ${savedTickets.size} 注，命中中奖 $wonCount 注！"
-                                } else {
-                                    "已自动核验全部 ${savedTickets.size} 注（支持下方切换往期期号复盘，金环标出命中球）"
-                                },
-                                style = MaterialTheme.typography.labelSmall,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = if (wonCount > 0) {
+                                        "对照选定官方开奖：共核验 ${savedTickets.size} 注，命中中奖 $wonCount 注！"
+                                    } else {
+                                        "已自动核验全部 ${savedTickets.size} 注（支持下方切换往期期号复盘，金环标出命中球）"
+                                    },
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
                         }
                     }
 
@@ -929,44 +931,46 @@ private fun HistoryTicketsDialog(
                     involvedTypes.forEach { lt ->
                         val recentDraws = drawsByType[lt].orEmpty().take(10)
                         if (recentDraws.size > 1) {
-                            val activeIssue = selectedIssueByLottery[lt] ?: recentDraws.first().issue
-                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Text(
-                                    text = "${lt.title} 对奖期号（最新第 ${recentDraws.first().issue} 期）：",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontSize = 10.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .horizontalScroll(rememberScrollState()),
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    recentDraws.forEachIndexed { dIdx, dItem ->
-                                        val isCur = dItem.issue == activeIssue
-                                        FilterChip(
-                                            selected = isCur,
-                                            onClick = { selectedIssueByLottery[lt] = dItem.issue },
-                                            label = {
-                                                Text(
-                                                    text = if (dIdx == 0) "最新 ${dItem.issue}" else dItem.issue,
-                                                    fontSize = 10.sp,
-                                                    fontWeight = if (isCur) FontWeight.Bold else FontWeight.Normal
+                            item(key = "issue_picker_${lt.code}") {
+                                val activeIssue = selectedIssueByLottery[lt] ?: recentDraws.first().issue
+                                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Text(
+                                        text = "${lt.title} 对奖期号（最新第 ${recentDraws.first().issue} 期）：",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontSize = 10.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .horizontalScroll(rememberScrollState()),
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        recentDraws.forEachIndexed { dIdx, dItem ->
+                                            val isCur = dItem.issue == activeIssue
+                                            FilterChip(
+                                                selected = isCur,
+                                                onClick = { selectedIssueByLottery[lt] = dItem.issue },
+                                                label = {
+                                                    Text(
+                                                        text = if (dIdx == 0) "最新 ${dItem.issue}" else dItem.issue,
+                                                        fontSize = 10.sp,
+                                                        fontWeight = if (isCur) FontWeight.Bold else FontWeight.Normal
+                                                    )
+                                                },
+                                                colors = FilterChipDefaults.filterChipColors(
+                                                    selectedContainerColor = accentGold.copy(alpha = 0.22f),
+                                                    selectedLabelColor = accentGold
                                                 )
-                                            },
-                                            colors = FilterChipDefaults.filterChipColors(
-                                                selectedContainerColor = accentGold.copy(alpha = 0.22f),
-                                                selectedLabelColor = accentGold
                                             )
-                                        )
+                                        }
                                     }
                                 }
                             }
                         }
                     }
 
-                    savedTickets.forEachIndexed { idx, ticket ->
+                    itemsIndexed(items = savedTickets, key = { _, ticket -> ticket.id }) { idx, ticket ->
                         val prize = prizeResults[ticket.id]
                         val priList = (ticket.primaryNumbers as? List<*>)?.mapNotNull {
                             (it as? Number)?.toInt() ?: it?.toString()?.toIntOrNull()

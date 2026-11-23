@@ -36,7 +36,7 @@ def _parse_bool(raw: Optional[str], default: bool = False) -> bool:
 
 class Settings:
     PROJECT_NAME: str = "曾练彩票助手 - 易道乾坤与大数据分析中枢"
-    VERSION: str = "1.4.0"
+    VERSION: str = "1.5.0"
     API_V1_PREFIX: str = "/api"
 
     # 运行环境配置（默认生产模式 fail-closed）

@@ -349,6 +349,11 @@ def calculate_four_pillars(
     time_gan = eight_char.getTimeGan()
     time_zhi = eight_char.getTimeZhi()
 
+    # 若处于春节与立春之间（农历年干支与立春八字年柱不同），显式注明八字年柱消除违和
+    bazi_year_pair = f"{year_gan}{year_zhi}"
+    if bazi_year_pair != lunar.getYearInGanZhi():
+        lunar_dt_str = f"{lunar_dt_str} [八字{bazi_year_pair}年]"
+
     def make_pillar_detail(stem: str, branch: str) -> Dict[str, Any]:
         stem_elem = STEM_ELEMENTS[stem]
         branch_hiddens = BRANCH_HIDDEN_STEMS[branch]
@@ -386,8 +391,9 @@ def calculate_four_pillars(
     gender_int = 1 if is_male else 0
     yun = eight_char.getYun(gender_int)
     dayun_forward = yun.isForward()
-    dayun_start_age = int(yun.getStartYear())
     raw_dayuns = [d for d in yun.getDaYun() if d.getGanZhi()][:8]
+    # 统一使用第一柱大运虚岁起运年龄，避免与 dayun_details[0].start_age 混用周岁/虚岁差 1-2 岁
+    dayun_start_age = int(raw_dayuns[0].getStartAge()) if raw_dayuns else int(yun.getStartYear())
     dayun_list = [d.getGanZhi() for d in raw_dayuns]
     dayun_details = [
         {

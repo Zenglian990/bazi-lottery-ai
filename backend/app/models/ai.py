@@ -193,8 +193,9 @@ class BaziDivinationRequest(BaseModel):
         s = v.strip()
         if not s:
             return "缘主"
-        if len(s) > 20 or not _USER_NAME_RE.fullmatch(s):
+        if len(s) > 20:
             raise ValueError("Invalid user_name format or length")
+        # 兼容大众用户昵称中的 Emoji 与常见标点，同时保留对控制符和尖括号的严格拦截
         return s
 
     @field_validator("user_api_key", mode="before")

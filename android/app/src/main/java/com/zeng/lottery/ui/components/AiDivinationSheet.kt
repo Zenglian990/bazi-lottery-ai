@@ -59,6 +59,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -235,11 +236,26 @@ fun AiDivinationSheet(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // 正文滚动容器（流式输出时自动平滑跟随滚底）
+            // 正文滚动容器（智能跟滚：仅当用户停留在底部附近且未手动上滑时才跟随，绝不抢滚动条）
             val scrollState = rememberScrollState()
+            var autoFollowBottom by remember { mutableStateOf(true) }
+            LaunchedEffect(selectedBetIndex, isStreaming) {
+                if (isStreaming && text.isEmpty()) {
+                    autoFollowBottom = true
+                }
+            }
+            LaunchedEffect(scrollState.value, scrollState.maxValue, scrollState.isScrollInProgress) {
+                val distToBottom = (scrollState.maxValue - scrollState.value).coerceAtLeast(0)
+                if (scrollState.isScrollInProgress && distToBottom > 120) {
+                    autoFollowBottom = false
+                } else if (distToBottom <= 60) {
+                    autoFollowBottom = true
+                }
+            }
             LaunchedEffect(text.length, isStreaming) {
-                if (isStreaming && scrollState.maxValue > 0) {
-                    scrollState.animateScrollTo(scrollState.maxValue)
+                val distToBottom = (scrollState.maxValue - scrollState.value).coerceAtLeast(0)
+                if (isStreaming && autoFollowBottom && !scrollState.isScrollInProgress && scrollState.maxValue > 0 && distToBottom <= 300) {
+                    scrollState.scrollTo(scrollState.maxValue)
                 }
             }
 
