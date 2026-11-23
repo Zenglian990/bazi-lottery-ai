@@ -51,7 +51,7 @@ class BirthInputLayoutAdaptationTest {
     @Test
     fun testShichenAll12Hours_FormattingAndRange() {
         val testHours = listOf(
-            0 to "早子时 (23-01)",
+            0 to "早子时 (00-01)",
             2 to "丑时 (01-03)",
             4 to "寅时 (03-05)",
             6 to "卯时 (05-07)",
@@ -63,7 +63,7 @@ class BirthInputLayoutAdaptationTest {
             18 to "酉时 (17-19)",
             20 to "戌时 (19-21)",
             22 to "亥时 (21-23)",
-            23 to "晚子时 (23-01)"
+            23 to "晚子时 (23-24)"
         )
 
         for ((hour, expectedText) in testHours) {
