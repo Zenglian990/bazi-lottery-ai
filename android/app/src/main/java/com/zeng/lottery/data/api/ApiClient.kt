@@ -81,7 +81,7 @@ object ApiClient {
     private val coldStartRetryInterceptor = Interceptor { chain ->
         val req = chain.request()
         val path = req.url.encodedPath
-        val retryable = !path.endsWith("/api/lottery/sync") && !path.endsWith("/api/ai/divination")
+        val retryable = !path.endsWith("/api/ai/divination")
         var attempt = 0
         var lastException: IOException? = null
         while (attempt < 2) {
