@@ -127,17 +127,47 @@ class UserPickHistoryStore(
 
     override fun saveTicket(ticket: SavedTicket) {
         synchronized(this) {
-            val fp = ticketFingerprint(ticket)
             val current = getAllTickets().toMutableList()
-            // 同彩种同号码去重防手滑重复收藏，并限制总上限防止本地存储无限膨胀
-            current.removeAll { it.id == ticket.id || ticketFingerprint(it) == fp }
+            current.removeAll { it.id == ticket.id }
             current.add(0, ticket)
-            val sorted = current.sortedByDescending { it.timestamp }.take(MAX_TICKETS)
+            val sorted = current.sortedByDescending { it.timestamp }
             writeTickets(sorted)
         }
     }
 
     override fun saveTickets(tickets: List<SavedTicket>) {
+        if (tickets.isEmpty()) return
+        synchronized(this) {
+            val current = getAllTickets().toMutableList()
+            val incomingIds = tickets.map { it.id }.toSet()
+            current.removeAll { it.id in incomingIds }
+            current.addAll(0, tickets)
+            val sorted = current.sortedByDescending { it.timestamp }
+            writeTickets(sorted)
+        }
+    }
+
+    /**
+     * 业务层收藏写入：按（彩种 + 前后区号码）去重防手滑重复收藏，并限制上限防止本地存储无限膨胀。
+     * 返回 true 表示新增，false 表示已存在同号记录（已刷新置顶）。
+     */
+    fun saveUniqueTicketWithCap(ticket: SavedTicket, maxTickets: Int = MAX_TICKETS): Boolean {
+        synchronized(this) {
+            val fp = ticketFingerprint(ticket)
+            val current = getAllTickets().toMutableList()
+            val existed = current.any { it.id == ticket.id || ticketFingerprint(it) == fp }
+            current.removeAll { it.id == ticket.id || ticketFingerprint(it) == fp }
+            current.add(0, ticket)
+            val sorted = current.sortedByDescending { it.timestamp }.take(maxTickets.coerceAtLeast(1))
+            writeTickets(sorted)
+            return !existed
+        }
+    }
+
+    /**
+     * 业务层批量收藏写入：合并同彩种同号码记录并保留最新 maxTickets 条。
+     */
+    fun saveUniqueTicketsWithCap(tickets: List<SavedTicket>, maxTickets: Int = MAX_TICKETS) {
         if (tickets.isEmpty()) return
         synchronized(this) {
             val current = getAllTickets().toMutableList()
@@ -149,7 +179,7 @@ class UserPickHistoryStore(
             val incomingFps = dedupIncoming.keys
             current.removeAll { it.id in incomingIds || ticketFingerprint(it) in incomingFps }
             current.addAll(0, dedupIncoming.values)
-            val sorted = current.sortedByDescending { it.timestamp }.take(MAX_TICKETS)
+            val sorted = current.sortedByDescending { it.timestamp }.take(maxTickets.coerceAtLeast(1))
             writeTickets(sorted)
         }
     }

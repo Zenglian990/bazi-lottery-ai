@@ -267,9 +267,20 @@ class PrizeCheckerAndAuditFixesTest {
             primaryNumbers = listOf(1, 2, 3, 4, 5, 6),
             secondaryNumbers = listOf(7)
         )
-        store.saveTicket(sample)
-        store.saveTicket(sample.copy(id = "another-id"))
+        assertTrue(store.saveUniqueTicketWithCap(sample))
+        assertFalse(store.saveUniqueTicketWithCap(sample.copy(id = "another-id")))
         assertEquals("Duplicate ticket should be deduplicated", 1, store.getAllTickets().size)
+        val overflow = (1..215).map { idx ->
+            com.zeng.lottery.data.local.SavedTicket(
+                id = "cap-$idx",
+                timestamp = 1700000000000L + idx,
+                lotteryType = LotteryType.SSQ,
+                primaryNumbers = listOf((idx % 28) + 1, ((idx + 1) % 28) + 2, ((idx + 2) % 28) + 3, 29, 30, 31),
+                secondaryNumbers = listOf((idx % 16) + 1)
+            )
+        }
+        store.saveUniqueTicketsWithCap(overflow, maxTickets = 200)
+        assertTrue("Ticket count must be capped at 200", store.getAllTickets().size <= 200)
         store.clearAll()
     }
 }

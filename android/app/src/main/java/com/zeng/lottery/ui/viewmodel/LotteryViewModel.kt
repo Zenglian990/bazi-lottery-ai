@@ -1239,10 +1239,14 @@ class LotteryViewModel @JvmOverloads constructor(
             strategy = _selectedStrategy.value,
             rationale = item.scoreRationale
         )
-        historyStore.saveTicket(ticket)
+        val isNew = historyStore.saveUniqueTicketWithCap(ticket)
         _savedTickets.value = historyStore.getAllTickets()
         val label = if (index < 26) ('A' + index).toString() else "${index + 1}"
-        _toastMessage.value = "已收藏第 [$label] 注灵感号码"
+        _toastMessage.value = if (isNew) {
+            "已收藏第 [$label] 注灵感号码"
+        } else {
+            "第 [$label] 注已在收藏夹中，已刷新置顶"
+        }
     }
 
     fun saveAllCurrentTickets() {
@@ -1266,9 +1270,9 @@ class LotteryViewModel @JvmOverloads constructor(
             )
         }
         if (newTickets.isNotEmpty()) {
-            historyStore.saveTickets(newTickets)
+            historyStore.saveUniqueTicketsWithCap(newTickets)
             _savedTickets.value = historyStore.getAllTickets()
-            _toastMessage.value = "已将全部 ${newTickets.size} 注灵感号码保存至历史收藏"
+            _toastMessage.value = "已保存本组 ${newTickets.size} 注至历史收藏（重复号自动合并）"
         }
     }
 
